@@ -1,0 +1,13 @@
+[Unit]
+Description=Lodestar Beacon Chain Log Monitor
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/lodestarbeacon_logmonitor.sh
+Restart=on-failure
+User=lodestarbeacon
+Group=lodestarbeacon
+
+[Install]
+WantedBy=multi-user.target

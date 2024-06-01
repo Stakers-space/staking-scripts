@@ -1,0 +1,10 @@
+[Unit]
+Description=Timer to regularly check time synchronization
+
+[Timer]
+# Run it in 30 minutes interval
+OnCalendar=*:0/30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

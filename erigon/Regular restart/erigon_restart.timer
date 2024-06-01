@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer to restart Erigon Service every day at 3:30 PM
+
+[Timer]
+OnCalendar=*-*-* 15:30:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target

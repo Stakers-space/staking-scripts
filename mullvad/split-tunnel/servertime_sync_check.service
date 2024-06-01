@@ -1,0 +1,9 @@
+[Unit]
+Description=Check time synchronization and setup Mullvad VPN split tunneling if needed
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mullvad_split_tunnel_setup.sh
+
+[Install]
+WantedBy=multi-user.target

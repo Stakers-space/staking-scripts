@@ -1,0 +1,64 @@
+###
+#   Exact errors - matches whole line
+###
+
+ECONNREFUSED:echo 'Error: Connect ECONNREFUSED'
+# [network] ... Error dialing discovered peer peer=16...XxXXXX
+# Error: Connect ECONNREFUSED IP:PORT
+#   at TCPConnectWrap.afterConnect [as fn]
+
+NETWORK_INVALIDREQUEST:echo 'Error: RESPONSE_ERROR_INVALID_REQUEST: stream reset'
+# [network] ... Error: Resp error method=ping, client=Lodestar, peer=16...xxxxxx...
+# Error: RESPONSE_ERROR_INVALID_REQUEST: stream reset
+#   at file://...
+
+
+NETWORK_TIMEOUT:echo 'Error: Timeout'
+# [network] ... Failed to send goodbye peer=16...xXXXXX - Timeout
+# Error: Timeout
+#   at timeoutPromise (file://...)
+# Error: unexpected end of input
+#   at Object.read (file://...)
+# Error: REQUEST_ERROR_DIAL_ERROR
+#   at file://...
+
+
+NETWORK_RATELIMIT:echo 'Error: Request_Error_RATE_LIMITED'
+# [network] ... Resp error method=goodbye, client=NA, peer=16... ...code=REQUEST_ERROR_RATE_LIMITED
+#   at requestHandleSource (file://...)
+# Error: unexpected end of input
+#   at Object.read (file://...)
+# Error: REQUEST_ERROR_DIAL_ERROR
+#   at file://...
+
+
+NETWORK_MaxPeerAddr:echo 'CodeError: Peer had more than maxPeerAddrsToDial'
+# [network] ... Error dialing discovered peer peer=16...XXxXXX - Peer had more than maxPeerAddrsToDial
+# CodeError: Peer had more than maxPeerAddrsToDial
+#   at queue.add.peerId.peerId [as fn] (file://...)
+
+
+NETWORK_MulltiaddrAggr: echo 'AggregateCodeError: All multiaddr dials failed'
+# [network] ... Error dialing discovered peer peer=16...XXxXXX - All mulltiaddr dials failed
+# AggregateCodeError: All multiaddr dials failed
+#   at queue.add.peerId.peerId [as fn] (file://...)
+
+
+PUBLISH_NoPeers:echo 'Error: PublishError.NoPeersSubscribedToTopic'
+# [rest] ... Req req-xxxxx submitPoolSyncCommitteeSignatures error - PublishError.NoPeersSubscribedToTopic
+# Error: PublishError.NoPeersSubscribedToTopic
+#   at Eth2Gossipsub.publish (file://...)
+
+
+
+
+
+
+###################################################################################################
+#   Float errors - matches certian part of a line (contain dynamic parameter)
+###
+
+NETWORK_InconsistentState: echo 'Error: Inconsistent state, blobSidecar blockRoot='
+# [network] ... Resp error method=blob_sidecars_by_root, client=...
+# Error: Inconsistent state, blobSidecar blockRoot=...
+#   at onBlobSidecarsByRoot (file://...)

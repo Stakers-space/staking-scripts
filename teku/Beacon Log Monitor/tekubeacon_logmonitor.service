@@ -1,0 +1,13 @@
+[Unit]
+Description=Teku Beacon Chain Log Monitor
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/tekubeacon_logmonitor.sh -s="tekubeacon" -df="/usr/local/etc/teku_tracking_records.txt" -tc=100 -p=600 -pt=900
+Restart=on-failure
+User=tekubeacon
+Group=tekubeacon
+
+[Install]
+WantedBy=multi-user.target

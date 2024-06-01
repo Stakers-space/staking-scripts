@@ -1,0 +1,26 @@
+2024-05-30 08:56:26.804+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish sync committee message(s) for slot XXXXXXX because no peers were available on the required g>
+2024-05-30 08:56:26.865+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.892+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.892+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.892+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.893+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.894+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.894+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.894+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.894+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.895+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.895+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.895+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.895+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.895+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2024-05-30 08:56:26.895+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+2
+
+2024-05-30 08:56:35.489+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish sync committee message(s) for slot XXXXXXX because no peers were available on the required g>
+2024-05-30 08:56:35.527+00:00 | GossipRouter-event-thread-0 | WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot XXXXXXX because no peers were available on the required gossip topic
+
+
+"because no peers were available on the required gossip topic"
+
+
+"WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot" && "because no peers were available on the required gossip topic"
