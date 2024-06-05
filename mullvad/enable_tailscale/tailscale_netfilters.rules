@@ -1,0 +1,31 @@
+define RESOLVER_ADDRS = {
+    100.100.100.100
+}
+
+# Define machines IPs (available at login.tailscale.com/admin/machines)
+define EXCLUDED_IPS = {
+    100.101.102.103,
+    100.104.105.106
+}
+
+# https://mullvad.net/en/help/split-tunneling-with-linux-advanced
+table inet mullvad-tilescale {
+    # Exclude outgoing Tailscale connection
+    chain excludeOutgoing {
+        type route hook output priority 0; policy accept;
+        ip daddr $EXCLUDED_IPS ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+    }
+
+    # Allow incoming Tailscale connection
+    chain allow-incoming {
+        type filter hook input priority -100; policy accept;
+        iifname "tailscale0" ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+    }
+
+    # Exclude Tailscale DNS
+    chain excludeDns {
+        type filter hook output priority -10; policy accept;
+        ip daddr $RESOLVER_ADDRS udp dport 53 ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+        ip daddr $RESOLVER_ADDRS tcp dport 53 ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
+    }
+}
