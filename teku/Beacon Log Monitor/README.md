@@ -3,36 +3,77 @@
 This utility script monitors teku beacon log in real time and check its lines for defined errors. The script allows to set any execution of teku beacon as well as any other serrvice if certain issue is detected.
 
 ## Installation
+This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor) on background and extends it with a custom tekubeacon related configuration.
+1. Check `.logmonitor.sh` availability
+```
+/usr/local/bin/logmonitor.sh version
+```
+If the shell script is not available, install it
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/Beacon%20Log%20Monitor/tekubeacon_logmonitor.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/tekubeacon_logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/Beacon%20Log%20Monitor/tekubeacon_logmonitor.sh
+sudo curl -o /usr/local/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
 ```
-- download error database files to `/usr/local/etc` directory
+- Enable execution of the shell script
+```
+sudo chmod +x /usr/local/bin/logmonitor.sh
+```
+
+2. Download errors list for tekubeacon service
+[Stakers.space](https://stakers.space) updates list with tekubeacon related errors occuring in a log. Take into notice that the file is kept as small as possible, containing only serious issues. High number of lines can increase CPU usage.
 ```
 sudo curl -o /usr/local/etc/teku_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/Beacon%20Log%20Monitor/teku_tracking_records.txt
 ```
-- Modify config, if required
-Open `tekubeacon_logmonitor.sh`
+- Add / remove lines from the file anytime, if required
 ```
-sudo nano /usr/local/bin/tekubeacon_logmonitor.sh
+sudo nano /usr/local/etc/teku_tracking_records.txt
 ```
-Within the shell script, you can specify other services execution (e.g. restart the service, switch mullvad VPN connection to different server etc.)
+Keep the required line format of `targetType@targetString`, where:
+- `errorType`: custom key under which the target is being tracked
+- `@`: parser element
+- `errorString`: each log line is checked whether it contains this string.
+> [!NOTE]
+> There may be a need to resave the downloaded file for option to read from it.
 
-- Enable execution of the shell script
+3. Configurate executor utility
+
+
+4. Configurate sleeper utility
+
+
+5. Configurate Log motitor service
+
+
+## Run the log monitor service
+### Start the service
+Enable the service
 ```
-sudo chmod +x /usr/local/bin/tekubeacon_logmonitor.sh
+sudo systemctl enable tekubeacon_logmonitor.service
 ```
+Start the service
+```
+sudo systemctl start tekubeacon_logmonitor.service
+```
+
+### Monitor the service
+```
+systemctl status tekubeacon_logmonitor.service
+```
+```
+journalctl -fu tekubeacon_logmonitor.service
+```
+Monitor the service together with tekubeacon service
+```
+journalctl -f -u tekubeacon.service -u tekubeacon_logmonitor.service
+```
+
 
 ### Definition file
 `/usr/local/bin/tekubeacon_logmonitor.sh` shell script controls logs for string targets defined at `/usr/local/etc/teku_tracking_records.txt`.
-There is one target at each line in a format of ```targetType@targetString```, where:
-- `targetType`: custom key under which the target is being tracked
-- `@`: parser element
-- `targetString`: each log line is checked whether it contains this string.
+There is one target at each line in a format of 
 
 ## Run the service
 `tekubeacon_logmonitor.sh` is running under definned configuration that is taken from following place
@@ -68,24 +109,3 @@ sudo chown tekueacon:tekubeacon /usr/local/etc/teku_tracking_records.txt
 sudo curl -o /etc/systemd/system/tekubeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/Beacon%20Log%20Monitor/tekubeacon_logmonitor.service
 ```
 
-### Start the service
-Enable the service
-```
-sudo systemctl enable tekubeacon_logmonitor.service
-```
-Start the service
-```
-sudo systemctl start tekubeacon_logmonitor.service
-```
-
-### Monitor the service
-```
-systemctl status tekubeacon_logmonitor.service
-```
-```
-journalctl -fu tekubeacon_logmonitor.service
-```
-Monitor the service together with tekubeacon service
-```
-journalctl -f -u tekubeacon.service -u tekubeacon_logmonitor.service
-```

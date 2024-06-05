@@ -64,7 +64,7 @@ start () {
 start_validators () {
   for validator in "${validatorServices_array[@]}"; do
     start_service "$validator"
-    sleep $validatorServices_startDelay
+    sleep $validatorServices_instanceStartDelay
   done
 }
 start_service () {
@@ -272,7 +272,7 @@ print_config() {
   echo -e "# ├── execution:  $executionClient → $executionService"
   echo -e "# ├── beacon:     $beaconClient → $beaconService"
   echo -e "# └── validators: $validatorClient → ${validatorServices[@]}"
-  echo -e "#     └── start delay: $validatorServices_startDelay"
+  echo -e "#     └── start delay: $validatorServices_instanceStartDelay"
 }
 
 generate_default_clients_conf_file() {
@@ -290,7 +290,7 @@ validatorServices="lighthouse-vi1.service lighthouse-vi2.service"
 
 # Delay in starting validator instances.
 # Spreading keystores loading over longer time.
-validatorServices_startDelay=10
+validatorServices_instanceStartDelay=10
 EOF
   else
     echo 'staking.sh is already initialized'

@@ -8,12 +8,26 @@ executer_shell="" #logmonitor_executer.sh
 executer_trigger_count=200
 executer_trigger_periode=600
 executer_trigger_pause=900
+declare -r version="1.0.1"
+
+get_version() {
+  echo -e "LogMonitor version: $version | Powered by https://stakers.space"
+}
+
+get_help() {
+    echo "https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor"
+}
 
 # Set variables from attached parameters
 use_shell_parameters() {
     TEMP=$(getopt -o s:tf:lt:ex:etc:ett:etd: --long service_name:,targets_file:,log_maxwaitingtime:,executer_shell:,executer_trigger_count:,executer_trigger_periode:,executer_trigger_pause: -- "$@")
     eval set -- "$TEMP"
 
+    # requests
+    [ "$1" = "version" ] && get_version && return
+    [ "$1" = "help" ] && get_help && return
+
+    # params
     while true; do
         case "$1" in
               -s|--service_name) service_name="$2" shift 2 ;;
