@@ -1,0 +1,11 @@
+[Unit]
+Description=Set up netfilter rules at startup
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/netfilter_manager.sh add-rules "/usr/local/etc/mullvad-tailscale_netfilters.rules"
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target

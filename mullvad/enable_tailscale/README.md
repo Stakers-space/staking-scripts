@@ -45,3 +45,30 @@ sudo curl -o /usr/local/etc/mullvad-tailscale_netfilters.rules https://raw.githu
 ```
 sudo nano /usr/local/etc/mullvad-tailscale_netfilters.rules
 ```
+
+## Usage
+- `/usr/local/bin/netfilter_manager.sh help` - show help
+- `/usr/local/bin/netfilter_manager.sh add-rules "/usr/local/etc/mullvad-tailscale_netfilters.rules"` - add rules from `"/usr/local/etc/mullvad-tailscale_netfilters.rules"` file to `nft ruleset`
+- `/usr/local/bin/netfilter_manager.sh add-rules "mullvad-tilescale"` - remove `mullvad-tailscale` mark from `nft ruleset`
+
+## Launch through service file on Ubuntu Server startup
+1. Download service file
+```
+sudo curl -o /etc/systemd/system/mullvad_enable_tailscale.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/mullvad_enable_tailscale.service
+```
+2. Edit path to rules file, if needed
+```
+sudo nano /etc/systemd/system/mullvad_enable_tailscale.service
+```
+3. Enable service launch on Ubuntu Server startup
+```
+sudo systemctl enable /etc/systemd/system/mullvad_enable_tailscale.service
+```
+4. Start the service
+```
+sudo systemctl start /etc/systemd/system/mullvad_enable_tailscale.service
+```
+5. Check the service
+```
+systemctl status /etc/systemd/system/mullvad_enable_tailscale.service
+```

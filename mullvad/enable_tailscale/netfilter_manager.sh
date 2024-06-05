@@ -1,16 +1,7 @@
 #!/usr/bin/env bash
 
-NFT_RULES="usr/local/etc/mullvad-tailscale_netfilters.rules" # Path to file with netmask rules
+NFT_RULES="/usr/local/etc/mullvad-tailscale_netfilters.rules" # Path to file with netmask rules
 NFT_TABLENAME="mullvad-tilescale"
-
-# ---------------------------
-EXCLUDE_COUNTRY_CODES=(us ca jp au hk gb) # Country codes to avoid. Set to '' to allow all.
-# INCLUDE_COUNTRY_CODES=(fr gb) # Country codes to connect to. Uncomment to use. Overridden by -c option. Overrides EXCLUDE_COUNTRY_CODES.
-# DNS=(1.1.1.1 8.8.8.8) # Custom DNS servers for Mullvad. Uncomment to use. Overridden by -d option.
-# ----------------------------
-# CONFIG VARIABLES YOU CAN BUT SHOULD NOT MANUALLY CHANGE
-# It is better to use the flags -f/--file and -t/--table to change this dynamically
-
 
 # Do not edit past this point.
 # ----------------------------
@@ -18,7 +9,6 @@ EXCLUDE_COUNTRY_CODES=(us ca jp au hk gb) # Country codes to avoid. Set to '' to
 # Global variables
 script_name="$(basename "$0")"
 args="$*"
-rules_checked=false
 
 # Functions
 ## Checks and errors
@@ -60,9 +50,18 @@ trap_sigint() {
   die "Interruption signal caught. Your network might be in a broken state. Run '$script_name $args' again to fix."
 }
 
+## Usage functions
+help() {
+    printf "usage: %s <action> [OPTIONS]\n" "$script_name"
+    echo "├── add-rules [OPTIONS]            adds rules to netfilter based on attached file"
+    echo "|                 └─ file          definition file with netfilter rules"
+    echo "└─── remove-rules [OPTIONS]        removes rules to netfilter based on attached file"
+    echo "                  └─ table         nft table that should be removed"
+  exit 0
+}
+
 ### Check that the nft rules file is valid.
 check_nft_rules() {
-  if [[ $rules_checked = false ]]; then
     if [[ ! -f $NFT_RULES ]]; then
       die "[ERROR] The file '$NFT_RULES' does not exist."
     fi
@@ -72,55 +71,6 @@ check_nft_rules() {
     else
       die "[ERROR] NFT tables validity check | nftables rules are not valid. Fix them before running the script."
     fi
-    rules_checked=true
-  fi
-}
-
-## Usage functions
-usage() {
-  printf "usage: %s <action> [OPTIONS]\n" "$script_name"
-  printf "\n"
-  printf "Action: up\n"
-  upusage
-  printf "\n"
-  printf "Action: down\n"
-  downusage
-  printf "\n"
-  printf "Action: conf\n"
-  confusage
-  exit 0
-}
-
-upusage() {
-  cat <<EOF
-Apply nftables configuration and connect to Mullvad and Tailscale/Zerotier
-$script_name up [OPTIONS]
-  -h, --help:         Show this help message
-  -z, --zerotier:     Use Zerotier instead of Tailscale
-  -d, --dns:          Set custom Mullvad DNS Server (i.e. -d 1.1.1.1 or -d 8.8.8.8,1.1.1.1)
-  -c, --country:      Specify a country code to connect to (i.e. -c gb or -c fr,pt,es)
-  -f, --file:         Specify a particular NFT rules file. Indicate absolute path to file (default: $NFT_RULES)
-EOF
-}
-
-downusage() {
-  cat <<EOF
-Bring down Mullvad and remove nftables configuration
-$script_name down [OPTIONS]
-  -h, --help:         Show this help message
-  -a, --all:          Stop Mullvad and Tailscale/Zerotier (default: only stop Mullvad)
-  -z, --zerotier:     Use Zerotier instead of Tailscale
-  -t, --table:        Indicate the nft tablename to bring down (default: $NFT_TABLENAME)
-EOF
-}
-
-confusage() {
-  cat <<EOF
-Apply nftables configuration so Mullvad and Tailscale/Zerotier can work together and do nothing more
-$script_name conf [OPTIONS]
-  -u, --unconf:       Remove the nftables configuration
-  -h, --help:         Show this help message
-EOF
 }
 
 remove_nft_rules() {
@@ -132,198 +82,8 @@ remove_nft_rules() {
   fi
 }
 
-## Action functions
-up() {
-    echo "netfilter | up | Bring down current connection $0"
-    if [[ $zerotier = false ]]; then
-        bash "$0" down -a || printf "[INFO] Ignoring tailscale error...\n"
-    else
-        bash "$0" down -a -z || printf "[INFO] Ignoring zerotier error...\n"
-    fi
-
-    # Update relay list and store it in an array
-    prefix_output mullvad relay update
-    readarray -t MULLVAD_RELAYS < <(mullvad relay list | awk '/wireguard|wg/ { print $1 }')
-
-    echo "MULLVAD_RELAYS:"
-    for relay in "${MULLVAD_RELAYS[@]}"; do
-        echo "$relay"
-    done
-
-    # Include countries
-    ## User-specified option overrides INCLUDE_COUNTRY_CODES.
-    if [[ ! $country_code = false ]]; then
-        echo "MULLVAD_RELAYS | Include countries"
-        # Turn into regex.
-        country_code="$(tr ',' '|' <<<"$country_code")"
-        readarray -t MULLVAD_RELAYS < <(printf '%s\n' "${MULLVAD_RELAYS[@]}" | grep -E "^$country_code")
-        size=${#MULLVAD_RELAYS[@]}
-        if [[ $size -lt 1 ]]; then
-        die "[ERROR] Country code '$country_code' is not valid!"
-        fi
-    ## Use INCLUDE_COUNTRY_CODES unless command flag used.
-    elif [[ -n $INCLUDE_COUNTRY_CODES && $country_code = false ]]; then
-       echo "MULLVAD_RELAYS | INCLUDE_COUNTRY_CODES"
-        # Check that the user-specified variable is valid.
-        for c in "${INCLUDE_COUNTRY_CODES[@]}"; do
-        if ! [[ $c =~ ^[a-z]{2}$ ]]; then
-            die "The country code '$c' you have specified in INCLUDE_COUNTRY_CODES is not valid."
-        fi
-        done
-
-        # Turn into regex.
-        country_code="$(tr ',' '|' <<<"$INCLUDE_COUNTRY_CODES")"
-        readarray -t MULLVAD_RELAYS < <(printf '%s\n' "${MULLVAD_RELAYS[@]}" | grep -E "^$country_code")
-
-    # Exclude countries
-    else
-        echo "MULLVAD_RELAYS | Exclude countries"
-        # If EXCLUDE_COUNTRY_CODES is non-null
-        if [[ -n ${EXCLUDE_COUNTRY_CODES[*]} ]]; then
-        # Check that the user-specified variable is valid
-        for c in "${EXCLUDE_COUNTRY_CODES[@]}"; do
-            if ! [[ $c =~ ^[a-z]{2}$ ]]; then
-            die "The country code '$c' you have specified in EXCLUDE_COUNTRY_CODES is not valid."
-            fi
-        done
-
-        # Turn into regex
-        exclude=$(tr " " "|" <<<"${EXCLUDE_COUNTRY_CODES[@]}")
-        fi
-
-        readarray -t MULLVAD_RELAYS < <(printf '%s\n' "${MULLVAD_RELAYS[@]}" | grep -Ev "^$exclude")
-        size=${#MULLVAD_RELAYS[@]}
-        if [[ $size -lt 1 ]]; then
-        die "[ERROR] Too many countries have been excluded, none left."
-        fi
-    fi
-
-    # RAM servers
-    printf "Getting RAM-only servers..."
-    readarray -t MULLVAD_RELAYS < <(printf '%s\n' "${MULLVAD_RELAYS[@]}" | grep -E 'wg')
-    
-    size=${#MULLVAD_RELAYS[@]}
-    if [[ $size -lt 1 ]]; then
-        die "[ERROR] No RAM-only servers are available with the options you specified."
-    fi
-    echo "MULLVAD_RELAYS:"
-    for relay in "${MULLVAD_RELAYS[@]}"; do
-        echo "$relay"
-    done
-
-    # Pick a random country code.
-    size=${#MULLVAD_RELAYS[@]}
-    index=$((RANDOM % size))
-    relay=${MULLVAD_RELAYS[$index]}
-
-    echo "MULLVAD_RELAY | size: $size, randomIndex: $index, relay: $relay"
-
-    # DNS
-    printf "[INFO] Setting DNS server(s) for Mullvad...\n"
-    if [[ $dns = false && ${#DNS[*]} -eq 0 ]]; then
-        prefix_output mullvad dns set default
-    else
-        if [[ $dns = false && ${#DNS[*]} -gt 0 ]]; then
-        dns="${DNS[*]}"
-        else
-        dns="$(tr ',' ' ' <<<"$dns")"
-        fi
-        printf "[INFO] Setting up Mullvad DNS to %s...\n" "$dns"
-        # shellcheck disable=SC2086
-        prefix_output mullvad dns set custom $dns
-    fi
-
-    # Zerotier
-    if [[ "$zerotier" = false ]]; then
-        printf "[INFO] Restarting tailscale connection...\n"
-        prefix_output sudo tailscale down
-        prefix_output sudo tailscale up
-    else
-        printf "[INFO] Restarting zerotier-one connection...\n"
-        prefix_output sudo systemctl start zerotier-one.service
-        prefix_output sudo systemctl restart zerotier-one.service
-    fi
-
-    if [[ "$zerotier" = false ]]; then
-        printf "[INFO] Applying nft rules for tailscale...\n"
-        prefix_output sudo nft -f "$NFT_RULES"
-    fi
-
-    if [[ "$zerotier" = true ]]; then
-        printf "[INFO] Applying nft rules for zerotier...\n"
-        # This repetition is necessary. If not used it does not work wiht ZT.
-        # I need to investigate, but this is a workaround for the time being.
-        prefix_output sudo nft -f "$NFT_RULES"
-        prefix_output sudo nft add table inet "$NFT_TABLENAME"
-        sleep .5
-        remove_nft_rules
-        sleep .5
-        prefix_output sudo nft -f "$NFT_RULES"
-        prefix_output sudo nft add table inet "$NFT_TABLENAME"
-    fi
-
-    # Connect to Mullvad
-    printf "[INFO] Connecting to server '%s'...\n" "$relay"
-    prefix_output mullvad relay set hostname "$relay"
-    prefix_output mullvad connect -w
-
-    if [[ "$zerotier" = true ]]; then
-        printf "[INFO] Applying nft rules...\n"
-        # This repetition is necessary. If not used it does not work wiht ZT.
-        # I need to investigate, but this is a workaround for the time being.
-        prefix_output sudo nft -f "$NFT_RULES"
-        prefix_output sudo nft add table inet "$NFT_TABLENAME"
-        sleep .5
-        prefix_output remove_nft_rules
-        sleep .5
-        prefix_output sudo nft -f "$NFT_RULES"
-        prefix_output sudo nft add table inet "$NFT_TABLENAME"
-
-        sleep 6 &
-        PID=$!
-        printf 'Progress: \n'
-        while [[ -d /proc/$PID ]]; do
-        for s in █ █ █; do
-            printf "%s" "$s"
-            sleep .1
-        done
-        done
-    fi
-
-    if [[ $zerotier = true ]]; then
-        printf "\n\nDone! You may need to wait a few seconds for the connection to be ready."
-    fi
-    exit 0
-}
-
-down() {
-  if [[ $all = true ]]; then
-    if [[ $zerotier = true ]]; then
-      printf "Stopping zerotier-one...\n"
-      prefix_output sudo systemctl stop zerotier-one
-      printf "[INFO] Zerotier-one disconnected.\n"
-    else
-      printf "[INFO] Disconnecting tailscale...\n"
-      prefix_output sudo tailscale down
-      printf "[INFO] Tailscale disconnected.\n"
-    fi
-  fi
-
-  printf "[INFO] Disconnecting Mullvad...\n"
-  prefix_output mullvad disconnect && printf "[INFO] Mullvad disconnected.\n" || printf "[WARN] Mullvad didn't disconnect properly.\n"
-
-  remove_nft_rules
-}
-
-conf() {
-    echo "NETFILTER | conf | unconf: $unconf | params $0, $1"
-    if [[ $unconf = true ]]; then
-        echo "NETFILTER | conf | $unconf"
-        remove_nft_rules
-        exit 0
-    fi
-
-    # conf - loop... why?
+add_nft_rules(){    
+    check_nft_rules
 
     printf "[INFO] Applying nft rules...\n"
     if prefix_output sudo nft -f "$NFT_RULES"; then
@@ -336,100 +96,49 @@ conf() {
 
 ## Main function
 main() {
-  bash_version_check
 
-  # Get the action to perform
-  local actions=("up" "down" "conf","add","remove")
-  action="$1"
-  if [[ ! ${actions[*]} =~ ${action} || -z $action ]]; then
-    usage
-    exit 1
-  fi
+    bash_version_check
 
-  # Get options and flags
-  ARGS=$(getopt -a --options d:f:c:t:auhz --long "dns:,file:,table:,country:,all,unconf,zerotier,help" -- "$@")
-  eval set -- "$ARGS"
+    # Get the action to perform
+    local actions=("add-rules" "remove-rules")
+    action="$1"
+    shift
 
-  help=false
-  all=false
-  unconf=false
-  zerotier=false
-  dns=false
-  country_code=false
+    # Get options and flags
+    local ARGS=$(getopt -a --options f:h --long "file:,help" -- "$@")
+    eval set -- "$ARGS"
 
-  while true; do
-    case "$1" in
-      -d | --dns)
-        dns="$2"
-        shift 2
-        ;;
-      -f | --file)
-        NFT_RULES="$2"
-        shift 2
-        ;;
-      -c | --country)
-        country_code="$2"
-        shift 2
-        ;;
-      -t | --table)
-        NFT_TABLENAME="$2"
-        shift 2
-        ;;
-      -a | --all)
-        all=true
-        shift
-        ;;
-      -u | --unconf)
-        unconf=true
-        shift
-        ;;
-      -z | --zerotier)
-        zerotier=true
-        shift
-        ;;
-      -h | --help)
-        help=true
-        shift
-        ;;
-      --) break ;;
-      *)
-        die "Unknown option '$1'."
-        ;;
+    while true; do
+        case "$1" in
+            -f|--file)
+                NFT_RULES="$2" # Update NFT_RULES if -f or --file is specified
+                shift 2
+                ;;
+            -t|--table)
+                NFT_TABLENAME="$2" # Update NFT_RULES if -f or --file is specified
+                shift 2
+                ;;
+            -h|--help)
+                help
+                exit 0
+                ;;
+            --)
+                break
+                ;;
+            *)
+                die "Unknown option '$1'."
+                ;;
+        esac
+    done
+
+    case "$action" in
+        "add-rules") add_nft_rules ;;
+        "remove-rules") remove_nft_rules ;;
+        *) 
+            echo "Invalid action attached"
+            help 
+            ;;
     esac
-  done
-
-  if [[ $help = false && $unconf = false && $action != down ]]; then
-    check_nft_rules
-  fi
-
-  case "$action" in
-    "up")
-        if [[ $help = true ]]; then
-            upusage
-            exit 0
-        fi
-
-        up
-        ;;
-
-    "down")
-        if [[ $help = true ]]; then
-            downusage
-            exit 0
-        fi
-
-        down
-        ;;
-
-    "conf")
-        if [[ $help = true ]]; then
-            confusage
-            exit 0
-        fi
-
-        conf
-        ;;
-  esac
 }
 
 # _____________________________________
