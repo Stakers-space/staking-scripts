@@ -7,7 +7,7 @@ Most VPN clients blocks other simultaneous VPN connections by default. This util
 
 
 ### How does it work?
-Internet traffic is go through a netfilter list. Utilities then customize the traffic through a rules in the nft. All nft rules can be listed through command `sudo nft list ruleset`. Within the list:
+Internet traffic is go through `nftables` rules. Utilities then customize the traffic through a rules in the nft. All nft rules can be listed through command `sudo nft list ruleset`. Within the list:
 - Mullvad VPN client manages rule `table inet mullvad` (It's added on connection and removed on disconnection)
 - This shell utility manages rule `table inet mullvad-tailscale` (It's added on activation and removed on deactivation)
 

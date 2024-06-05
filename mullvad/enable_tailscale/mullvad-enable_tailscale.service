@@ -1,6 +1,7 @@
 [Unit]
 Description=Set up netfilter rules at startup
-After=network.target
+After=network.target mullvad-daemon.service
+Wants=mullvad-daemon.service
 
 [Service]
 Type=oneshot
