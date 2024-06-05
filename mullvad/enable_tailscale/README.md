@@ -35,11 +35,11 @@ sudo chmod +x /usr/local/bin/netfilter_manager.sh
 2. Download `tailscale_netfilters.rules` file
 - View the file
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/tailscale_netfilters.rules
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/mullvad-tailscale_netfilters.rules
 ```
 - download the service file to `/usr/local/etc` directory
 ```
-sudo curl -o /usr/local/etc/mullvad-tailscale_netfilters.rules https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/tailscale_netfilters.rules
+sudo curl -o /usr/local/etc/mullvad-tailscale_netfilters.rules https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/mullvad-tailscale_netfilters.rules
 ```
 - Open the file and update `EXCLUDED_IPS` marks for your server Tilescale IP(s)
 ```

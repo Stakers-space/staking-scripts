@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-NFT_RULES="usr/local/etc/tailscale_netfilters.rules" # Path to file with netmask rules
+NFT_RULES="usr/local/etc/mullvad-tailscale_netfilters.rules" # Path to file with netmask rules
 NFT_TABLENAME="mullvad-tilescale"
 
 # ---------------------------
