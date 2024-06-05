@@ -69,25 +69,28 @@ sudo nano /usr/local/etc/mullvad-tailscale_netfilters.rules
 ## Launch through service file on Ubuntu Server startup
 1. Download service file
 ```
-sudo curl -o /etc/systemd/system/mullvad-tailscale.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/mullvad_enable_tailscale.service
+sudo curl -o /etc/systemd/system/mullvad-enable_tailscale.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/mullvad-enable_tailscale.service
 ```
 2. Edit path to rules file, if needed
 ```
-sudo nano /etc/systemd/system/mullvad-tailscale.service
+sudo nano /etc/systemd/system/mullvad-enable_tailscale.service
 ```
 3. Reload daemon-reload
 ```
 sudo systemctl daemon-reload
 ```
-4. Enable service launch on Ubuntu Server startup
+4. Start the service
 ```
-sudo systemctl enable /etc/systemd/system/mullvad-tailscale.service
+sudo systemctl start mullvad-enable_tailscale.service
 ```
-5. Start the service
+5. Check the service
 ```
-sudo systemctl start /etc/systemd/system/mullvad-tailscale.service
+systemctl status mullvad-enable_tailscale.service
 ```
-6. Check the service
 ```
-systemctl status /etc/systemd/system/mullvad-tailscale.service
+journalctl -u mullvad-enable_tailscale.service
+```
+6. Enable service launch on Ubuntu Server startup
+```
+sudo systemctl enable mullvad-enable_tailscale.service
 ```
