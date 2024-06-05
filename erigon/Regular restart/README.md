@@ -23,7 +23,7 @@ sudo curl -o /etc/systemd/system/erigon_restart.service https://raw.githubuserco
 > ```
 > sudo curl -o /etc/systemd/system/gno-erigon_restart.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/erigon/Regular%20restart/erigon_restart.service
 > ```
-> Open the downlaoded file
+> Open the downloaded file
 > ```
 > sudo nano '/etc/systemd/system/gno-erigon_restart.service'
 > ```
