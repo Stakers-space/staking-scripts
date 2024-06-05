@@ -47,9 +47,23 @@ sudo nano /usr/local/etc/mullvad-tailscale_netfilters.rules
 ```
 
 ## Usage
-- `/usr/local/bin/netfilter_manager.sh help` - show help
-- `/usr/local/bin/netfilter_manager.sh add-rules "/usr/local/etc/mullvad-tailscale_netfilters.rules"` - add rules from `"/usr/local/etc/mullvad-tailscale_netfilters.rules"` file to `nft ruleset`
-- `/usr/local/bin/netfilter_manager.sh add-rules "mullvad-tilescale"` - remove `mullvad-tailscale` mark from `nft ruleset`
+- Show help
+```
+/usr/local/bin/netfilter_manager.sh help
+```
+- add rules from `"/usr/local/etc/mullvad-tailscale_netfilters.rules"` file to `nft ruleset`
+```
+/usr/local/bin/netfilter_manager.sh add-rules "/usr/local/etc/mullvad-tailscale_netfilters.rules"
+```
+- remove `mullvad-tailscale` mark from `nft ruleset`
+```
+/usr/local/bin/netfilter_manager.sh remove-rules "mullvad-tilescale"
+```
+- Display all ruleset marks file
+```
+/usr/local/bin/netfilter_manager.sh list-rules
+```
+
 
 ## Launch through service file on Ubuntu Server startup
 1. Download service file

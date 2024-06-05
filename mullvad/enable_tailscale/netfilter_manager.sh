@@ -55,8 +55,9 @@ help() {
     printf "usage: %s <action> [OPTIONS]\n" "$script_name"
     echo "├── add-rules [OPTIONS]            adds rules to netfilter based on attached file"
     echo "|                 └─ file          definition file with netfilter rules"
-    echo "└─── remove-rules [OPTIONS]        removes rules to netfilter based on attached file"
-    echo "                  └─ table         nft table that should be removed"
+    echo "├── remove-rules [OPTIONS]        removes rules to netfilter based on attached file"
+    echo "|                 └─ table         nft table that should be removed"
+    echo "└── list-rules                     display nft rules"
   exit 0
 }
 
@@ -92,6 +93,9 @@ add_nft_rules(){
     else
         die "[ERROR] There was an error while applying nft rules."
     fi
+}
+list_nft_rules(){
+    prefix_output sudo nft list ruleset
 }
 
 ## Main function
@@ -134,6 +138,7 @@ main() {
     case "$action" in
         "add-rules") add_nft_rules ;;
         "remove-rules") remove_nft_rules ;;
+        "list-rules") list_nft_rules ;;
         *) 
             echo "Invalid action attached"
             help 
