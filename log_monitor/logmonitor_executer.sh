@@ -1,8 +1,22 @@
 #!/bin/bash
 # readme: https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor
 
+
+# move count trigger for execution here
+
+
 occurancyKey=$1
 serviceName=$2
+
+declare -r version="1.0.1"
+
+get_version() {
+  echo -e "LogMonitor version: $version | Powered by https://stakers.space"
+}
+
+# requests
+[ "$1" = "version" ] && get_version && return
+
 if [ -z "$occurancyKey" ]; then
 echo "no occurancy key parameter attached: $0 | e.g. 'NETWORK' from targets_file"
 exit 1

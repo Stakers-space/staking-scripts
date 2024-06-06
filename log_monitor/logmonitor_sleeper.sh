@@ -1,9 +1,22 @@
 #!/bin/bash
 # readme: https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor
 
+# Separated execution shell script. It serves as a timedown timer. If not cancelled before reaching trigger time, it triggers client restart
+# (although it may also forward to executor) either directly or through ./staking.sh
+
+
 occurancyKey=$1
 serviceName=$2
 sleepTime=$3
+
+declare -r version="1.0.1"
+
+get_version() {
+  echo -e "LogMonitor version: $version | Powered by https://stakers.space"
+}
+
+# requests
+[ "$1" = "version" ] && get_version && return
 
 if [ -z "$occurancyKey" ]; then
 echo "no occurancy key parameter attached: $1 | e.g. 'NETWORK' from targets_file"
@@ -21,7 +34,10 @@ exit 1
 fi
 
 timedown_trigger() {
-    echo "Timer reached for $1 $2 $3"
+    echo "Timer reached for $1 $2 $3 | ServiceName: $serviceName"
+    # restart the service
+    # sudo systemctl restart $serviceName
+    # or through executor ?
 }
 
 # run timer on background

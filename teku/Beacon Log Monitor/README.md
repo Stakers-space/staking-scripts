@@ -1,9 +1,10 @@
 # Beacon node log monitor for Teku client
 
-This utility script monitors teku beacon log in real time and check its lines for defined errors. The script allows to set any execution of teku beacon as well as any other serrvice if certain issue is detected.
+This utility script monitors teku beacon log in real time and check its lines for defined errors. The script allows to set any execution action of teku beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the teku beacon log service through the `teku_tracking_records.txt` file.
 
 ## Installation
 This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor) on background and extends it with a custom tekubeacon related configuration.
+### Log Monitor utility
 1. Check `.logmonitor.sh` availability
 ```
 /usr/local/bin/logmonitor.sh version
@@ -38,27 +39,78 @@ Keep the required line format of `targetType@targetString`, where:
 > [!NOTE]
 > There may be a need to resave the downloaded file for option to read from it.
 
-3. Configurate executor utility
+### Log monitor executor utility
+Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
+`logmonitor_executer.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
 
-4. Configurate sleeper utility
-
-
-5. Configurate Log motitor service
-
-
-## Run the log monitor service
-### Start the service
-Enable the service
+1. Check `.logmonitor_executer.sh` availability
 ```
-sudo systemctl enable tekubeacon_logmonitor.service
+/usr/local/bin/logmonitor_executer.sh version
 ```
-Start the service
+If the shell script is not available, install it
+- View the script
+```
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executer.sh
+```
+- Download the script to `/usr/local/bin` directory
+```
+sudo curl -o /usr/local/logmonitor_executer_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executer.sh
+```
+- Enable execution of the shell script
+```
+sudo chmod +x /usr/local/bin/logmonitor_executer_tekubeacon.sh
+```
+- Open the file and configurate execution actions
+```
+sudo nano /usr/local/bin/logmonitor_executer_tekubeacon.sh
+```
+- Executor is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
+
+### Log monitor sleeper utility
+`logmonitor_sleeper.sh` checks log for regular updates. Once there's no new line for certain defined periode, it may be considered that the service is stucked. In such case sleeper utility allows automatically restart it. The utility allows to configurate the maximum waiting time for new line as well as action to execute on occuration.
+
+1. Check `.logmonitor_sleeper.sh` availability
+```
+/usr/local/bin/logmonitor_sleeper.sh version
+```
+If the shell script is not available, install it
+- View the script
+```
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
+```
+- Download the script to `/usr/local/bin` directory
+```
+sudo curl -o /usr/local/logmonitor_sleeper_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
+```
+- Enable execution of the shell script
+```
+sudo chmod +x /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
+```
+- Open the file and configurate execution actions
+```
+sudo nano /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
+```
+- Sleeper is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
+
+
+### Log monitor service
+Log monitor service starts the log monitor with active executor and sleeper utility (both optionals) automatically on OS startup.
+
+
+- Download a service file `tekubeacon_logmonitor.service` for running `tekubeacon_logmonitor.sh` on system backgorund
+```
+sudo curl -o /etc/systemd/system/tekubeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/Beacon%20Log%20Monitor/tekubeacon_logmonitor.service
+```
+- Open the file and modify the configuration, if needed
+```
+sudo nano /etc/systemd/system/tekubeacon_logmonitor.service
+```
+- Start the service
 ```
 sudo systemctl start tekubeacon_logmonitor.service
 ```
-
-### Monitor the service
+- Check the service running
 ```
 systemctl status tekubeacon_logmonitor.service
 ```
@@ -70,42 +122,7 @@ Monitor the service together with tekubeacon service
 journalctl -f -u tekubeacon.service -u tekubeacon_logmonitor.service
 ```
 
-
-### Definition file
-`/usr/local/bin/tekubeacon_logmonitor.sh` shell script controls logs for string targets defined at `/usr/local/etc/teku_tracking_records.txt`.
-There is one target at each line in a format of 
-
-## Run the service
-`tekubeacon_logmonitor.sh` is running under definned configuration that is taken from following place
-1. Right from variables defined inside the `tekubeacon_logmonitor.sh` shell script
-2. From `config/clients.conf` and `config/logmonitor.conf` files (overrides values in step 1)
-3. From attached parameters to the shell script on startion (overrides values in step 2)
+- Enable the service
 ```
-/usr/local/bin/tekubeacon_logmonitor.sh --service="tekubeacon" --definition_file="/usr/local/etc/nethermind_tracking_records.txt" --triggercount=100 --tracking_periode=600 --pause_tracking=900
+sudo systemctl enable tekubeacon_logmonitor.service
 ```
-Arguments
--  `-s` | `--service` = service name
-- `-df` | `--definition_file` = file with defined strings the monitor search in the real time log
-- `-tc` | `--triggercount` = number of occurences (found results) to execute defined trigger
-- `-tp` | `--tracking_periode` [seconds] = periode during each `triggercount` is accumulated. After that time accumulated count is reseted back to 0
-- `-pt` | `pause_tracking` [seconds] = for what time to pause the script after processed execution (it helps to estabilish the running before starting checking the log again)
-
-
-## [Optional]  Run the service on background
-> [!NOTE]
-> Steps below expects you are running Lodestar beacon under `tekubeacon` service.
-
-Set files ownership
-```
-sudo chown tekubeacon:tekubeacon /usr/local/bin/tekubeacon_logmonitor.sh
-```
-```
-sudo chown tekueacon:tekubeacon /usr/local/etc/teku_tracking_records.txt
-```
-
-### Download service file
-- Download a service file `tekubeacon_logmonitor.service` for running `tekubeacon_logmonitor.sh` on system backgorund
-```
-sudo curl -o /etc/systemd/system/tekubeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/Beacon%20Log%20Monitor/tekubeacon_logmonitor.service
-```
-

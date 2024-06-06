@@ -121,6 +121,10 @@ Sample:
 ```
 
 ## Running executer
+Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
+
+`logmonitor_executer.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename its default name `logmonitor_executer.sh` for your custom client-based related name.
+
 - Check the `logmonitor_executer.sh` script
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executer.sh
@@ -133,7 +137,20 @@ sudo curl -o /usr/local/logmonitor.sh https://raw.githubusercontent.com/Stakers-
 ```
 sudo chmod +x /usr/local/bin/logmonitor_executer.sh
 ```
-- Launch the shell script checker `/usr/local/bin/logmonitor.sh` with attached arguments
+- Open the file and configurate execution actions
+```
+sudo nano /usr/local/bin/logmonitor_executer.sh
+```
+- Activate executor with adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`.
+```
+/usr/local/bin/logmonitor.sh --service "serviceName" --targets="definition_file" --executer_trigger_pause="MaxnabledTimeFromPreviousLogLine" ...
+```
+Sample:
+```
+/usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt" --executer_trigger_pause="500" ...
+```
+
+
 
 
 

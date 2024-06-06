@@ -110,6 +110,7 @@ load_execution_processor
 last_reset=$(date +%s)
 # infinite loop - monitoring is repetitive activity
 while true; do
+    # On each nnew line
     journalctl -fu $service_name | while read -r line; do
         current_time=$(date +%s)
 
@@ -128,6 +129,7 @@ while true; do
             # reset / remove previous timer (through different shell with sleep timer - trap - SIGINT)
             
             # set new timer (sleep with certain action afterward)
+            # logmonitor_sleeper.sh $ $serviceName
 
             local timeSincePreviousLog=$((current_time - previous_log_time))
             if (( timeSincePreviousLog > log_maxwaitingtime )); then
@@ -155,6 +157,8 @@ while true; do
                 fi
 
                 # Execution processor
+                    # If this would be move into executor, there's possible to set individual trigger count for any error separately (special trigger config file)
+                        # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
                 # Process action if occurancy count is higher than $executer_trigger_count
                 if [[ ${occ_counts_arr["$occKey"]} -ge $executer_trigger_count ]]; then
                     echo "$service_name log monitor | $current_time || $occKey | count: $occ_counts_arr["$occKey"]"
