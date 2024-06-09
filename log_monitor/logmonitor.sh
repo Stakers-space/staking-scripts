@@ -23,10 +23,6 @@ use_shell_parameters() {
     TEMP=$(getopt -o s:tf:lt:ex:etc:ett:etd: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_count:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
     eval set -- "$TEMP"
 
-    # requests
-    [ "$1" = "version" ] && get_version && return
-    [ "$1" = "help" ] && get_help && return
-
     # params
     while true; do
         case "$1" in
@@ -49,8 +45,10 @@ use_shell_parameters() {
 }
 
 init_config() {
-    # override values with values from params, if attached
     if [ $# -gt 0 ]; then
+        [ "$1" = "version" ] && get_version && return
+        [ "$1" = "help" ] && get_help && return
+         # override values with values from params, if attached
         use_shell_parameters "$@"
     else
         echo "No parameters attached"
@@ -67,7 +65,7 @@ init_config() {
     echo "    └── delay:     $executor_trigger_pause [seconds] | delay time after execution- time for servicrs estabilishment before continuing in the script"
     
 }
-init_config
+init_config "$@"
 
 declare -A tracked_occurances_arr # from $targets_file file
 load_tracking_targets (){

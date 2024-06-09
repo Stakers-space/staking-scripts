@@ -16,7 +16,7 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lo
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
+sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
 ```
 - Enable execution of the shell script
 ```
