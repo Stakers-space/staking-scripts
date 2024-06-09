@@ -95,24 +95,6 @@ load_execution_processor() {
     fi
 }
 
-init_config() {
-    if [ $# -eq 0 ]; then
-        echo "No parameters attached. See 'help' for more info"
-        print_variables
-        exit 1
-    else
-        [ "$1" = "version" ] && get_version && return
-        [ "$1" = "help" ] && get_help && return
-         # override values with values from params, if attached
-        use_shell_parameters "$@"
-    fi
-}
-init_config "$@"
-load_tracking_targets
-load_execution_processor
-print_variables
-
-
 ##########
 ## Monitor
 last_reset=$(date +%s)
@@ -175,3 +157,20 @@ while true; do
     done
 done
 
+init_config() {
+    if [ $# -eq 0 ]; then
+        echo "No parameters attached. See 'help' for more info"
+        print_variables
+        exit 1
+    else
+        [ "$1" = "version" ] && get_version && return
+        [ "$1" = "help" ] && get_help && return
+    fi
+}
+init_config "$@"
+ # override values with values from params, if attached
+use_shell_parameters "$@"
+# load other data
+load_tracking_targets
+load_execution_processor
+print_variables
