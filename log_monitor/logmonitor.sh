@@ -152,81 +152,70 @@ if ! systemctl is-active --quiet "$service_name"; then
     exit 1
 fi
 
-last_reset=$(date +%s)
-last_log_time=$last_reset
-# infinite loop - monitoring is repetitive activity
-#while true; do
-    # On each new line
-    journalctl -fu $service_name | while read -r line; do
-        current_time=$(date +%s)
-        last_log_time=$current_time
-        echo "$service_name LogMonitor | $current_time | new line"
-        # echo "$service_name LogMonitor | $current_time | new line $line"
-
-        if [ "$execution_processor" -eq 1 ]; then
-            # Reset intervals after $executor_trigger_periode
-            if (( current_time - last_reset > executor_trigger_periode )); then
-                for occKey in "${!occ_counts_arr[@]}"; do
-                    occ_counts_arr["$occKey"]=0
-                done
-                echo "$service_name log monitor | Occurancies counts reseted to 0"
-                last_reset=$current_time
-            fi
-        fi
-
-        # iterate over realtime log and check it for tracked_occurances_arr states
-        #$ {!tracked_occurances_arr[@]} returns list of all keys
-        for occKey in "${!tracked_occurances_arr[@]}"; do
-            # tracked string found in the service log
-            if [[ "$line" == *"${tracked_occurances_arr[$occKey]}"* ]]; then
-                # increase numer of counts for detected error
-                ((occ_counts_arr["$occKey"]++))
-                
-                echo "!!! $tracked_occurances_arr[$occKey] detected | hits counter: ${occ_counts_arr["$occKey"]} in last $executor_trigger_periode seconds"
-                
-                if [ "$execution_processor" -ne 1 ]; then
-                    return
-                fi
-
-                # Execution processor
-                    # If this would be move into executor, there's possible to set individual trigger count for any error separately (special trigger config file)
-                        # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
-                # Process action if occurancy count is higher than $executor_trigger_count
-                if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
-                    echo "$service_name log monitor | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
-
-                    # Execute action
-                    "$executor_shell" "$occKey" "$service_name"
-
-                    # Reset occurancy counters back to 0
-                    occ_counts_arr["$occKey"]=0
-
-                    echo "$service_name log monitor  | Paused for $executor_trigger_pause seconds"
-                    sleep $executor_trigger_pause
-                fi
-            fi
-        done
-    done
-#    sleep 1
-#done
-
+last_log_time=$(date +%s)
 while true; do
     if [ "$log_maxwaitingtime" -gt 0 ]; then
-            # set new timer (sleep with certain action afterward). It's done through new timer file as this action is triggered only on newly added log line
-            # Script below owerride previous
-            #( # asynchronous code - do not block the stream
-            #    /usr/local/bin/logmonitor_sleeper.sh "nolog" "$service_name" "$log_maxwaitingtime"
-            #) &
-            current_time=$(date +%s)
-            local TimeFromlastLog = $current_time-$last_log_time
-            echo "$current_time Stucked lock check | Time from last log: {$current_time-$last_log_time}"
-            # Kontrola, zda od posledního logu uplynulo více než timeout_duration
-            if (( current_time - last_log_time > log_maxwaitingtime )); then
-                # execute
-                "$executor_shell" "CLIENT" "$service_name"
-                last_log_time=$current_time  # Reset času posledního logu po upozornění
+        current_time=$(date +%s)
+
+        local TimeFromlastLog = $current_time-$last_log_time
+        echo "$current_time Stucked log check | Time from last log: {$current_time-$last_log_time}"
+
+        if (( current_time - last_log_time > log_maxwaitingtime )); then
+            "$executor_shell" "CLIENT" "$service_name"
+            last_log_time=$current_time
+        fi
+    fi
+    sleep 10
+done &
+
+last_reset=$(date +%s)
+# On each new line
+journalctl -fu $service_name | while read -r line; do
+    current_time=$(date +%s)
+    last_log_time=$current_time
+    # echo "$service_name LogMonitor | $current_time | new line $line"
+
+    if [ "$execution_processor" -eq 1 ]; then
+        # Reset intervals after $executor_trigger_periode
+        if (( current_time - last_reset > executor_trigger_periode )); then
+            for occKey in "${!occ_counts_arr[@]}"; do
+                occ_counts_arr["$occKey"]=0
+            done
+            echo "$service_name log monitor | Occurancies counts reseted to 0"
+            last_reset=$current_time
+        fi
+     fi
+
+    # iterate over realtime log and check it for tracked_occurances_arr states
+    #$ {!tracked_occurances_arr[@]} returns list of all keys
+    for occKey in "${!tracked_occurances_arr[@]}"; do
+        # tracked string found in the service log
+        if [[ "$line" == *"${tracked_occurances_arr[$occKey]}"* ]]; then
+            # increase numer of counts for detected error
+            ((occ_counts_arr["$occKey"]++))
+                
+            echo "!!! $tracked_occurances_arr[$occKey] detected | hits counter: ${occ_counts_arr["$occKey"]} in last $executor_trigger_periode seconds"
+                
+            if [ "$execution_processor" -ne 1 ]; then
+                return
             fi
 
+            # Execution processor
+                # If this would be move into executor, there's possible to set individual trigger count for any error separately (special trigger config file)
+                    # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
+            # Process action if occurancy count is higher than $executor_trigger_count
+            if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
+                echo "$service_name log monitor | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
+
+                # Execute action
+                "$executor_shell" "$occKey" "$service_name"
+
+                # Reset occurancy counters back to 0
+                occ_counts_arr["$occKey"]=0
+
+                echo "$service_name log monitor  | Paused for $executor_trigger_pause seconds"
+                sleep $executor_trigger_pause
+            fi
         fi
-    sleep 10 #$log_maxwaitingtime
+    done
 done
