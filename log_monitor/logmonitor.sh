@@ -160,11 +160,10 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
             current_time=$(date +%s)
             echo "$current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
             if (( current_time - last_log_time > log_maxwaitingtime )); then
-                echo "!!! No log occured in $log_maxwaitingtime seconds"
+                echo "!!! No log occured in $((current_time - last_log_time)) seconds"
                 if [ "$execution_processor" -eq 1 ]; then
                     "$executor_shell" "CLIENT" "$service_name"
-                done
-                last_log_time=$current_time
+                fi
             fi
         else
             echo "$current_time Monitorin paused | Time from last log: $((current_time - last_log_time)) seconds"
@@ -218,10 +217,11 @@ journalctl -fu $service_name | while read -r line; do
                 # Reset occurancy counters back to 0
                 occ_counts_arr["$occKey"]=0
 
-                echo "$service_name log monitor  | Paused for $executor_trigger_pause seconds"
+                echo "$service_name log monitor | Pause for $executor_trigger_pause seconds"
                 paused=1
                 sleep $executor_trigger_pause
                 paused=0
+                echo "$service_name log monitor | Unpaused after $executor_trigger_pause seconds"
             fi
         fi
     done
