@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/lodestarbeacon_logmonitor.sh
+ExecStart=/usr/local/bin/logmonitor.sh -s="lodestarbeacon" -tf="/usr/local/etc/lodestar_tracking_records.txt" -lt=300 -ex="/usr/local/bin/logmonitor_executor.sh" -etc=100 -ett=360 -etd=1200
 Restart=on-failure
 User=lodestarbeacon
 Group=lodestarbeacon

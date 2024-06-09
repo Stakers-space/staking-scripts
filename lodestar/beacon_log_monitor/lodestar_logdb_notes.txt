@@ -62,3 +62,22 @@ NETWORK_InconsistentState: echo 'Error: Inconsistent state, blobSidecar blockRoo
 # [network] ... Resp error method=blob_sidecars_by_root, client=...
 # Error: Inconsistent state, blobSidecar blockRoot=...
 #   at onBlobSidecarsByRoot (file://...)
+
+
+
+
+
+
+
+NETWORK_ECONNREFUSED@Error: Connect ECONNREFUSED
+NETWORK_INVALIDREQUEST@Error: RESPONSE_ERROR_INVALID_REQUEST: stream reset
+NETWORK_TIMEOUT@Error: Timeout
+NETWORK_UnexpectedEnd@Error: unexpected end of input
+NETWORK_ErrorDial@Error: REQUEST_ERROR_DIAL_ERROR
+NETWORK_RATELIMIT@Error: Request_Error_RATE_LIMITED
+NETWORK_MaxPeerAddr@CodeError: Peer had more than maxPeerAddrsToDial
+NETWORK_MulltiaddrAggr@AggregateCodeError: All multiaddr dials failed
+NETWORK_InconsistentState@Error: Inconsistent state, blobSidecar blockRoot=
+PUBLISH_NoPeers@Error: PublishError.NoPeersSubscribedToTopic
+PUBLISH_NoPeers_Pool@Error: Multiple errors on submitPoolSyncCommitteeSignatures
+

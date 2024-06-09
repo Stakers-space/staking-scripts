@@ -11,7 +11,7 @@ Utility consists of scripts, definition file and service files for running the u
 ### Scripts
 - `logmonitor.sh` monitor logs based on specified parameters
 - `logmonitor_sleeper.sh` [optional] is used by `logmonitor.sh` as a timedown checker for triggering if no new line is printed into the log
-- `logmonitor_executer.sh` [optional] is used by `logmonitor.sh` to execute actions. It's attached as a parameter of `logmonitor.sh` and can be individual for any service.
+- `logmonitor_executor.sh` [optional] is used by `logmonitor.sh` to execute actions. It's attached as a parameter of `logmonitor.sh` and can be individual for any service.
 ### Definition file
 - `.txt` file that defined patterns to search in the logs. It's attached as a parameter of `logmonitor.sh` and can be individual for any service.
 ### Service file
@@ -22,7 +22,7 @@ Utility consists of scripts, definition file and service files for running the u
 ├── service_name:       this service log is being tracked"
 ├── targets_file:       [file] list of occurrences for which the log is checked"
 ├── log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service"
-└── executer_shell:     shell executing actions once the trigger is reached [if no filled, no action is applied]"
+└── executor_shell:     shell executing actions once the trigger is reached [if no filled, no action is applied]"
     ├── trigger:        [int] required number of occurances to execute a given action"
     ├── periode:        [seconds] | interval in which @trigger is automatically reseted to 0"
     └── delay:          [seconds] | delay time after execution- time for servicrs estabilishment before continuing in the script"
@@ -85,11 +85,11 @@ Sample:
 ```
 /usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt"
 ```
-The script prints warning if any specified patter is found in the log. It also may process any execution action through `logmonitor_executer.sh` (see running executer section).
+The script prints warning if any specified patter is found in the log. It also may process any execution action through `logmonitor_executor.sh` (see running executer section).
 
 
 ### Monitoring time from previous printed log
-Simple timer that is reseted on each new line printed into the log. If no new line is printed within a specified time, the `logmonitor_sleeper.sh` prints warning. It also may process any execution action through `logmonitor_executer.sh` (see running executer section)
+Simple timer that is reseted on each new line printed into the log. If no new line is printed within a specified time, the `logmonitor_sleeper.sh` prints warning. It also may process any execution action through `logmonitor_executor.sh` (see running executer section)
 - Check the `logmonitor.sh` script
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
@@ -123,23 +123,23 @@ Sample:
 ## Running executer
 Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
-`logmonitor_executer.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename its default name `logmonitor_executer.sh` for your custom client-based related name.
+`logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename its default name `logmonitor_executor.sh` for your custom client-based related name.
 
-- Check the `logmonitor_executer.sh` script
+- Check the `logmonitor_executor.sh` script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executer.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executer.sh
+sudo curl -o /usr/local/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
 ```
 - Enable execution of the shell script
 ```
-sudo chmod +x /usr/local/bin/logmonitor_executer.sh
+sudo chmod +x /usr/local/bin/logmonitor_executor.sh
 ```
 - Open the file and configurate execution actions
 ```
-sudo nano /usr/local/bin/logmonitor_executer.sh
+sudo nano /usr/local/bin/logmonitor_executor.sh
 ```
 - Activate executor with adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`.
 ```
@@ -162,7 +162,7 @@ Sample:
 
 Set files ownership
 ```
-sudo chown tekubeacon:tekubeacon /usr/local/bin/logmonitor_executer.sh
+sudo chown tekubeacon:tekubeacon /usr/local/bin/logmonitor_executor.sh
 ```
 ```
 sudo chown tekueacon:tekubeacon /usr/local/etc/lodestarbeaconlog_patterns.txt

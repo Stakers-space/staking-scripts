@@ -1,0 +1,13 @@
+[Unit]
+Description=Nethermind Log Monitor
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/logmonitor.sh -s="nethermind" -tf="/usr/local/etc/nethermind_tracking_records.txt" -lt=300 -ex="/usr/local/bin/logmonitor_executor.sh" -etc=100 -ett=360 -etd=1200
+Restart=on-failure
+User=nethermind
+Group=nethermind
+
+[Install]
+WantedBy=multi-user.target

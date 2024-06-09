@@ -1,9 +1,7 @@
 #!/bin/bash
 # readme: https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor
 
-
 # move count trigger for execution here
-
 
 occurancyKey=$1
 serviceName=$2
@@ -30,9 +28,11 @@ fi
 case "$occurancyKey" in
     NETWORK) 
         # /usr/local/bin/mullvad_change_server.sh
+        echo "logmonitor_executor | Executing $occurancyKey"
         ;;
     CLIENT)
         #    sudo systemct restart $service
+        echo "logmonitor_executor | Executing $occurancyKey"
         ;;
     # ...
     *)
