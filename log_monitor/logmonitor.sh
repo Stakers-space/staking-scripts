@@ -8,6 +8,7 @@ executor_shell="" #logmonitor_executor.sh
 executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
+paused=0 # paused monitoring
 declare -r version="1.0.1"
 
 print_variables() {
@@ -153,20 +154,24 @@ if ! systemctl is-active --quiet "$service_name"; then
 fi
 
 last_log_time=$(date +%s)
-while true; do
-    if [ "$log_maxwaitingtime" -gt 0 ]; then
-        current_time=$(date +%s)
-
-        local TimeFromlastLog = $current_time-$last_log_time
-        echo "$current_time Stucked log check | Time from last log: {$current_time-$last_log_time}"
-
-        if (( current_time - last_log_time > log_maxwaitingtime )); then
-            "$executor_shell" "CLIENT" "$service_name"
-            last_log_time=$current_time
-        fi
-    fi
-    sleep 10
-done &
+if [ "$log_maxwaitingtime" -gt 0 ]; then
+    while true; do
+        if [ "$paused" -eq 0 ]; then
+            current_time=$(date +%s)
+            echo "$current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
+            if (( current_time - last_log_time > log_maxwaitingtime )); then
+                echo "!!! No log occured in $log_maxwaitingtime seconds"
+                if [ "$execution_processor" -eq 1 ]; then
+                    "$executor_shell" "CLIENT" "$service_name"
+                done
+                last_log_time=$current_time
+            fi
+        else
+            echo "$current_time Monitorin paused | Time from last log: $((current_time - last_log_time)) seconds"
+        done
+        sleep 10
+    done &
+fi
 
 last_reset=$(date +%s)
 # On each new line
@@ -214,7 +219,9 @@ journalctl -fu $service_name | while read -r line; do
                 occ_counts_arr["$occKey"]=0
 
                 echo "$service_name log monitor  | Paused for $executor_trigger_pause seconds"
+                paused=1
                 sleep $executor_trigger_pause
+                paused=0
             fi
         fi
     done
