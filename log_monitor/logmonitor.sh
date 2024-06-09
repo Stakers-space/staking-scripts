@@ -40,13 +40,13 @@ use_shell_parameters() {
     # params
     while true; do
         case "$1" in
-              -s|--service_name) service_name="$2" shift 2 ;;
-             -tf|--targets_file) targets_file="$2" shift 2 ;;
-             -lt|--log_maxwaitingtime) log_maxwaitingtime="$2" shift 2 ;;
-             -ex|--executor_shell) executor_shell="$2" shift 2 ;;
-            -etc|--executor_trigger_count) executor_trigger_count="$2" shift 2 ;;
-            -ett|--executor_trigger_periode) executor_trigger_periode="$2" shift 2 ;;
-            -etd|--executor_trigger_pause) executor_trigger_pause="$2" shift 2 ;;
+            -s|--service_name) service_name="$2" shift 2 ;;
+            -f|--targets_file) targets_file="$2" shift 2 ;;
+            -t|--log_maxwaitingtime) log_maxwaitingtime="$2" shift 2 ;;
+            -x|--executor_shell) executor_shell="$2" shift 2 ;;
+            -c|--executor_trigger_count) executor_trigger_count="$2" shift 2 ;;
+            -d|--executor_trigger_periode) executor_trigger_periode="$2" shift 2 ;;
+            -ep|--executor_trigger_pause) executor_trigger_pause="$2" shift 2 ;;
             --) shift
                 break
                 ;;
