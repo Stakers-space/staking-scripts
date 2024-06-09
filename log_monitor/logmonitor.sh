@@ -167,7 +167,7 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
             fi
         else
             echo "$current_time Monitorin paused | Time from last log: $((current_time - last_log_time)) seconds"
-        done
+        fi
         sleep 10
     done &
 fi
