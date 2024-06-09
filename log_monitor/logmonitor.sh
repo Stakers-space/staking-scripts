@@ -163,7 +163,7 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
     while [ "$paused" -eq 0 ]; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
-        echo "$current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
+        echo "!!! $current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
         if (( current_time - last_log_time > log_maxwaitingtime )); then
             echo "!!! No log occured in $((current_time - last_log_time)) seconds"
             if [ "$execution_processor" -eq 1 ]; then
@@ -193,10 +193,11 @@ journalctl -fu $service_name | while read -r line; do
     fi
 
     # process once per 30 seconds to reduce disk IOs
-    last_log_time=$current_time
     if (( current_time - last_log_time > 30 )); then
         if ! echo "$current_time" > "$lastLogTimeFile"; then
             echo "Error: Failed to write to $lastLogTimeFile"
+        else
+            last_log_time=$current_time
         fi
     fi
 

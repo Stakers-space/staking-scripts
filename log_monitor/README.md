@@ -1,6 +1,6 @@
 # Log monitor and execution service
 
-This utility script monitors each log line of a specified service in real time and checks is for occurancy of defined pattern based on which it may process defined actions
+This utility script monitors each log line of a specified service in real time and checks it for occurancy of defined pattern based on which it may process defined actions
 
 ## Supported patters
 - log line contains certain string (e.g. `Error: PublishError.NoPeersSubscribedToTopic`)
@@ -30,7 +30,7 @@ Utility consists of scripts, definition file and service files for running the u
 ## Installation
 - Check the `logmonitor.sh` script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
+curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
@@ -86,37 +86,21 @@ Sample:
 ```
 The script prints warning if any specified patter is found in the log. It also may process any execution action through `logmonitor_executor.sh` (see running executer section).
 
-
 ### Monitoring time from previous printed log
-Simple timer that is reseted on each new line printed into the log. If no new line is printed within a specified time, the `logmonitor_sleeper.sh` prints warning. It also may process any execution action through `logmonitor_executor.sh` (see running executer section)
-- Check the `logmonitor.sh` script
-```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
-```
-- Download the script to `/usr/local/bin` directory
-```
-sudo curl -o /usr/local/logmonitor_sleeper.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
-```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor_sleeper.sh
-```
-- Launch the shell script checker
-```
-/usr/local/bin/logmonitor.sh --service "serviceName" --executer_trigger_pause="MaxnabledTimeFromPreviousLogLine"
-```
+Simple timer that is reseted on each new line printed into the log. If no new line is printed within a specified time, the `logmonitor.sh` prints warning. It also may process any execution action through `logmonitor_executor.sh` (see running executer section)
+The feature is being activated through attached parameter `--log_maxwaitingtime` specifying maximal enabled meantime between 2 log lines
 Sample:
 ```
-/usr/local/bin/logmonitor.sh --service "serviceName" --executer_trigger_pause="500"
+/usr/local/bin/logmonitor.sh --service "serviceName" --log_maxwaitingtime="500"
 ```
 
 ### Monitoring both at once
 ```
-/usr/local/bin/logmonitor.sh --service "serviceName" --targets="definition_file" --executer_trigger_pause="MaxnabledTimeFromPreviousLogLine"
+/usr/local/bin/logmonitor.sh --service "serviceName" --targets_file="definition_file" --log_maxwaitingtime="MaxnabledTimeFromPreviousLogLine"
 ```
 Sample:
 ```
-/usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt" --executer_trigger_pause="500"
+/usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets_file="/usr/local/etc/lodestarbeaconlog_patterns.txt" --log_maxwaitingtime="500"
 ```
 
 ## Running executor
@@ -148,8 +132,6 @@ Sample:
 ```
 /usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt" --executer_trigger_pause="500" ...
 ```
-
-
 
 
 
