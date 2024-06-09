@@ -35,13 +35,24 @@ get_help() {
 # Set variables from attached parameters
 use_shell_parameters() {
     TEMP=$(getopt -o s:f:t:x:c:d:p: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_count:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
+    #eval set -- "$TEMP"
+
+    echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
+    echo "Params after eval set: $1 $2"
 
     # params
     while true; do
         echo "$1 $2"
         case "$1" in
-            -s|--service_name) service_name="$2" shift 2 
+            -s|--service_name) 
+                echo "Service name: $2"
+                service_name="$2" 
+                shift 2 
+                if [ -z "$service_name" ]; then
+                    echo "Error: No service name specified."
+                    exit 1
+                fi
                 echo "Settings service_name=$service_name" ;;
             -f|--targets_file) targets_file="$2" shift 2 
                 echo "Settings targets_file=$targets_file" ;;
@@ -60,10 +71,7 @@ use_shell_parameters() {
         esac
     done
 
-    if [ -z "$service_name" ]; then
-        echo "Error: No service name specified."
-        exit 1
-    fi
+    
 }
 
 declare -A tracked_occurances_arr # from $targets_file file
