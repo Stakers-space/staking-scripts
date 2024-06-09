@@ -55,7 +55,7 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lo
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/logmonitor_executor_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
+sudo curl -o /usr/local/bin/logmonitor_executor_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
 ```
 - Enable execution of the shell script
 ```
@@ -81,7 +81,7 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lo
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/logmonitor_sleeper_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
+sudo curl -o /usr/local/bin/logmonitor_sleeper_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
 ```
 - Enable execution of the shell script
 ```
@@ -96,7 +96,6 @@ sudo nano /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
 
 ### Log monitor service
 Log monitor service starts the log monitor with active executor and sleeper utility (both optionals) automatically on OS startup.
-
 
 - Download a service file `tekubeacon_logmonitor.service` for running `tekubeacon_logmonitor.sh` on system backgorund
 ```
