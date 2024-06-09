@@ -153,12 +153,15 @@ if ! systemctl is-active --quiet "$service_name"; then
 fi
 
 last_reset=$(date +%s)
+last_log_time=$last_reset
 # infinite loop - monitoring is repetitive activity
-while true; do
+#while true; do
     # On each new line
     journalctl -fu $service_name | while read -r line; do
         current_time=$(date +%s)
-        echo "$service_name LogMonitor | $current_time | New log line occured"
+        last_log_time=$current_time
+        echo "$service_name LogMonitor | $current_time | new line"
+        # echo "$service_name LogMonitor | $current_time | new line $line"
 
         if [ "$execution_processor" -eq 1 ]; then
             # Reset intervals after $executor_trigger_periode
@@ -171,28 +174,6 @@ while true; do
             fi
         fi
 
-        # ( # asynchronous execution
-        #    local timeSincePreviousLog=$((current_time - previous_log_time))
-        #    if (( timeSincePreviousLog > log_maxwaitingtime )); then
-        #        echo "$service_name log monitor | no new log received in "
-        #        if [ "$execution_processor" -eq 1 ]; then
-        #            # Execute action
-        #            "$executer_shell" "nolog" "$service_name"
-        #        fi
-        #    fi
-        #    previous_log_time=$current_time
-        #    "$executor_shell" "$occKey" "$service_name"
-        #    sleep $executor_trigger_pause
-        #) &
-
-        if [ "$log_maxwaitingtime" -gt 0 ]; then
-            # set new timer (sleep with certain action afterward). It's done through new timer file as this action is triggered only on newly added log line
-            # Script below owerride previous
-            ( # asynchronous code - do not block the stream
-                /usr/local/bin/logmonitor_sleeper.sh "nolog" "$service_name" "$log_maxwaitingtime"
-            ) &
-        fi
-        
         # iterate over realtime log and check it for tracked_occurances_arr states
         #$ {!tracked_occurances_arr[@]} returns list of all keys
         for occKey in "${!tracked_occurances_arr[@]}"; do
@@ -201,7 +182,7 @@ while true; do
                 # increase numer of counts for detected error
                 ((occ_counts_arr["$occKey"]++))
                 
-                echo "!!! $tracked_occurances_arr[$occKey] detected | hits counter: $occ_counts_arr[$occKey] in last $executor_trigger_periode seconds"
+                echo "!!! $tracked_occurances_arr[$occKey] detected | hits counter: ${occ_counts_arr["$occKey"]} in last $executor_trigger_periode seconds"
                 
                 if [ "$execution_processor" -ne 1 ]; then
                     return
@@ -212,7 +193,7 @@ while true; do
                         # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
                 # Process action if occurancy count is higher than $executor_trigger_count
                 if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
-                    echo "$service_name log monitor | $current_time || $occKey | count: $occ_counts_arr[$occKey]"
+                    echo "$service_name log monitor | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
 
                     # Execute action
                     "$executor_shell" "$occKey" "$service_name"
@@ -226,4 +207,26 @@ while true; do
             fi
         done
     done
+#    sleep 1
+#done
+
+while true; do
+    if [ "$log_maxwaitingtime" -gt 0 ]; then
+            # set new timer (sleep with certain action afterward). It's done through new timer file as this action is triggered only on newly added log line
+            # Script below owerride previous
+            #( # asynchronous code - do not block the stream
+            #    /usr/local/bin/logmonitor_sleeper.sh "nolog" "$service_name" "$log_maxwaitingtime"
+            #) &
+            current_time=$(date +%s)
+            local TimeFromlastLog = $current_time-$last_log_time
+            echo "$current_time Stucked lock check | Time from last log: {$current_time-$last_log_time}"
+            # Kontrola, zda od posledního logu uplynulo více než timeout_duration
+            if (( current_time - last_log_time > log_maxwaitingtime )); then
+                # execute
+                "$executor_shell" "CLIENT" "$service_name"
+                last_log_time=$current_time  # Reset času posledního logu po upozornění
+            fi
+
+        fi
+    sleep 10 #$log_maxwaitingtime
 done
