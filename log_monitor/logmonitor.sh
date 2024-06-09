@@ -59,6 +59,11 @@ use_shell_parameters() {
                 ;;
         esac
     done
+
+    if [ -z "$service_name" ]; then
+        echo "Error: No service name specified."
+        exit 1
+    fi
 }
 
 declare -A tracked_occurances_arr # from $targets_file file
@@ -95,8 +100,32 @@ load_execution_processor() {
     fi
 }
 
+init_config() {
+    if [ $# -eq 0 ]; then
+        echo "No parameters attached. See 'help' for more info"
+        print_variables
+        exit 1
+    else
+        [ "$1" = "version" ] && get_version && return
+        [ "$1" = "help" ] && get_help && return
+    fi
+}
+init_config "$@"
+ # override values with values from params, if attached
+use_shell_parameters "$@"
+# load other data
+load_tracking_targets
+load_execution_processor
+print_variables
+
+
 ##########
 ## Monitor
+if ! systemctl is-active --quiet "$service_name"; then
+    echo "Service $service_name is not active."
+    exit 1
+fi
+
 last_reset=$(date +%s)
 # infinite loop - monitoring is repetitive activity
 while true; do
@@ -156,21 +185,3 @@ while true; do
         done
     done
 done
-
-init_config() {
-    if [ $# -eq 0 ]; then
-        echo "No parameters attached. See 'help' for more info"
-        print_variables
-        exit 1
-    else
-        [ "$1" = "version" ] && get_version && return
-        [ "$1" = "help" ] && get_help && return
-    fi
-}
-init_config "$@"
- # override values with values from params, if attached
-use_shell_parameters "$@"
-# load other data
-load_tracking_targets
-load_execution_processor
-print_variables

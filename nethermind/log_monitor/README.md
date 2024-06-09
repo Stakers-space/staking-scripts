@@ -12,7 +12,7 @@ This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scrip
 If the shell script is not available, install it
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
+curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
