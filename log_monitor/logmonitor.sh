@@ -34,7 +34,7 @@ get_help() {
 
 # Set variables from attached parameters
 use_shell_parameters() {
-    TEMP=$(getopt -o s:tf:lt:ex:etc:ett:etd: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_count:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
+    TEMP=$(getopt -o s:f:t:x:c:d:p: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_count:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
     eval set -- "$TEMP"
 
     # params
