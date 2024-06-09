@@ -35,32 +35,50 @@ get_help() {
 # Set variables from attached parameters
 use_shell_parameters() {
     TEMP=$(getopt -o s:f:t:x:c:d:p: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_count:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
-    #eval set -- "$TEMP"
-
-    echo "TEMP before eval: $TEMP"
+    #echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
-    echo "Params after eval set: $1 $2"
+    
 
     # params
     while true; do
-        echo "$1 $2"
+        echo "Params after eval set: $1 $2"
         case "$1" in
             -s|--service_name) 
-                echo "Service name: $2"
                 service_name="$2" 
                 shift 2 
                 if [ -z "$service_name" ]; then
                     echo "Error: No service name specified."
                     exit 1
                 fi
-                echo "Settings service_name=$service_name" ;;
-            -f|--targets_file) targets_file="$2" shift 2 
-                echo "Settings targets_file=$targets_file" ;;
-            -t|--log_maxwaitingtime) log_maxwaitingtime="$2" shift 2 ;;
-            -x|--executor_shell) executor_shell="$2" shift 2 ;;
-            -c|--executor_trigger_count) executor_trigger_count="$2" shift 2 ;;
-            -d|--executor_trigger_periode) executor_trigger_periode="$2" shift 2 ;;
-            -p|--executor_trigger_pause) executor_trigger_pause="$2" shift 2 ;;
+                ;;
+            -f|--targets_file) 
+                targets_file="$2" 
+                shift 2
+                if [ -z "$targets_file" ]; then
+                    echo "Error: No target file specified."
+                    exit 1
+                fi
+                ;;
+            -t|--log_maxwaitingtime) 
+                log_maxwaitingtime="$2"
+                shift 2
+                ;;
+            -x|--executor_shell) 
+                executor_shell="$2" 
+                shift 2
+                ;;
+            -c|--executor_trigger_count) 
+                executor_trigger_count="$2" 
+                shift 2
+                ;;
+            -d|--executor_trigger_periode) 
+                executor_trigger_periode="$2" 
+                shift 2
+                ;;
+            -p|--executor_trigger_pause) 
+                executor_trigger_pause="$2" 
+                shift 2
+                ;;
             --) shift
                 break
                 ;;
