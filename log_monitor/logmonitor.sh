@@ -9,7 +9,8 @@ executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
 paused=0 # paused monitoring
-declare -r version="1.0.1"
+lastLogTimeFile=""
+declare -r version="1.0.2"
 
 print_variables() {
     echo "Log Monitor configuration"
@@ -39,7 +40,6 @@ use_shell_parameters() {
     #echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
     
-
     # params
     while true; do
         echo "Params after eval set: $1 $2"
@@ -145,7 +145,6 @@ load_tracking_targets
 load_execution_processor
 print_variables
 
-
 ##########
 ## Monitor
 if ! systemctl is-active --quiet "$service_name"; then
@@ -153,17 +152,22 @@ if ! systemctl is-active --quiet "$service_name"; then
     exit 1
 fi
 
+safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
+lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
+
 last_log_time=$(date +%s)
 if [ "$log_maxwaitingtime" -gt 0 ]; then
     while true; do
         if [ "$paused" -eq 0 ]; then
             current_time=$(date +%s)
+            last_log_time=$(cat $lastLogTimeFile)
             echo "$current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
             if (( current_time - last_log_time > log_maxwaitingtime )); then
                 echo "!!! No log occured in $((current_time - last_log_time)) seconds"
                 if [ "$execution_processor" -eq 1 ]; then
                     "$executor_shell" "CLIENT" "$service_name"
                 fi
+                sleep 100
             fi
         else
             echo "$current_time Monitorin paused | Time from last log: $((current_time - last_log_time)) seconds"
@@ -188,7 +192,14 @@ journalctl -fu $service_name | while read -r line; do
             echo "$service_name log monitor | Occurancies counts reseted to 0"
             last_reset=$current_time
         fi
-     fi
+
+        # process once per 30 seconds to reduce disk IOs
+        if (( current_time - last_log_time > 30 )); then
+            if ! echo "$current_time" > "$lastLogTimeFile"; then
+                echo "Error: Failed to write to $filename"
+            fi
+        fi
+    fi
 
     # iterate over realtime log and check it for tracked_occurances_arr states
     #$ {!tracked_occurances_arr[@]} returns list of all keys
