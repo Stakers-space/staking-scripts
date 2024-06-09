@@ -1,6 +1,6 @@
 # Nethermind log monitor
 
-This utility script monitors nethermind beacon log in real time and check its lines for defined errors. The script allows to set any execution action of nethermind as well as any other service if certain issue is detected. There're attached known issue patterns for the nethermind beacon log service through the `nethermind_tracking_records.txt` file.
+This utility script monitors nethermind log in real time and check its lines for defined errors. The script allows to set any execution action of nethermind as well as any other service if certain issue is detected. There're attached known issue patterns for the nethermind log service through the `nethermind_tracking_records.txt` file.
 
 ## Installation
 This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor) on background and extends it with a custom nethermind related configuration.
@@ -100,7 +100,7 @@ Log monitor service starts the log monitor with active executor and sleeper util
 
 - Download a service file `nethermind_logmonitor.service` for running `nethermind_logmonitor.sh` on system backgorund
 ```
-sudo curl -o /etc/systemd/system/nethermind_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/nethermind/beacon_log_monitor/nethermind_logmonitor.service
+sudo curl -o /etc/systemd/system/nethermind_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/nethermind/log_monitor/nethermind_logmonitor.service
 ```
 - Open the file and modify the configuration, if needed
 ```
