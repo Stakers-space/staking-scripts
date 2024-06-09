@@ -7,15 +7,29 @@ log_maxwaitingtime=1000 #if no new log is received within the time, it may indic
 executor_shell="" #logmonitor_executor.sh
 executor_trigger_count=200
 executor_trigger_periode=600
-executor_trigger_pause=900
+executor_trigger_pause=1200
 declare -r version="1.0.1"
 
+print_variables (){
+    echo "Log Monitor configuration"
+    echo "├── service_name:       $service_name | this service log is being tracked"
+    echo "├── targets_file:       $targets_file [file] list of occurrences for which the log is checked"
+    echo "├── log_maxwaitingtime: $log_maxwaitingtime [seconds] Maximum enabled time between 2 printed logs by the tracked service"
+    echo "└── executor_shell:     $executor_shell shell executing actions once the trigger is reached [if no filled, no action is applied]"
+    echo "    ├── trigger:   $executor_trigger_count [int] required number of occurances to execute a given action"
+    echo "    ├── periode:   $executor_trigger_periode [seconds] | interval in which @trigger is automatically reseted to 0"
+    echo "    └── delay:     $executor_trigger_pause [seconds] | delay time after execution- time for servicrs estabilishment before continuing in the script"
+}
+
 get_version() {
-  echo -e "LogMonitor version: $version | Powered by https://stakers.space"
+    echo -e "LogMonitor version: $version | Powered by https://stakers.space"
+    exit 0
 }
 
 get_help() {
     echo "https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor"
+    print_variables
+    exit 0
 }
 
 # Set variables from attached parameters
@@ -27,7 +41,7 @@ use_shell_parameters() {
     while true; do
         case "$1" in
               -s|--service_name) service_name="$2" shift 2 ;;
-             -tf|--targets_file) targets_file="$2" shift 2 ;; # optioal in log_maxwaitingtime mode
+             -tf|--targets_file) targets_file="$2" shift 2 ;;
              -lt|--log_maxwaitingtime) log_maxwaitingtime="$2" shift 2 ;;
              -ex|--executor_shell) executor_shell="$2" shift 2 ;;
             -etc|--executor_trigger_count) executor_trigger_count="$2" shift 2 ;;
@@ -43,29 +57,6 @@ use_shell_parameters() {
         esac
     done
 }
-
-init_config() {
-    if [ $# -gt 0 ]; then
-        [ "$1" = "version" ] && get_version && return
-        [ "$1" = "help" ] && get_help && return
-         # override values with values from params, if attached
-        use_shell_parameters "$@"
-    else
-        echo "No parameters attached"
-        exit 1
-    fi
-
-    echo "Log Monitor configuration"
-    echo "├── service_name:       $service_name | this service log is being tracked"
-    echo "├── targets_file:       $targets_file [file] list of occurrences for which the log is checked"
-    echo "├── log_maxwaitingtime: $log_maxwaitingtime [seconds] Maximum enabled time between 2 printed logs by the tracked service"
-    echo "└── executor_shell:     $executor_shell shell executing actions once the trigger is reached [if no filled, no action is applied]"
-    echo "    ├── trigger:   $executor_trigger_count [int] required number of occurances to execute a given action"
-    echo "    ├── periode:   $executor_trigger_periode [seconds] | interval in which @trigger is automatically reseted to 0"
-    echo "    └── delay:     $executor_trigger_pause [seconds] | delay time after execution- time for servicrs estabilishment before continuing in the script"
-    
-}
-init_config "$@"
 
 declare -A tracked_occurances_arr # from $targets_file file
 load_tracking_targets (){
@@ -90,7 +81,6 @@ load_tracking_targets (){
         tracked_occurances_arr["$occKey"]="$occString"
     done < "$targets_file"
 }
-load_tracking_targets
 
 execution_processor=0
 load_execution_processor() {
@@ -100,8 +90,20 @@ load_execution_processor() {
         execution_processor=1
     fi
 }
-load_execution_processor
 
+init_config() {
+    if [ $# -eq 0 ]; then
+        echo "No parameters attached"
+    else
+        [ "$1" = "version" ] && get_version && return
+        [ "$1" = "help" ] && get_help && return
+         # override values with values from params, if attached
+        use_shell_parameters "$@" 
+        load_tracking_targets
+        load_execution_processor
+    fi
+    print_variables
+}
 
 ##########
 ## Monitor
@@ -164,3 +166,5 @@ while true; do
         done
     done
 done
+
+init_config "$@"

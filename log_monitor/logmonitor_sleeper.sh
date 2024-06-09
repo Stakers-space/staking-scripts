@@ -13,6 +13,7 @@ declare -r version="1.0.1"
 
 get_version() {
   echo -e "LogMonitor version: $version | Powered by https://stakers.space"
+  exit 0
 }
 
 # requests
