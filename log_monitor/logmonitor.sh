@@ -201,7 +201,7 @@ while true; do
                 # increase numer of counts for detected error
                 ((occ_counts_arr["$occKey"]++))
                 
-                echo "!!! $tracked_occurances_arr[$occKey] detected | hits counter: $occKey hits $occ_counts_arr["$occKey"] in last $executor_trigger_periode seconds"
+                echo "!!! $tracked_occurances_arr[$occKey] detected | hits counter: $occ_counts_arr[$occKey] in last $executor_trigger_periode seconds"
                 
                 if [ "$execution_processor" -ne 1 ]; then
                     return
@@ -212,7 +212,7 @@ while true; do
                         # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
                 # Process action if occurancy count is higher than $executor_trigger_count
                 if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
-                    echo "$service_name log monitor | $current_time || $occKey | count: $occ_counts_arr["$occKey"]"
+                    echo "$service_name log monitor | $current_time || $occKey | count: $occ_counts_arr[$occKey]"
 
                     # Execute action
                     "$executor_shell" "$occKey" "$service_name"
