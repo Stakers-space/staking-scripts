@@ -55,15 +55,15 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lo
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor_executor_nethermind.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
+sudo curl -o /usr/local/bin/logmonitor_executor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
 ```
 - Enable execution of the shell script
 ```
-sudo chmod +x /usr/local/bin/logmonitor_executor_nethermind.sh
+sudo chmod +x /usr/local/bin/logmonitor_executor.sh
 ```
 - Open the file and configurate execution actions
 ```
-sudo nano /usr/local/bin/logmonitor_executor_nethermind.sh
+sudo nano /usr/local/bin/logmonitor_executor.sh
 ```
 - Executor is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
 
@@ -81,15 +81,15 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lo
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor_sleeper_nethermind.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
-```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor_sleeper_nethermind.sh
+sudo curl -o /usr/local/bin/logmonitor_sleeper.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
 ```
 - Open the file and configurate execution actions
 ```
-sudo nano /usr/local/bin/logmonitor_sleeper_nethermind.sh
+sudo nano /usr/local/bin/logmonitor_sleeper.sh
+```
+- Enable execution of the shell script
+```
+sudo chmod +x /usr/local/bin/logmonitor_sleeper.sh
 ```
 - Sleeper is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
 

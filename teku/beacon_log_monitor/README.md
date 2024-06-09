@@ -83,13 +83,13 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lo
 ```
 sudo curl -o /usr/local/bin/logmonitor_sleeper_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
 ```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
-```
 - Open the file and configurate execution actions
 ```
 sudo nano /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
+```
+- Enable execution of the shell script
+```
+sudo chmod +x /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
 ```
 - Sleeper is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
 
