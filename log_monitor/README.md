@@ -10,7 +10,6 @@ This utility script monitors each log line of a specified service in real time a
 Utility consists of scripts, definition file and service files for running the utility on the background
 ### Scripts
 - `logmonitor.sh` monitor logs based on specified parameters
-- `logmonitor_sleeper.sh` [optional] is used by `logmonitor.sh` as a timedown checker for triggering if no new line is printed into the log
 - `logmonitor_executor.sh` [optional] is used by `logmonitor.sh` to execute actions. It's attached as a parameter of `logmonitor.sh` and can be individual for any service.
 ### Definition file
 - `.txt` file that defined patterns to search in the logs. It's attached as a parameter of `logmonitor.sh` and can be individual for any service.
@@ -120,7 +119,7 @@ Sample:
 /usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt" --executer_trigger_pause="500"
 ```
 
-## Running executer
+## Running executor
 Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename its default name `logmonitor_executor.sh` for your custom client-based related name.

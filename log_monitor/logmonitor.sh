@@ -8,9 +8,11 @@ executor_shell="" #logmonitor_executor.sh
 executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
-paused=0 # paused monitoring
-lastLogTimeFile=""
 declare -r version="1.0.2"
+
+lastLogTimeFile=""
+paused=1 # paused monitoring
+(sleep 120; paused=0) &
 
 print_variables() {
     echo "Log Monitor configuration"
@@ -157,20 +159,17 @@ lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
 
 last_log_time=$(date +%s)
 if [ "$log_maxwaitingtime" -gt 0 ]; then
-    while true; do
-        if [ "$paused" -eq 0 ]; then
-            current_time=$(date +%s)
-            last_log_time=$(cat $lastLogTimeFile)
-            echo "$current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
-            if (( current_time - last_log_time > log_maxwaitingtime )); then
-                echo "!!! No log occured in $((current_time - last_log_time)) seconds"
-                if [ "$execution_processor" -eq 1 ]; then
-                    "$executor_shell" "CLIENT" "$service_name"
-                fi
-                sleep 100
+    # start with 1 minute delay
+    while [ "$paused" -eq 0 ]; do
+        current_time=$(date +%s)
+        last_log_time=$(cat $lastLogTimeFile)
+        echo "$current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
+        if (( current_time - last_log_time > log_maxwaitingtime )); then
+            echo "!!! No log occured in $((current_time - last_log_time)) seconds"
+            if [ "$execution_processor" -eq 1 ]; then
+                "$executor_shell" "CLIENT" "$service_name"
             fi
-        else
-            echo "$current_time Monitorin paused | Time from last log: $((current_time - last_log_time)) seconds"
+            sleep 100
         fi
         sleep 10
     done &
@@ -180,7 +179,6 @@ last_reset=$(date +%s)
 # On each new line
 journalctl -fu $service_name | while read -r line; do
     current_time=$(date +%s)
-    last_log_time=$current_time
     # echo "$service_name LogMonitor | $current_time | new line $line"
 
     if [ "$execution_processor" -eq 1 ]; then
@@ -192,12 +190,13 @@ journalctl -fu $service_name | while read -r line; do
             echo "$service_name log monitor | Occurancies counts reseted to 0"
             last_reset=$current_time
         fi
+    fi
 
-        # process once per 30 seconds to reduce disk IOs
-        if (( current_time - last_log_time > 30 )); then
-            if ! echo "$current_time" > "$lastLogTimeFile"; then
-                echo "Error: Failed to write to $filename"
-            fi
+    # process once per 30 seconds to reduce disk IOs
+    last_log_time=$current_time
+    if (( current_time - last_log_time > 30 )); then
+        if ! echo "$current_time" > "$lastLogTimeFile"; then
+            echo "Error: Failed to write to $lastLogTimeFile"
         fi
     fi
 
