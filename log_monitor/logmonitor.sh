@@ -94,14 +94,16 @@ load_execution_processor() {
 
 init_config() {
     if [ $# -eq 0 ]; then
-        echo "No parameters attached"
+        echo "No parameters attached. See 'help' for more info"
+        print_variables
+        exit 1
     else
         [ "$1" = "version" ] && get_version && return
         [ "$1" = "help" ] && get_help && return
          # override values with values from params, if attached
-        use_shell_parameters "$@" 
+        use_shell_parameters "$@"
+        print_variables
     fi
-    print_variables
 }
 init_config "$@"
 load_tracking_targets
