@@ -171,10 +171,26 @@ while true; do
             fi
         fi
 
+        # ( # asynchronous execution
+        #    local timeSincePreviousLog=$((current_time - previous_log_time))
+        #    if (( timeSincePreviousLog > log_maxwaitingtime )); then
+        #        echo "$service_name log monitor | no new log received in "
+        #        if [ "$execution_processor" -eq 1 ]; then
+        #            # Execute action
+        #            "$executer_shell" "nolog" "$service_name"
+        #        fi
+        #    fi
+        #    previous_log_time=$current_time
+        #    "$executor_shell" "$occKey" "$service_name"
+        #    sleep $executor_trigger_pause
+        #) &
+
         if [ "$log_maxwaitingtime" -gt 0 ]; then
             # set new timer (sleep with certain action afterward). It's done through new timer file as this action is triggered only on newly added log line
             # Script below owerride previous
-            /usr/local/bin/logmonitor_sleeper.sh "nolog" "$service_name" "$log_maxwaitingtime"
+            ( # asynchronous code - do not block the stream
+                /usr/local/bin/logmonitor_sleeper.sh "nolog" "$service_name" "$log_maxwaitingtime"
+            ) &
         fi
         
         # iterate over realtime log and check it for tracked_occurances_arr states
