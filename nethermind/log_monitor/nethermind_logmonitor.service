@@ -4,7 +4,6 @@ After=network.target
 
 [Service]
 Type=simple
-s:f:t:x:c:d:p
 ExecStart=/usr/local/bin/logmonitor.sh -s "nethermind" -f "/usr/local/etc/nethermind_tracking_records.txt" -t 300 -x "/usr/local/bin/logmonitor_executor.sh" -c 100 -d 360 -p 1200
 Restart=on-failure
 User=nethermind

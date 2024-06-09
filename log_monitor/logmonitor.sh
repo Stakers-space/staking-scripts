@@ -39,9 +39,12 @@ use_shell_parameters() {
 
     # params
     while true; do
+        echo "$1 $2"
         case "$1" in
-            -s|--service_name) service_name="$2" shift 2 ;;
-            -f|--targets_file) targets_file="$2" shift 2 ;;
+            -s|--service_name) service_name="$2" shift 2 
+                echo "Settings service_name=$service_name" ;;
+            -f|--targets_file) targets_file="$2" shift 2 
+                echo "Settings targets_file=$targets_file" ;;
             -t|--log_maxwaitingtime) log_maxwaitingtime="$2" shift 2 ;;
             -x|--executor_shell) executor_shell="$2" shift 2 ;;
             -c|--executor_trigger_count) executor_trigger_count="$2" shift 2 ;;
@@ -51,7 +54,7 @@ use_shell_parameters() {
                 break
                 ;;
             *)
-                echo "Warning | Unknown parameter $2"
+                echo "Warning | Unknown parameter $2 | all parameters $@"
                 exit 1
                 ;;
         esac
@@ -102,12 +105,12 @@ init_config() {
         [ "$1" = "help" ] && get_help && return
          # override values with values from params, if attached
         use_shell_parameters "$@"
-        print_variables
     fi
 }
 init_config "$@"
 load_tracking_targets
 load_execution_processor
+print_variables
 
 
 ##########
