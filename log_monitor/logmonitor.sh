@@ -10,7 +10,7 @@ executor_trigger_periode=600
 executor_trigger_pause=1200
 declare -r version="1.0.1"
 
-print_variables (){
+print_variables() {
     echo "Log Monitor configuration"
     echo "├── service_name:       $service_name | this service log is being tracked"
     echo "├── targets_file:       $targets_file [file] list of occurrences for which the log is checked"
@@ -86,6 +86,7 @@ execution_processor=0
 load_execution_processor() {
     if [ ! -f "$executor_shell" ]; then
         echo "[Warn] $executor_shell not found / defined - running log monitor without execution processor"
+        exit 1
     else
         execution_processor=1
     fi
