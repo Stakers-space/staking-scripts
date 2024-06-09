@@ -151,6 +151,7 @@ print_variables
 safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
 lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
 save_lastLogTime() {
+    echo "Saving last log time $1"
     if ! echo "$current_time" > "$lastLogTimeFile"; then
         echo "Error: Failed to write to $lastLogTimeFile"
     else
@@ -173,7 +174,7 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
     while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
-        echo "!!! $current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
+        echo "!!! [CLIENT] Stucked log check | Last log Time: $last_log_time | Now: $current_time || Time from last log: $((current_time - last_log_time)) seconds | Max meantime: $log_maxwaitingtime"
         if (( current_time - last_log_time > log_maxwaitingtime )); then
             echo "!!! No log occured in $((current_time - last_log_time)) seconds"
             if [ "$execution_processor" -eq 1 ]; then
@@ -208,6 +209,7 @@ journalctl -fu $service_name | while read -r line; do
     # process once per 30 seconds to reduce disk IOs
     if (( current_time - last_log_time > 30 )); then
         save_lastLogTime $current_time
+        last_log_time=$current_time
     fi
 
     # iterate over realtime log and check it for tracked_occurances_arr states
