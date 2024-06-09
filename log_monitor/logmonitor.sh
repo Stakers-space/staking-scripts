@@ -61,7 +61,7 @@ use_shell_parameters() {
 declare -A tracked_occurances_arr # from $targets_file file
 load_tracking_targets (){
     if [ ! -f "$targets_file" ]; then
-        echo "$targets_file not found / accessible."
+        echo "load_tracking_targets: $targets_file not found / accessible. Target File parameter is required!"
         exit 1
     fi
 
@@ -85,7 +85,7 @@ load_tracking_targets (){
 execution_processor=0
 load_execution_processor() {
     if [ ! -f "$executor_shell" ]; then
-        echo "[Warn] $executor_shell not found / defined - running log monitor without execution processor"
+        echo "[Warn] load_execution_processor: $executor_shell not found / defined - running log monitor without execution processor"
         exit 1
     else
         execution_processor=1
@@ -100,11 +100,13 @@ init_config() {
         [ "$1" = "help" ] && get_help && return
          # override values with values from params, if attached
         use_shell_parameters "$@" 
-        load_tracking_targets
-        load_execution_processor
     fi
     print_variables
 }
+init_config "$@"
+load_tracking_targets
+load_execution_processor
+
 
 ##########
 ## Monitor
@@ -168,4 +170,3 @@ while true; do
     done
 done
 
-init_config "$@"
