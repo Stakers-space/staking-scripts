@@ -46,7 +46,7 @@ use_shell_parameters() {
             -x|--executor_shell) executor_shell="$2" shift 2 ;;
             -c|--executor_trigger_count) executor_trigger_count="$2" shift 2 ;;
             -d|--executor_trigger_periode) executor_trigger_periode="$2" shift 2 ;;
-            -ep|--executor_trigger_pause) executor_trigger_pause="$2" shift 2 ;;
+            -p|--executor_trigger_pause) executor_trigger_pause="$2" shift 2 ;;
             --) shift
                 break
                 ;;
