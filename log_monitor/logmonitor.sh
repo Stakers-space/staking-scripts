@@ -148,27 +148,39 @@ load_execution_processor
 print_variables
 
 ##########
+safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
+lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
+save_lastLogTime() {
+    if ! echo "$current_time" > "$lastLogTimeFile"; then
+        echo "Error: Failed to write to $lastLogTimeFile"
+    else
+        last_log_time=$1
+    fi
+}
+
 ## Monitor
 if ! systemctl is-active --quiet "$service_name"; then
     echo "Service $service_name is not active."
     exit 1
 fi
 
-safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
-lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
+
 
 last_log_time=$(date +%s)
 if [ "$log_maxwaitingtime" -gt 0 ]; then
+    save_lastLogTime $(date +%s)
     # start with 1 minute delay
-    while [ "$paused" -eq 0 ]; do
+    while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
         echo "!!! $current_time Stucked log check | Time from last log: $((current_time - last_log_time)) seconds"
         if (( current_time - last_log_time > log_maxwaitingtime )); then
             echo "!!! No log occured in $((current_time - last_log_time)) seconds"
             if [ "$execution_processor" -eq 1 ]; then
+                # restart client
                 "$executor_shell" "CLIENT" "$service_name"
             fi
+            # time for start
             sleep 100
         fi
         sleep 10
@@ -194,11 +206,7 @@ journalctl -fu $service_name | while read -r line; do
 
     # process once per 30 seconds to reduce disk IOs
     if (( current_time - last_log_time > 30 )); then
-        if ! echo "$current_time" > "$lastLogTimeFile"; then
-            echo "Error: Failed to write to $lastLogTimeFile"
-        else
-            last_log_time=$current_time
-        fi
+        save_lastLogTime $current_time
     fi
 
     # iterate over realtime log and check it for tracked_occurances_arr states
