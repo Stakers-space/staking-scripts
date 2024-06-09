@@ -11,8 +11,8 @@ executor_trigger_pause=1200
 declare -r version="1.0.2"
 
 lastLogTimeFile=""
-paused=1 # paused monitoring
-(sleep 120; paused=0) &
+paused=0 # paused monitoring
+#(sleep 120; paused=0) &
 
 print_variables() {
     echo "Log Monitor configuration"
@@ -169,7 +169,7 @@ fi
 last_log_time=$(date +%s)
 if [ "$log_maxwaitingtime" -gt 0 ]; then
     save_lastLogTime $(date +%s)
-    # start with 1 minute delay
+
     while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
@@ -178,12 +178,13 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
             echo "!!! No log occured in $((current_time - last_log_time)) seconds"
             if [ "$execution_processor" -eq 1 ]; then
                 # restart client
-                "$executor_shell" "CLIENT" "$service_name"
+                "$executor_shell" "NOLOG" "$service_name"
             fi
-            # time for start
+            # pause after restart
             sleep 100
         fi
-        sleep 10
+        # run in $log_maxwaitingtime interval
+        sleep $log_maxwaitingtime
     done &
 fi
 

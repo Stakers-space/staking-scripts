@@ -35,6 +35,10 @@ case "$occurancyKey" in
         #    sudo systemct restart $service
         echo "logmonitor_executor | Executing $occurancyKey"
         ;;
+    NOLOG)
+        #    sudo systemct restart $service
+        echo "logmonitor_executor | Executing $occurancyKey"
+        ;;
     # ...
     *)
     echo "Warning | Unknown parameter $1"
