@@ -8,21 +8,22 @@ Installed Mullvad VPN client on the Ubuntu Server
 
 ## Shell script Installation
 From a home directory
+1. View the script
 ```
-cd ~
+curl -o- https://raw.githubusercontent.com/Stakers-space/ShellScripts/main/mullvad/server-change/mullvad_change_server.sh
+
+```
+2. Download the script
+```
+sudo curl -o /usr/local/bin/mullvad_change_server.sh https://raw.githubusercontent.com/Stakers-space/ShellScripts/main/mullvad/server-change/mullvad_change_server.sh
 ```
 
-1. Download the script
+3. Open and check the downloaded script
 ```
-curl -o https://raw.githubusercontent.com/Stakers-space/ShellScripts/main/mullvad/server-change/mullvad_change_server.sh
-```
-
-2. Open and check the downloaded script
-```
-nano ~/mullvad_change_server.sh
+sudo nano /usr/local/bin/mullvad_change_server.sh
 ```
 
-3. Edit `RELAY_LOCATIONS` configuration in opened script
+4. Edit `RELAY_LOCATIONS` configuration in opened script
 Within the opened shell script `mullvad_change_server.sh`, find array `RELAY_LOCATIONS`, see below:
 ```
 # List with preferred VPN server locations
@@ -30,17 +31,13 @@ RELAY_LOCATIONS=("cz prg" "de fra" "de ber" "de dus" "at vie" "pl waw" "sk bts")
 ```
 Replace its content `"cz prg" "de fra" "de ber" "de dus" "at vie" "pl waw" "sk bts"` for your preferred geo location (nearest to your node) from [https://mullvad.net/en/servers](https://mullvad.net/en/servers).
 
-4. Move the script to `/usr/local/bin` directory
-```
-sudo mv ~/mullvad_change_server.sh /usr/local/bin
-```
 
-4. Enable execution of the shell script
+5. Enable execution of the shell script
 ```
 sudo chmod +x /usr/local/bin/mullvad_change_server.sh
 ```
 
-5. From scripts and services, within which you detect an issue with a internet connection, process the file
+6. From scripts and services, within which you detect an issue with a internet connection, process the file
 ```
 /usr/local/bin/mullvad_change_server.sh
 ```
