@@ -34,7 +34,7 @@ curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
+sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
 ```
 - Enable execution of the shell script
 ```
@@ -111,19 +111,19 @@ Executor utility allows to execute any acction when certain pattern is reached (
 
 - Check the `logmonitor_executor.sh` script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
-```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor_executor.sh
+sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Open the file and configurate execution actions
 ```
 sudo nano /usr/local/bin/logmonitor_executor.sh
+```
+- Enable execution of the shell script
+```
+sudo chmod +x /usr/local/bin/logmonitor_executor.sh
 ```
 - Activate executor with adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`.
 ```
@@ -135,40 +135,9 @@ Sample:
 ```
 
 
-
 ## Service files configuration
-
-## [Optional]  Run the service on background
-> [!NOTE]
-> Steps below expects you are running Lodestar beacon under `tekubeacon` service.
-
-Set files ownership
-```
-sudo chown tekubeacon:tekubeacon /usr/local/bin/logmonitor_executor.sh
-```
-```
-sudo chown tekueacon:tekubeacon /usr/local/etc/lodestarbeaconlog_patterns.txt
-```
-
-- Define service file
-- Start the service
-Enable the service
-```
-sudo systemctl enable customName_logmonitor.service
-```
-Start the service
-```
-sudo systemctl start customName_logmonitor.service
-```
-
-### Monitor the service
-```
-systemctl status customName_logmonitor.service
-```
-```
-journalctl -fu customName_logmonitor.service
-```
-Monitor the service together with tekubeacon service
-```
-journalctl -f -u customName.service -u customName_logmonitor.service
-```
+Configurate serivce file and run the logmonitor under a service on background.
+Example services:
+- [Nethermind Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/nethermind/log_monitor)
+- [Lodestar Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/lodestar/beacon_log_monitor)
+...
