@@ -28,16 +28,21 @@ fi
 
 case "$occurancyKey" in
     NETWORK) 
-        # /usr/local/bin/mullvad_change_server.sh
         echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
+        if [ ! -f "/usr/local/bin/mullvad_change_server.sh" ]; then
+            echo "[Warn] /usr/local/bin/mullvad_change_server.sh not found"
+            exit 1
+        else
+            /usr/local/bin/mullvad_change_server.sh
+        fi
         ;;
-    CLIENT)
-        #    sudo systemct restart $service
+    CLIENT) 
         echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
+        sudo systemct restart $serviceName
         ;;
     NOLOG)
-        #    sudo systemct restart $service
         echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
+        sudo systemct restart $serviceName
         ;;
     # ...
     *)
