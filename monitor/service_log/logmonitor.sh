@@ -138,6 +138,7 @@ load_execution_processor() {
         local executor_log_file="${executor_shell}.log"
         # Create Log file
         if [ ! -f "$executor_log_file" ]; then
+            echo "Creating $executor_log_file"
             touch "$executor_log_file"
         fi
     fi
