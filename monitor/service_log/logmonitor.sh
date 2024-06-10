@@ -11,9 +11,13 @@ executor_trigger_pause=1200
 
 declare -r version="1.0.3"
 
+# System variables (do not modify)
 lastLogTimeFile=""
 # frequency of updating data in the file
-lastlogfile_updateTimer=60
+readonly lastlogfile_updateTimer=60
+declare -A tracked_occurances_arr # from $targets_file file
+declare -a tracked_occurances_keys # keys from tracked_occurances_arr
+execution_processor=0
 
 print_variables() {
     echo "Log Monitor configuration"
@@ -94,7 +98,7 @@ use_shell_parameters() {
     done
 }
 
-declare -A tracked_occurances_arr # from $targets_file file
+# fill $tracked_occurances_arr and $tracked_occurances_keys based on $targets_file
 load_tracking_targets (){
     if [ ! -f "$targets_file" ]; then
         echo "load_tracking_targets: $targets_file not found / accessible. Target File parameter is required!"
@@ -115,10 +119,14 @@ load_tracking_targets (){
 
         echo "# $occKey @ $occString"
         tracked_occurances_arr["$occKey"]="$occString"
+        tracked_occurances_keys+=("$occKey")
     done < "$targets_file"
+
+    if [ ${#tracked_occurances_keys[@]} -eq 0 ]; then
+        echo "$targets_file has no lines. Searching in log is disabled."
+    fi
 }
 
-execution_processor=0
 load_execution_processor() {
     if [ ! -f "$executor_shell" ]; then
         echo "[Warn] load_execution_processor: $executor_shell not found / defined - running log monitor without execution processor"
@@ -204,7 +212,12 @@ journalctl -fu $service_name | while read -r line; do
     if (( current_time - last_log_time > $lastlogfile_updateTimer )); then
         save_lastLogTime $current_time
     fi
-    
+
+    # if there are no defined lines → return (there's no defined pattern(s) to find)
+    if [ ${#tracked_occurances_keys[@]} -eq 0 ]; then
+        return
+    fi
+
     if [ "$execution_processor" -eq 1 ]; then
         # Reset intervals after $executor_trigger_periode
         if (( current_time - last_reset > executor_trigger_periode )); then
@@ -218,13 +231,13 @@ journalctl -fu $service_name | while read -r line; do
 
     # iterate over realtime log and check it for tracked_occurances_arr states
     #$ {!tracked_occurances_arr[@]} returns list of all keys
-    for occKey in "${!tracked_occurances_arr[@]}"; do
+    for occKey in "${tracked_occurances_keys[@]}"; do
         # tracked string found in the service log
         if [[ "$line" == *"${tracked_occurances_arr[$occKey]}"* ]]; then
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
                 
-            echo "!!! $tracked_occurances_arr[$occKey] detected | hits counter: ${occ_counts_arr["$occKey"]} in last $executor_trigger_periode seconds"
+            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]} (/$executor_trigger_count) hits in $executor_trigger_periode s."
                 
             if [ "$execution_processor" -ne 1 ]; then
                 return
