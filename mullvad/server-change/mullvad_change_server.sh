@@ -1,5 +1,5 @@
 #!/bin/bash
-
+declare -r version="1.0.0"
 # List with preferred VPN server locations
 declare -a RELAY_LOCATIONS=("cz prg" "de fra" "de ber" "de dus" "at vie" "pl waw" "sk bts")
 #readarray -t MULLVAD_RELAYS < <(mullvad relay list | awk '/wireguard|wg/ { print $1 }')
@@ -32,7 +32,7 @@ fi
 
 # Set new mullvad connection
 echo "mullvad relay set location $NEXT_LOCATION"
-mullvad relay set location "$NEXT_LOCATION"
+mullvad relay set location $NEXT_LOCATION
 
 # Get new state
 NEW_STATUS=$(mullvad status)
