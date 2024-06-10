@@ -191,7 +191,11 @@ push_lastLogTimeToFile() {
     else
         echo "[$service_name CLIENT] time $time_to_save succesfuly saved in $lastLogTimeFile"
         last_log_time=$time_to_save
-        sync
+        local read_back=$(cat "$lastLogTimeFile")
+        echo "Read back content: $read_back"
+        sleep 3
+        local read_back2=$(cat "$lastLogTimeFile")
+        echo "Read back content after 3s: $read_back2"
         #if [ -s "$last_log_time" ]; then
         #    echo "Last log time is $(cat "$lastLogTimeFile")"
         #else
