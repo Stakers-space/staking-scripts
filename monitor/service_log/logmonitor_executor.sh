@@ -6,7 +6,7 @@
 occurancyKey=$1
 serviceName=$2
 
-declare -r version="1.0.1"
+declare -r version="1.0.3"
 
 get_version() {
   echo -e "LogMonitor version: $version | Powered by https://stakers.space"
@@ -29,15 +29,15 @@ fi
 case "$occurancyKey" in
     NETWORK) 
         # /usr/local/bin/mullvad_change_server.sh
-        echo "logmonitor_executor | Executing $occurancyKey"
+        echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         ;;
     CLIENT)
         #    sudo systemct restart $service
-        echo "logmonitor_executor | Executing $occurancyKey"
+        echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         ;;
     NOLOG)
         #    sudo systemct restart $service
-        echo "logmonitor_executor | Executing $occurancyKey"
+        echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         ;;
     # ...
     *)

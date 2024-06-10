@@ -9,11 +9,11 @@ executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
 
-declare -r version="1.0.2"
+declare -r version="1.0.3"
 
 lastLogTimeFile=""
 # frequency of updating data in the file
-lastlogfile_updateTimer=30
+lastlogfile_updateTimer=60
 
 print_variables() {
     echo "Log Monitor configuration"
@@ -167,28 +167,33 @@ save_lastLogTime() {
     fi
 }
 
-if [ "$log_maxwaitingtime" -gt 0 ]; then
-    save_lastLogTime $(date +%s)
-
+last_log_time_async_loop_checker() {
     while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
-        echo "!!! [CLIENT] Stucked log check | Last log Time: $last_log_time | Now: $current_time || Time from last log: $((current_time - last_log_time)) seconds | Max meantime: $log_maxwaitingtime"
-        if (( current_time - last_log_time > log_maxwaitingtime )); then
-            echo "!!! [CLIENT] No log occured in $((current_time - last_log_time)) seconds"
+        local timeFromLastLog=$((current_time - last_log_time))
+        echo "[$service_name CLIENT] Time from last log check | Time since last log: $timeFromLastLog | Enabled: $log_maxwaitingtime"
+        if (( $timeFromLastLog > log_maxwaitingtime )); then
+            echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
             if [ "$execution_processor" -eq 1 ]; then
-                # restart client
+                # execute action
                 "$executor_shell" "NOLOG" "$service_name"
+                # pause after restart
+                sleep 100
             fi
-            # pause after restart
-            sleep 100
         fi
         sleep $log_maxwaitingtime
     done &
+}
+
+# UTILITY: check for stucked client (no logs for defined time)
+if [ "$log_maxwaitingtime" -gt 0 ]; then
+    save_lastLogTime $(date +%s)
+    last_log_time_async_loop_checker
 fi
 
+# UTILITY: Check each new log line for defined string
 last_reset=$(date +%s)
-
 # On each new line
 journalctl -fu $service_name | while read -r line; do
     current_time=$(date +%s)
@@ -226,7 +231,7 @@ journalctl -fu $service_name | while read -r line; do
             fi
 
             # Execution processor
-                # If this would be move into executor, there's possible to set individual trigger count for any error separately (special trigger config file)
+                # If this would be moved into executor, there's possible to set individual trigger count for any error separately (special trigger config file)
                     # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
             # Process action if occurancy count is higher than $executor_trigger_count
             if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
