@@ -184,12 +184,13 @@ fi
 safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
 lastLogTimeFile="/tmp/${safe_service_name}_log_lt.txt"
 last_log_time=$(date +%s)
-save_lastLogTime() {
+push_lastLogTimeToFile() {
+    local time_to_save=$1
     if ! echo "$current_time" > "$lastLogTimeFile"; then
         echo "!!![$service_name CLIENT] Error: Failed to write to $lastLogTimeFile"
     else
-        echo "[$service_name CLIENT] time $1 succesfuly saved to $lastLogTimeFile"
-        last_log_time=$1
+        echo "[$service_name CLIENT] time $time_to_save succesfuly saved in $lastLogTimeFile"
+        last_log_time=$time_to_save
         #if [ -s "$last_log_time" ]; then
         #    echo "Last log time is $(cat "$lastLogTimeFile")"
         #else
@@ -200,12 +201,16 @@ save_lastLogTime() {
 }
 
 # UTILITY: check for stucked client (no logs for defined time)
-save_lastLogTime $(date +%s)
-sleep 5
+push_lastLogTimeToFile $(date +%s)
 if [ "$log_maxwaitingtime" -gt 0 ]; then
     while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
+        if [ -s "$lastLogTimeFile" ]; then
+            echo "$lastLogTimeFile content is $last_log_time"
+        else
+            echo "$lastLogTimeFile is empty or does not exist"
+        fi
         timeFromLastLog=$((current_time - last_log_time))
         echo "[$service_name CLIENT] LL $last_log_time | Time since last log: $timeFromLastLog/$log_maxwaitingtime"
         if (( $timeFromLastLog > log_maxwaitingtime )); then
@@ -231,7 +236,7 @@ journalctl -fu $service_name | while read -r line; do
 
     # process once per 30 seconds to reduce disk IOs
     if (( current_time - last_log_time > $lastlogfile_updateTimer )); then
-        save_lastLogTime $current_time
+        push_lastLogTimeToFile $current_time
     fi
 
     # if there are no defined lines → return (there's no defined pattern(s) to find)
@@ -290,7 +295,7 @@ journalctl -fu $service_name | while read -r line; do
 
                 echo "$service_name log monitor | Pause for $executor_trigger_pause seconds"
                 # pause also last log time monitor (substream)
-                save_lastLogTime $((current_time + executor_trigger_pause))
+                push_lastLogTimeToFile $((current_time + executor_trigger_pause))
                 # pause the script
                 sleep $executor_trigger_pause
             fi
