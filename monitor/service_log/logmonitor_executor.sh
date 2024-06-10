@@ -32,7 +32,7 @@ echo "no service name parameter attached: $1 | e.g. 'lodestarbeacon'"
 exit 1
 fi
 
-executor_log_file="/usr/local/etc/${service_name}_monitor.log"
+executor_log_file="/tmp/${serviceName}_monitor.log"
 
 case "$occurancyKey" in
     NETWORK) 

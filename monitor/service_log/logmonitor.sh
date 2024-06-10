@@ -8,6 +8,7 @@ executor_shell="" #logmonitor_executor.sh
 executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
+# add log file (inside /var/lib... service data addressory)
 #peers_regex=" - peers: ([0-9]+)"
 #min_peers=20
 
@@ -135,7 +136,7 @@ load_execution_processor() {
         exit 1
     else
         execution_processor=1
-        local executor_log_file="/usr/local/etc/${service_name}_monitor.log"
+        local executor_log_file="/tmp/${service_name}_monitor.log"
         # Create Log file
         if [ ! -f "$executor_log_file" ]; then
             echo "[$service_name CLIENT] Creating $executor_log_file"
