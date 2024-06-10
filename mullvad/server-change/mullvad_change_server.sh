@@ -38,11 +38,8 @@ echo "[Mullvad VPN] mullvad relay set location $NEXT_LOCATION ($NEXT_INDEX)"
 mullvad relay set location $NEXT_LOCATION
 if [ $? -eq 0 ]; then
     echo "[Mullvad VPN] connection successfully changed"
-    echo "[Mullvad VPN] old relay: $ORIGINAL_STATUS"
-    echo "[Mullvad VPN] new relay: $(mullvad status)"
     exit 0
 else
     echo "[Mullvad VPN] connection change failed"
-    echo "Current status: $(mullvad status)"
     exit 1
 fi
