@@ -154,9 +154,9 @@ safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
 lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
 last_log_time=$(date +%s)
 save_lastLogTime() {
-    echo "Saving last log time $1"
+    echo "--- Saving last log time $1"
     if ! echo "$current_time" > "$lastLogTimeFile"; then
-        echo "Error: Failed to write to $lastLogTimeFile"
+        echo "!!! Error: Failed to write to $lastLogTimeFile"
     else
         last_log_time=$1
     fi
@@ -188,7 +188,7 @@ last_reset=$(date +%s)
 journalctl -fu $service_name | while read -r line; do
     current_time=$(date +%s)
     # echo "$service_name LogMonitor | $current_time | new line $line"
-    echo "$service_name log monitor | journal ctl - new line | time: $current_time | last log time: $last_log_time"
+    echo "$service_name | new log | seconds from last: $((current_time - last_log_time))"
 
     if [ "$execution_processor" -eq 1 ]; then
         # Reset intervals after $executor_trigger_periode
@@ -203,7 +203,7 @@ journalctl -fu $service_name | while read -r line; do
 
     # process once per 30 seconds to reduce disk IOs
     if (( current_time - last_log_time > 30 )); then
-        echo "save_lastLogTime $current_time request"
+        echo "--- save_lastLogTime $current_time request"
         save_lastLogTime $current_time
         # last_log_time=$current_time
     fi
