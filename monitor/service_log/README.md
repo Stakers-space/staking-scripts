@@ -115,7 +115,7 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mo
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
+sudo curl -o /usr/local/bin/logmonitor_executor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Open the file and configurate execution actions
 ```
