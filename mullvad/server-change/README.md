@@ -10,12 +10,12 @@ Installed Mullvad VPN client on the Ubuntu Server
 From a home directory
 1. View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/ShellScripts/main/mullvad/server-change/mullvad_change_server.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/server-change/mullvad_change_server.sh
 
 ```
 2. Download the script
 ```
-sudo curl -o /usr/local/bin/mullvad_change_server.sh https://raw.githubusercontent.com/Stakers-space/ShellScripts/main/mullvad/server-change/mullvad_change_server.sh
+sudo curl -o /usr/local/bin/mullvad_change_server.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/server-change/mullvad_change_server.sh
 ```
 
 3. Open and check the downloaded script
