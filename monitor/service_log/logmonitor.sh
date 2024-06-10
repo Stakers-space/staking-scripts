@@ -8,9 +8,12 @@ executor_shell="" #logmonitor_executor.sh
 executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
+
 declare -r version="1.0.2"
 
 lastLogTimeFile=""
+# frequency of updating data in the file
+lastlogfile_updateTimer=30
 
 print_variables() {
     echo "Log Monitor configuration"
@@ -134,14 +137,16 @@ init_config() {
         [ "$1" = "version" ] && get_version && return
         [ "$1" = "help" ] && get_help && return
     fi
+
+    # override values with values from params, if attached
+    use_shell_parameters "$@"
+    # load other data
+    load_tracking_targets
+    load_execution_processor
+    print_variables
 }
 init_config "$@"
- # override values with values from params, if attached
-use_shell_parameters "$@"
-# load other data
-load_tracking_targets
-load_execution_processor
-print_variables
+
 
 ########################################################
 ## Monitor
@@ -178,18 +183,23 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
             # pause after restart
             sleep 100
         fi
-        # run in $log_maxwaitingtime interval
-        sleep 10 #$log_maxwaitingtime
+        sleep $log_maxwaitingtime
     done &
 fi
 
 last_reset=$(date +%s)
+
 # On each new line
 journalctl -fu $service_name | while read -r line; do
     current_time=$(date +%s)
     # echo "$service_name LogMonitor | $current_time | new line $line"
     echo "$service_name | new log | seconds from last: $((current_time - last_log_time))"
 
+    # process once per 30 seconds to reduce disk IOs
+    if (( current_time - last_log_time > $lastlogfile_updateTimer )); then
+        save_lastLogTime $current_time
+    fi
+    
     if [ "$execution_processor" -eq 1 ]; then
         # Reset intervals after $executor_trigger_periode
         if (( current_time - last_reset > executor_trigger_periode )); then
@@ -199,13 +209,6 @@ journalctl -fu $service_name | while read -r line; do
             echo "$service_name log monitor | Occurancies counts reseted to 0"
             last_reset=$current_time
         fi
-    fi
-
-    # process once per 30 seconds to reduce disk IOs
-    if (( current_time - last_log_time > 30 )); then
-        echo "--- save_lastLogTime $current_time request"
-        save_lastLogTime $current_time
-        # last_log_time=$current_time
     fi
 
     # iterate over realtime log and check it for tracked_occurances_arr states
@@ -227,7 +230,8 @@ journalctl -fu $service_name | while read -r line; do
                     # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
             # Process action if occurancy count is higher than $executor_trigger_count
             if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
-                echo "$service_name log monitor | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
+                
+                echo "$service_name pattern detection | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
 
                 # Execute action
                 "$executor_shell" "$occKey" "$service_name"
@@ -236,6 +240,9 @@ journalctl -fu $service_name | while read -r line; do
                 occ_counts_arr["$occKey"]=0
 
                 echo "$service_name log monitor | Pause for $executor_trigger_pause seconds"
+                # pause also last log time monitor (substream)
+                save_lastLogTime $((current_time + executor_trigger_pause))
+                # pause the script
                 sleep $executor_trigger_pause
             fi
         fi
