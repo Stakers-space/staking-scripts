@@ -2,12 +2,11 @@
 # readme: https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor
 
 # move count trigger for execution here
-
+executor_log_file="${0}.log"
 occurancyKey=$1
 serviceName=$2
-executorLogFile="/usr/local/etc/logmonitor_executor.log"
 
-declare -r version="1.0.3"
+declare -r version="1.0.4"
 
 get_version() {
   echo -e "LogMonitor Executor version: $version | Powered by https://stakers.space"
@@ -17,6 +16,8 @@ get_version() {
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$log_file"
 }
+
+echo "LogMonitor Executer initialized"
 
 # requests
 [ "$1" = "version" ] && get_version && return
@@ -33,7 +34,6 @@ fi
 
 case "$occurancyKey" in
     NETWORK) 
-        echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         if [ ! -f "/usr/local/bin/mullvad_change_server.sh" ]; then
             log "[Warn] /usr/local/bin/mullvad_change_server.sh not found"
             exit 1
@@ -44,11 +44,11 @@ case "$occurancyKey" in
         ;;
     CLIENT) 
         log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
-        sudo systemct restart $serviceName
+        # sudo systemct restart $serviceName
         ;;
     NOLOG)
         log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
-        sudo systemct restart $serviceName
+        # sudo systemct restart $serviceName
         ;;
     # ...
     *)

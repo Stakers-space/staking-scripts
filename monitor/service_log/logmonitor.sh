@@ -11,7 +11,7 @@ executor_trigger_pause=1200
 #peers_regex=" - peers: ([0-9]+)"
 #min_peers=20
 
-declare -r version="1.0.3"
+declare -r version="1.0.4"
 
 # System variables (do not modify)
 lastLogTimeFile=""
@@ -135,6 +135,11 @@ load_execution_processor() {
         exit 1
     else
         execution_processor=1
+        local executor_log_file="${executor_shell}.log"
+        # Create Log file
+        if [ ! -f "$executor_log_file" ]; then
+            touch "$executor_log_file"
+        fi
     fi
 }
 
