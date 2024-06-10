@@ -191,11 +191,6 @@ push_lastLogTimeToFile() {
     else
         echo "[$service_name CLIENT] time $time_to_save succesfuly saved in $lastLogTimeFile"
         last_log_time=$time_to_save
-        local read_back=$(cat "$lastLogTimeFile")
-        echo "Read back content: $read_back"
-        sleep 3
-        local read_back2=$(cat "$lastLogTimeFile")
-        echo "Read back content after 3s: $read_back2"
         #if [ -s "$last_log_time" ]; then
         #    echo "Last log time is $(cat "$lastLogTimeFile")"
         #else
@@ -206,17 +201,14 @@ push_lastLogTimeToFile() {
 }
 
 # UTILITY: check for stucked client (no logs for defined time)
-push_lastLogTimeToFile $(date +%s)
-if [ "$log_maxwaitingtime" -gt 0 ]; then
+current_time=$(date +%s)
+push_lastLogTimeToFile $current_time
+
+process_last_log_time_check() {
     while true; do
-        current_time=$(date +%s)
-        last_log_time=$(cat $lastLogTimeFile)
-        if [ -s "$lastLogTimeFile" ]; then
-            echo "$lastLogTimeFile content is $last_log_time"
-        else
-            echo "$lastLogTimeFile is empty or does not exist"
-        fi
-        timeFromLastLog=$((current_time - last_log_time))
+        local current_ftime=$(date +%s)
+        local last_ftime=$(cat $lastLogTimeFile)
+        local timeFromLastLog=$((current_ftime - last_ftime))
         echo "[$service_name CLIENT] LL $last_log_time | Time since last log: $timeFromLastLog/$log_maxwaitingtime"
         if (( $timeFromLastLog > log_maxwaitingtime )); then
             echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
@@ -229,6 +221,10 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
         fi
         sleep $log_maxwaitingtime
     done &
+}
+
+if [ "$log_maxwaitingtime" -gt 0 ]; then
+    process_last_log_time_check
 fi
 
 # UTILITY: Check each new log line for defined string
