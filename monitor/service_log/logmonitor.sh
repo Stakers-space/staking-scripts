@@ -178,7 +178,7 @@ save_lastLogTime() {
     if ! echo "$current_time" > "$lastLogTimeFile"; then
         echo "!!![$service_name CLIENT] Error: Failed to write to $lastLogTimeFile"
     else
-        echo "[$service_name CLIENT] time $1 succesfuly saved to tmp file $lastLogTimeFile"
+        echo "[$service_name CLIENT] time $1 succesfuly saved to $lastLogTimeFile"
         last_log_time=$1
         #if [ -s "$last_log_time" ]; then
         #    echo "Last log time is $(cat "$lastLogTimeFile")"
@@ -190,8 +190,9 @@ save_lastLogTime() {
 }
 
 # UTILITY: check for stucked client (no logs for defined time)
+save_lastLogTime $(date +%s)
+sleep 1
 if [ "$log_maxwaitingtime" -gt 0 ]; then
-    save_lastLogTime $(date +%s)
     while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
