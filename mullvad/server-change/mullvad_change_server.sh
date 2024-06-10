@@ -9,10 +9,12 @@ declare -a RELAY_LOCATIONS=("cz prg" "de fra" "de ber" "de dus" "at vie" "pl waw
 ORIGINAL_STATUS=$(mullvad status)
 # Separate GEO id from mullvad status response (format: "Connected to us-atl-wg-110 in Atlanta, United States")
 CURRENT_LOCATION=$(echo $ORIGINAL_STATUS | grep -oP 'Connected to \K\w{2}-\w{3}' | tr '-' ' ')
-echo "Mullvad VPN  | current active location | $ORIGINAL_STATUS → $CURRENT_LOCATION"
+echo "[Mullvad VPN] status | $ORIGINAL_STATUS | Location: $CURRENT_LOCATION"
 
 # Get current relay location index in RELAY_LOCATIONS
 CURRENT_INDEX=-1
+NEXT_INDEX=0
+
 for i in "${!RELAY_LOCATIONS[@]}"; do
    if [[ "${RELAY_LOCATIONS[$i]}" == "$CURRENT_LOCATION" ]]; then
        CURRENT_INDEX=$i
@@ -31,7 +33,7 @@ else
 fi
 
 # Set new mullvad connection
-echo "mullvad relay set location $NEXT_LOCATION"
+echo "[Mullvad VPN] mullvad relay set location $NEXT_LOCATION ($NEXT_INDEX)"
 mullvad relay set location $NEXT_LOCATION
 
 # Get new state
@@ -39,9 +41,9 @@ NEW_STATUS=$(mullvad status)
 
 # Check the change
 if [[ "$NEW_STATUS" != "$ORIGINAL_STATUS" ]]; then
-    echo "Mullvad VPN | connection successfully changed | from $ORIGINAL_STATUS → $NEW_STATUS"
+    echo "[Mullvad VPN] connection successfully changed | from $ORIGINAL_STATUS → $NEW_STATUS"
     exit 0
 else
-    echo "Mullvad VPN | connection change failed | Current state: $NEW_STATUS"
+    echo "[Mullvad VPN] connection change failed | Current state: $NEW_STATUS"
     exit 1
 fi
