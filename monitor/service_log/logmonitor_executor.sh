@@ -39,7 +39,7 @@ case "$occurancyKey" in
             exit 1
         else
             log "Changing mullvad VPN relay server"
-            /usr/local/bin/mullvad_change_server.sh
+            #/usr/local/bin/mullvad_change_server.sh
         fi
         ;;
     CLIENT) 

@@ -138,7 +138,7 @@ load_execution_processor() {
         local executor_log_file="${executor_shell}.log"
         # Create Log file
         if [ ! -f "$executor_log_file" ]; then
-            echo "Creating $executor_log_file"
+            echo "[$service_name CLIENT] Creating $executor_log_file"
             touch "$executor_log_file"
         fi
     fi
@@ -172,14 +172,20 @@ if ! systemctl is-active --quiet "$service_name"; then
 fi
 
 safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
-lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
+lastLogTimeFile="/tmp/${safe_service_name}_llt.txt"
 last_log_time=$(date +%s)
 save_lastLogTime() {
-    echo "--- Saving last log time $1 to $lastLogTimeFile"
     if ! echo "$current_time" > "$lastLogTimeFile"; then
-        echo "!!! Error: Failed to write to $lastLogTimeFile"
+        echo "!!![$service_name CLIENT] Error: Failed to write to $lastLogTimeFile"
     else
+        echo "[$service_name CLIENT] Last log time $1 succesfulyl save to tmp file $lastLogTimeFile"
         last_log_time=$1
+        if [ -s "$last_log_time" ]; then
+            echo "Last log time is $(cat "$lastLogTimeFile")"
+        else
+            echo "Error: Log time file is empty."
+            last_log_time=$(date +%s)
+        fi  
     fi
 }
 
@@ -251,7 +257,7 @@ journalctl -fu $service_name | while read -r line; do
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
                 
-            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]} (/$executor_trigger_count) hits in $executor_trigger_periode s."
+            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/$executor_trigger_count hits in $executor_trigger_periode s."
                 
             if [ "$execution_processor" -ne 1 ]; then
                 break
