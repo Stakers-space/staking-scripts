@@ -23,7 +23,7 @@ declare -a tracked_occurances_keys # keys from tracked_occurances_arr
 execution_processor=0
 
 print_variables() {
-    echo "Log Monitor configuration"
+ echo -e "\nLog Monitor configuration"
     echo "├── service_name:       $service_name | this service log is being tracked"
     echo "├── targets_file:       $targets_file [file] list of occurrences for which the log is checked"
     echo "├── log_maxwaitingtime: $log_maxwaitingtime [seconds] Maximum enabled time between 2 printed logs by the tracked service"
@@ -165,6 +165,15 @@ init_config() {
 init_config "$@"
 
 
+cleanup() {
+    echo "Exiting script function"
+    exit 0 
+}
+
+# (Ctrl+C)
+trap cleanup SIGINT
+
+
 ########################################################
 ## Monitor
 if ! systemctl is-active --quiet "$service_name"; then
@@ -192,13 +201,13 @@ save_lastLogTime() {
 
 # UTILITY: check for stucked client (no logs for defined time)
 save_lastLogTime $(date +%s)
-sleep 1
+sleep 5
 if [ "$log_maxwaitingtime" -gt 0 ]; then
     while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
         timeFromLastLog=$((current_time - last_log_time))
-        echo "[$service_name CLIENT] Time from last log check | Time since last log: $timeFromLastLog | Enabled: $log_maxwaitingtime"
+        echo "[$service_name CLIENT] LL $last_log_time | Time since last log: $timeFromLastLog/$log_maxwaitingtime"
         if (( $timeFromLastLog > log_maxwaitingtime )); then
             echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
             if [ "$execution_processor" -eq 1 ]; then
