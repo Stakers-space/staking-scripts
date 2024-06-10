@@ -11,8 +11,6 @@ executor_trigger_pause=1200
 declare -r version="1.0.2"
 
 lastLogTimeFile=""
-paused=0 # paused monitoring
-#(sleep 120; paused=0) &
 
 print_variables() {
     echo "Log Monitor configuration"
@@ -91,8 +89,6 @@ use_shell_parameters() {
                 ;;
         esac
     done
-
-    
 }
 
 declare -A tracked_occurances_arr # from $targets_file file
@@ -147,9 +143,16 @@ load_tracking_targets
 load_execution_processor
 print_variables
 
-##########
+########################################################
+## Monitor
+if ! systemctl is-active --quiet "$service_name"; then
+    echo "Service $service_name is not active."
+    exit 1
+fi
+
 safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
 lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
+last_log_time=$(date +%s)
 save_lastLogTime() {
     echo "Saving last log time $1"
     if ! echo "$current_time" > "$lastLogTimeFile"; then
@@ -159,15 +162,6 @@ save_lastLogTime() {
     fi
 }
 
-## Monitor
-if ! systemctl is-active --quiet "$service_name"; then
-    echo "Service $service_name is not active."
-    exit 1
-fi
-
-
-
-last_log_time=$(date +%s)
 if [ "$log_maxwaitingtime" -gt 0 ]; then
     save_lastLogTime $(date +%s)
 
@@ -176,7 +170,7 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
         last_log_time=$(cat $lastLogTimeFile)
         echo "!!! [CLIENT] Stucked log check | Last log Time: $last_log_time | Now: $current_time || Time from last log: $((current_time - last_log_time)) seconds | Max meantime: $log_maxwaitingtime"
         if (( current_time - last_log_time > log_maxwaitingtime )); then
-            echo "!!! No log occured in $((current_time - last_log_time)) seconds"
+            echo "!!! [CLIENT] No log occured in $((current_time - last_log_time)) seconds"
             if [ "$execution_processor" -eq 1 ]; then
                 # restart client
                 "$executor_shell" "NOLOG" "$service_name"
@@ -185,7 +179,7 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
             sleep 100
         fi
         # run in $log_maxwaitingtime interval
-        sleep $log_maxwaitingtime
+        sleep 10 #$log_maxwaitingtime
     done &
 fi
 
@@ -194,6 +188,7 @@ last_reset=$(date +%s)
 journalctl -fu $service_name | while read -r line; do
     current_time=$(date +%s)
     # echo "$service_name LogMonitor | $current_time | new line $line"
+    echo "$service_name log monitor | journal ctl - new line | time: $current_time | last log time: $last_log_time"
 
     if [ "$execution_processor" -eq 1 ]; then
         # Reset intervals after $executor_trigger_periode
@@ -208,8 +203,9 @@ journalctl -fu $service_name | while read -r line; do
 
     # process once per 30 seconds to reduce disk IOs
     if (( current_time - last_log_time > 30 )); then
+        echo "save_lastLogTime $current_time request"
         save_lastLogTime $current_time
-        last_log_time=$current_time
+        # last_log_time=$current_time
     fi
 
     # iterate over realtime log and check it for tracked_occurances_arr states
@@ -240,10 +236,7 @@ journalctl -fu $service_name | while read -r line; do
                 occ_counts_arr["$occKey"]=0
 
                 echo "$service_name log monitor | Pause for $executor_trigger_pause seconds"
-                paused=1
                 sleep $executor_trigger_pause
-                paused=0
-                echo "$service_name log monitor | Unpaused after $executor_trigger_pause seconds"
             fi
         fi
     done
