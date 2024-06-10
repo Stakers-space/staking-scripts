@@ -17,7 +17,7 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$log_file"
 }
 
-echo "LogMonitor Executer initialized"
+#echo "LogMonitor Executer initialized"
 
 # requests
 [ "$1" = "version" ] && get_version && return

@@ -172,7 +172,7 @@ if ! systemctl is-active --quiet "$service_name"; then
 fi
 
 safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
-lastLogTimeFile="/tmp/${safe_service_name}_llt.txt"
+lastLogTimeFile="/tmp/${safe_service_name}_log_lt.txt"
 last_log_time=$(date +%s)
 save_lastLogTime() {
     if ! echo "$current_time" > "$lastLogTimeFile"; then
@@ -180,12 +180,12 @@ save_lastLogTime() {
     else
         echo "[$service_name CLIENT] Last log time $1 succesfulyl save to tmp file $lastLogTimeFile"
         last_log_time=$1
-        if [ -s "$last_log_time" ]; then
-            echo "Last log time is $(cat "$lastLogTimeFile")"
-        else
-            echo "Error: Log time file is empty."
-            last_log_time=$(date +%s)
-        fi  
+        #if [ -s "$last_log_time" ]; then
+        #    echo "Last log time is $(cat "$lastLogTimeFile")"
+        #else
+        #    echo "Error: Log time file is empty."
+        #    last_log_time=$(date +%s)
+        #fi  
     fi
 }
 
