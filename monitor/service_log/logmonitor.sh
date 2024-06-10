@@ -8,6 +8,8 @@ executor_shell="" #logmonitor_executor.sh
 executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
+#peers_regex=" - peers: ([0-9]+)"
+#min_peers=20
 
 declare -r version="1.0.3"
 
@@ -234,6 +236,16 @@ journalctl -fu $service_name | while read -r line; do
     for occKey in "${tracked_occurances_keys[@]}"; do
         # tracked string found in the service log
         if [[ "$line" == *"${tracked_occurances_arr[$occKey]}"* ]]; then
+            
+            #  peers check
+            #if [[ $line =~ $peers_regex ]]; then
+            #    peers=${BASH_REMATCH[1]}
+            #    echo "Active peers: $peers (minimum: $min_peers)"
+            #    if [[ $peers -gt $min_peers ]]; then
+            #       return
+            #    fi
+            #fi
+            
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
                 
