@@ -10,7 +10,7 @@ executorLogFile="/usr/local/etc/logmonitor_executor.log"
 declare -r version="1.0.3"
 
 get_version() {
-  echo -e "LogMonitor version: $version | Powered by https://stakers.space"
+  echo -e "LogMonitor Executor version: $version | Powered by https://stakers.space"
   exit 0
 }
 

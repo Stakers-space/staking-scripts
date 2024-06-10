@@ -217,7 +217,7 @@ journalctl -fu $service_name | while read -r line; do
 
     # if there are no defined lines → return (there's no defined pattern(s) to find)
     if [ ${#tracked_occurances_keys[@]} -eq 0 ]; then
-        return
+        break
     fi
 
     if [ "$execution_processor" -eq 1 ]; then
@@ -242,7 +242,7 @@ journalctl -fu $service_name | while read -r line; do
             #    peers=${BASH_REMATCH[1]}
             #    echo "Active peers: $peers (minimum: $min_peers)"
             #    if [[ $peers -gt $min_peers ]]; then
-            #       return
+            #       break
             #    fi
             #fi
             
@@ -252,7 +252,7 @@ journalctl -fu $service_name | while read -r line; do
             echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]} (/$executor_trigger_count) hits in $executor_trigger_periode s."
                 
             if [ "$execution_processor" -ne 1 ]; then
-                return
+                break
             fi
 
             # Execution processor
