@@ -5,12 +5,17 @@
 
 occurancyKey=$1
 serviceName=$2
+executorLogFile="/usr/local/etc/logmonitor_executor.log"
 
 declare -r version="1.0.3"
 
 get_version() {
   echo -e "LogMonitor version: $version | Powered by https://stakers.space"
   exit 0
+}
+
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$log_file"
 }
 
 # requests
@@ -30,23 +35,24 @@ case "$occurancyKey" in
     NETWORK) 
         echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         if [ ! -f "/usr/local/bin/mullvad_change_server.sh" ]; then
-            echo "[Warn] /usr/local/bin/mullvad_change_server.sh not found"
+            log "[Warn] /usr/local/bin/mullvad_change_server.sh not found"
             exit 1
         else
+            log "Changing mullvad VPN relay server"
             /usr/local/bin/mullvad_change_server.sh
         fi
         ;;
     CLIENT) 
-        echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
+        log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         sudo systemct restart $serviceName
         ;;
     NOLOG)
-        echo "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
+        log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         sudo systemct restart $serviceName
         ;;
     # ...
     *)
-    echo "Warning | Unknown parameter $1"
+    log "Warning | Unknown parameter $1"
     exit 1
     ;;
 esac
