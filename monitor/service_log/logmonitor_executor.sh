@@ -2,7 +2,7 @@
 # readme: https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor
 
 # move count trigger for execution here
-executor_log_file="${0}.log"
+executor_log_file=""
 occurancyKey=$1
 serviceName=$2
 
@@ -14,7 +14,7 @@ get_version() {
 }
 
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$log_file"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$executor_log_file"
 }
 
 #echo "LogMonitor Executer initialized"
@@ -31,6 +31,8 @@ if [ -z "$serviceName" ]; then
 echo "no service name parameter attached: $1 | e.g. 'lodestarbeacon'"
 exit 1
 fi
+
+executor_log_file="/usr/local/etc/${service_name}_monitor.log"
 
 case "$occurancyKey" in
     NETWORK) 

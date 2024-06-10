@@ -51,7 +51,7 @@ use_shell_parameters() {
     
     # params
     while true; do
-        echo "Params after eval set: $1 $2"
+        #echo "Params after eval set: $1 $2"
         case "$1" in
             -s|--service_name) 
                 service_name="$2" 
@@ -135,7 +135,7 @@ load_execution_processor() {
         exit 1
     else
         execution_processor=1
-        local executor_log_file="${executor_shell}.log"
+        local executor_log_file="/usr/local/etc/${service_name}_monitor.log"
         # Create Log file
         if [ ! -f "$executor_log_file" ]; then
             echo "[$service_name CLIENT] Creating $executor_log_file"
@@ -178,7 +178,7 @@ save_lastLogTime() {
     if ! echo "$current_time" > "$lastLogTimeFile"; then
         echo "!!![$service_name CLIENT] Error: Failed to write to $lastLogTimeFile"
     else
-        echo "[$service_name CLIENT] Last log time $1 succesfulyl save to tmp file $lastLogTimeFile"
+        echo "[$service_name CLIENT] time $1 succesfuly saved to tmp file $lastLogTimeFile"
         last_log_time=$1
         #if [ -s "$last_log_time" ]; then
         #    echo "Last log time is $(cat "$lastLogTimeFile")"
@@ -257,7 +257,7 @@ journalctl -fu $service_name | while read -r line; do
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
                 
-            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/$executor_trigger_count hits in $executor_trigger_periode s."
+            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/$executor_trigger_count hits in ${executor_trigger_periode}s"
                 
             if [ "$execution_processor" -ne 1 ]; then
                 break
