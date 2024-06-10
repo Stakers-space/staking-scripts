@@ -174,7 +174,7 @@ safe_service_name=$(echo "$service_name" | tr -d '[:space:]/\\')
 lastLogTimeFile="/tmp/${safe_service_name}_last_log_time.txt"
 last_log_time=$(date +%s)
 save_lastLogTime() {
-    echo "--- Saving last log time $1"
+    echo "--- Saving last log time $1 to $lastLogTimeFile"
     if ! echo "$current_time" > "$lastLogTimeFile"; then
         echo "!!! Error: Failed to write to $lastLogTimeFile"
     else
@@ -182,11 +182,13 @@ save_lastLogTime() {
     fi
 }
 
-last_log_time_async_loop_checker() {
+# UTILITY: check for stucked client (no logs for defined time)
+if [ "$log_maxwaitingtime" -gt 0 ]; then
+    save_lastLogTime $(date +%s)
     while true; do
         current_time=$(date +%s)
         last_log_time=$(cat $lastLogTimeFile)
-        local timeFromLastLog=$((current_time - last_log_time))
+        timeFromLastLog=$((current_time - last_log_time))
         echo "[$service_name CLIENT] Time from last log check | Time since last log: $timeFromLastLog | Enabled: $log_maxwaitingtime"
         if (( $timeFromLastLog > log_maxwaitingtime )); then
             echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
@@ -199,12 +201,6 @@ last_log_time_async_loop_checker() {
         fi
         sleep $log_maxwaitingtime
     done &
-}
-
-# UTILITY: check for stucked client (no logs for defined time)
-if [ "$log_maxwaitingtime" -gt 0 ]; then
-    save_lastLogTime $(date +%s)
-    last_log_time_async_loop_checker
 fi
 
 # UTILITY: Check each new log line for defined string
