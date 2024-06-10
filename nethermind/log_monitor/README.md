@@ -3,7 +3,7 @@
 This utility script monitors nethermind log in real time and check its lines for defined errors. The script allows to set any execution action of nethermind as well as any other service if certain issue is detected. There're attached known issue patterns for the nethermind log service through the `nethermind_tracking_records.txt` file.
 
 ## Installation
-This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor) on background and extends it with a custom nethermind related configuration.
+This script uses service log monitor utility [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on the background and extends it with a custom nethermind related configuration.
 ### Log Monitor utility
 1. Check `.logmonitor.sh` availability
 ```
@@ -12,11 +12,11 @@ This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scrip
 If the shell script is not available, install it
 - View the script
 ```
-curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
+curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
+sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
 ```
 - Enable execution of the shell script
 ```
@@ -51,11 +51,11 @@ Executor utility allows to execute any acction when certain pattern is reached (
 If the shell script is not available, install it
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor_executor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
+sudo curl -o /usr/local/bin/logmonitor_executor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Enable execution of the shell script
 ```
@@ -69,6 +69,8 @@ sudo nano /usr/local/bin/logmonitor_executor.sh
 
 ### Log monitor sleeper utility
 `logmonitor_sleeper.sh` checks log for regular updates. Once there's no new line for certain defined periode, it may be considered that the service is stucked. In such case sleeper utility allows automatically restart it. The utility allows to configurate the maximum waiting time for new line as well as action to execute on occuration.
+
+Note: `.logmonitor_sleeper.sh` is now part of `.logmonitor.sh`
 
 1. Check `.logmonitor_sleeper.sh` availability
 ```
