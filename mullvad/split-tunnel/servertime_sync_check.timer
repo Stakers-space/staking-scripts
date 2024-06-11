@@ -3,7 +3,8 @@ Description=Timer to regularly check time synchronization
 
 [Timer]
 # Run it in 30 minutes interval
-OnCalendar=*:0/30
+# OnCalendar=*:0/30
+OnCalendar=hourly
 Persistent=true
 
 [Install]
