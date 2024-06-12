@@ -233,25 +233,26 @@ last_reset=$(date +%s)
 journalctl -fu $service_name | while read -r line; do
     current_time=$(date +%s)
     # echo "$service_name LogMonitor | $current_time | new line $line"
-    echo "$service_name | new log | seconds from last: $((current_time - last_log_time))"
+    # echo "$service_name | new log | seconds from last: $((current_time - last_log_time))"
 
     # process once per 30 seconds to reduce disk IOs
     if (( current_time - last_log_time > $lastlogfile_updateTimer )); then
         push_lastLogTimeToFile $current_time
     fi
 
-    # if there are no defined lines → return (there's no defined pattern(s) to find)
+    # if there are no defined lines → return (there's no defined string(s) to search for)
     if [ ${#tracked_occurances_keys[@]} -eq 0 ]; then
         break
     fi
 
     if [ "$execution_processor" -eq 1 ]; then
         # Reset intervals after $executor_trigger_periode
+        echo "$service_name log monitor | Resetting occurances counter"
         if (( current_time - last_reset > executor_trigger_periode )); then
             for occKey in "${!occ_counts_arr[@]}"; do
+                echo "# ${occKey} | occ_counts_arr[${occKey}] → 0"
                 occ_counts_arr["$occKey"]=0
             done
-            echo "$service_name log monitor | Occurancies counts reseted to 0"
             last_reset=$current_time
         fi
     fi
@@ -261,7 +262,7 @@ journalctl -fu $service_name | while read -r line; do
     for occKey in "${tracked_occurances_keys[@]}"; do
         # tracked string found in the service log
         if [[ "$line" == *"${tracked_occurances_arr[$occKey]}"* ]]; then
-            
+
             #  peers check
             #if [[ $line =~ $peers_regex ]]; then
             #    peers=${BASH_REMATCH[1]}
@@ -270,7 +271,7 @@ journalctl -fu $service_name | while read -r line; do
             #       break
             #    fi
             #fi
-            
+
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
                 

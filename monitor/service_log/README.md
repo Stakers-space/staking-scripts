@@ -142,7 +142,7 @@ sudo visudo
 ```
 - Eanble sudo execution of `/usr/local/bin/sampleService` by `specificServiceUser` through adding following line at the end
 ```
-specificServiceUser ALL = NOPASSWD: /usr/bin/systemctl restart sampleService
+specificServiceUser ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart sampleService
 ```
 
 ## Service files configuration
