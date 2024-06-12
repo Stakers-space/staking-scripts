@@ -301,9 +301,11 @@ journalctl -fu $service_name | while read -r line; do
                 # Reset occurancy counters back to 0
                 occ_counts_arr["$occKey"]=0
 
-                echo "$service_name log monitor | Pause for $executor_trigger_pause seconds"
+                unpause_time=$((current_time + executor_trigger_pause))
+                readable_time=$(date -d "@$unpause_time" '+%Y-%m-%d %H:%M:%S')
+                echo "$service_name log monitor | Pause for $executor_trigger_pause seconds | Unpause at $readable_time"
                 # pause also last log time monitor (substream)
-                push_lastLogTimeToFile $((current_time + executor_trigger_pause))
+                push_lastLogTimeToFile $unpause_time
                 # pause the script
                 sleep $executor_trigger_pause
             fi
