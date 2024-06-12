@@ -49,13 +49,13 @@ use_shell_parameters() {
     TEMP=$(getopt -o s:f:t:x:c:d:p: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_count:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
     #echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
-    
+
     # params
     while true; do
         #echo "Params after eval set: $1 $2"
         case "$1" in
             -s|--service_name) 
-                service_name="$2" 
+                service_name="$2"
                 shift 2 
                 if [ -z "$service_name" ]; then
                     echo "Error: No service name specified."
@@ -63,7 +63,7 @@ use_shell_parameters() {
                 fi
                 ;;
             -f|--targets_file) 
-                targets_file="$2" 
+                targets_file="$2"
                 shift 2
                 if [ -z "$targets_file" ]; then
                     echo "Error: No target file specified."
@@ -75,19 +75,19 @@ use_shell_parameters() {
                 shift 2
                 ;;
             -x|--executor_shell) 
-                executor_shell="$2" 
+                executor_shell="$2"
                 shift 2
                 ;;
             -c|--executor_trigger_count) 
-                executor_trigger_count="$2" 
+                executor_trigger_count="$2"
                 shift 2
                 ;;
             -d|--executor_trigger_periode) 
-                executor_trigger_periode="$2" 
+                executor_trigger_periode="$2"
                 shift 2
                 ;;
             -p|--executor_trigger_pause) 
-                executor_trigger_pause="$2" 
+                executor_trigger_pause="$2"
                 shift 2
                 ;;
             --) shift
@@ -247,8 +247,8 @@ journalctl -fu $service_name | while read -r line; do
 
     if [ "$execution_processor" -eq 1 ]; then
         # Reset intervals after $executor_trigger_periode
-        echo "$service_name log monitor | Resetting occurances counter"
         if (( current_time - last_reset > executor_trigger_periode )); then
+            echo "$service_name log monitor | Resetting occurances counter"
             for occKey in "${!occ_counts_arr[@]}"; do
                 echo "# ${occKey} | occ_counts_arr[${occKey}] → 0"
                 occ_counts_arr["$occKey"]=0
@@ -274,9 +274,9 @@ journalctl -fu $service_name | while read -r line; do
 
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
-                
+
             echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/$executor_trigger_count hits in ${executor_trigger_periode}s"
-                
+
             if [ "$execution_processor" -ne 1 ]; then
                 break
             fi
@@ -286,7 +286,7 @@ journalctl -fu $service_name | while read -r line; do
                     # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
             # Process action if occurancy count is higher than $executor_trigger_count
             if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
-                
+
                 echo "$service_name pattern detection | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
 
                 # Execute action
