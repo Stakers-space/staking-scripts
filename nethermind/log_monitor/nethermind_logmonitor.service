@@ -8,6 +8,7 @@ ExecStart=/usr/local/bin/logmonitor.sh -s "nethermind" -f "/usr/local/etc/nether
 Restart=on-failure
 User=nethermind
 Group=nethermind
+KillMode=control-group
 
 [Install]
 WantedBy=multi-user.target

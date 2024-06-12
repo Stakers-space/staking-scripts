@@ -172,6 +172,7 @@ init_config "$@"
 
 cleanup() {
     echo "Exiting script function"
+    kill $(jobs -p)
     exit 0 
 }
 
