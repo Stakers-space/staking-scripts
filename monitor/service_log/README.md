@@ -3,8 +3,8 @@
 This utility script monitors each log line of a specified service in real time and checks it for occurancy of defined pattern based on which it may process defined actions
 
 ## Supported patters
-- log line contains certain string (e.g. `Error: PublishError.NoPeersSubscribedToTopic`)
-- new log line was not returned for a specified time (this may indicate stucked client). As a shell does not allow parallel execution, this will be done through an extra shell script
+- log line contains certain string (e.g. `Error: PublishError.NoPeersSubscribedToTopic`). This feature is activated by attaching `-f TargetFile`.
+- new log line was not returned for a specified time (this may indicate stucked client). As a shell does not allow parallel execution, this will be done through an extra shell script.  This feature is activated by attaching `-t MaxSecondsPeriode`
 
 ## Utility structure
 Utility consists of scripts, definition file and service files for running the utility on the background
@@ -18,13 +18,13 @@ Utility consists of scripts, definition file and service files for running the u
 
 ### Supported arguments
 ```
-├── service_name:       this service log is being tracked"
-├── targets_file:       [file] list of occurrences for which the log is checked"
-├── log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service"
-└── executor_shell:     shell executing actions once the trigger is reached [if no filled, no action is applied]"
-    ├── trigger:        [int] required number of occurances to execute a given action"
-    ├── periode:        [seconds] | interval in which @trigger is automatically reseted to 0"
-    └── delay:          [seconds] | delay time after execution- time for servicrs estabilishment before continuing in the script"
+├── -s|--service_name:   name of the targeted service for log monitoring
+├── -x|--executor_shell: absolute path to shell script executing actions
+├── -t|--log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service. If no log displayed, an action is processed through executor_shell
+├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log
+├── -c|--executor_trigger_count: [int] required number of occurances to execute a given action through executor_shell
+├── -d|--executor_trigger_periode: [seconds] | interval within which executor_trigger_count must occure (e.g. 60 occurances in 60 seconds)
+└──  -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment
 ```
 
 ## Installation

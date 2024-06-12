@@ -23,14 +23,14 @@ declare -a tracked_occurances_keys # keys from tracked_occurances_arr
 execution_processor=0
 
 print_variables() {
- echo -e "\nLog Monitor configuration"
-    echo "├── service_name:       $service_name | this service log is being tracked"
-    echo "├── targets_file:       $targets_file [file] list of occurrences for which the log is checked"
-    echo "├── log_maxwaitingtime: $log_maxwaitingtime [seconds] Maximum enabled time between 2 printed logs by the tracked service"
-    echo "└── executor_shell:     $executor_shell shell executing actions once the trigger is reached [if no filled, no action is applied]"
-    echo "    ├── trigger:   $executor_trigger_count [int] required number of occurances to execute a given action"
-    echo "    ├── periode:   $executor_trigger_periode [seconds] | interval in which @trigger is automatically reseted to 0"
-    echo "    └── delay:     $executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment"
+    echo -e "\nLog Monitor configuration"
+    echo -e "├── -s|--service_name:   name of the targeted service for log monitoring"
+    echo -e "├── -x|--executor_shell: absolute path to shell script executing actions"
+    echo -e "├── -t|--log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service. If no log displayed, an action is processed through executor_shell"
+    echo -e "├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log"
+    echo -e "├── -c|--executor_trigger_count: [int] required number of occurances to execute a given action through executor_shell"
+    echo -e "├── -d|--executor_trigger_periode: [seconds] | interval within which executor_trigger_count must occure (e.g. 60 occurances in 60 seconds)"
+    echo -e "└──  -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment"
 }
 
 get_version() {
