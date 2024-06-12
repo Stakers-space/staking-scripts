@@ -3,7 +3,8 @@
 This utility script monitors lodestar beacon log in real time and check its lines for defined errors. The script allows to set any execution action of lodestar beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the lodestar beacon log service through the `lodestar_tracking_records.txt` file.
 
 ## Installation
-This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor) on background and extends it with a custom lodestarbeacon related configuration.
+This script uses Service log monitor shell [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on background and extends it with a custom lodestarbeacon related configuration.
+
 ## Log Monitor utility
 1. Check `.logmonitor.sh` availability
 ```
@@ -44,7 +45,7 @@ Executor utility allows to execute any acction when certain pattern is reached (
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
 
-1. Check `.logmonitor_executor.sh` availability
+- Check `.logmonitor_executor.sh` availability
 ```
 /usr/local/bin/logmonitor_executor.sh version
 ```
@@ -94,7 +95,6 @@ Monitor the service together with lodestarbeacon service
 ```
 journalctl -f -u lodestarbeacon.service -u lodestarbeacon_logmonitor.service
 ```
-
 - Enable the service
 ```
 sudo systemctl enable lodestarbeacon_logmonitor.service
