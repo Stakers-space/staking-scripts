@@ -103,30 +103,32 @@ use_shell_parameters() {
 
 # fill $tracked_occurances_arr and $tracked_occurances_keys based on $targets_file
 load_tracking_targets (){
-    if [ ! -f "$targets_file" ]; then
+    if [ -f "$targets_file" ]; then
+        if [ -s "$targets_file" ]; then
+            echo "$targets_file loaded. Tracking for following actions:"
+            #parse by lines
+            while IFS= read -r line; do
+                # split according to first occurancy of '@'
+                # parseby :   leftSide  rightSide
+                IFS=@ read -r occKey occString <<< "$line"
+                # each line must contain at least 1x : [type]:[string]
+                if [[ -z "$occKey" || -z "$occString" ]]; then
+                    echo "[Error] Line $line does not fill valid schema 'occurancyKey@occurancyString'"
+                    exit 1
+                fi
+                echo "# $occKey @ $occString"
+                tracked_occurances_arr["$occKey"]="$occString"
+                tracked_occurances_keys+=("$occKey")
+            done < "$targets_file"
+        else
+            echo "$targets_file loaded. No lines found - the file is empty"
+        fi
+    else
         echo "load_tracking_targets: $targets_file not found / accessible. Target File parameter is required!"
-        exit 1
     fi
 
-    echo "Tracking for following actions"
-    #parse by lines
-    while IFS= read -r line; do
-        # split according to first occurancy of ':'
-        # parseby :   leftSide  rightSide
-        IFS=@ read -r occKey occString <<< "$line"
-        # each line must contain at least 1x : [type]:[string]
-        if [[ -z "$occKey" || -z "$occString" ]]; then
-            echo "[Error] Line $line does not fill valid schema 'occurancyKey@occurancyString'"
-            exit 1
-        fi
-
-        echo "# $occKey @ $occString"
-        tracked_occurances_arr["$occKey"]="$occString"
-        tracked_occurances_keys+=("$occKey")
-    done < "$targets_file"
-
     if [ ${#tracked_occurances_keys[@]} -eq 0 ]; then
-        echo "$targets_file has no lines. Searching in log is disabled."
+        echo "[$service_name CLIENT] Searching for defined string in the log is disabled."
     fi
 }
 
