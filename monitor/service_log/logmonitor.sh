@@ -12,7 +12,7 @@ executor_trigger_pause=1200
 #peers_regex=" - peers: ([0-9]+)"
 #min_peers=20
 
-declare -r version="1.0.4"
+declare -r version="1.0.5"
 
 # System variables (do not modify)
 lastLogTimeFile=""
@@ -65,10 +65,6 @@ use_shell_parameters() {
             -f|--targets_file) 
                 targets_file="$2"
                 shift 2
-                if [ -z "$targets_file" ]; then
-                    echo "Error: No target file specified."
-                    exit 1
-                fi
                 ;;
             -t|--log_maxwaitingtime) 
                 log_maxwaitingtime="$2"
@@ -103,32 +99,39 @@ use_shell_parameters() {
 
 # fill $tracked_occurances_arr and $tracked_occurances_keys based on $targets_file
 load_tracking_targets (){
-    if [ -f "$targets_file" ]; then
-        if [ -s "$targets_file" ]; then
-            echo "$targets_file loaded. Tracking for following actions:"
-            #parse by lines
-            while IFS= read -r line; do
-                # split according to first occurancy of '@'
-                # parseby :   leftSide  rightSide
-                IFS=@ read -r occKey occString <<< "$line"
-                # each line must contain at least 1x : [type]:[string]
-                if [[ -z "$occKey" || -z "$occString" ]]; then
-                    echo "[Error] Line $line does not fill valid schema 'occurancyKey@occurancyString'"
-                    exit 1
-                fi
-                echo "# $occKey @ $occString"
-                tracked_occurances_arr["$occKey"]="$occString"
-                tracked_occurances_keys+=("$occKey")
-            done < "$targets_file"
+    # Target file is attached as parameter (optional)
+    if [[ -n "$targets_file" ]]; then
+        # Target file exists on the disk
+        if [ -f "$targets_file" ]; then
+            # Target file contains definition data
+            if [ -s "$targets_file" ]; then
+                echo "$targets_file loaded. Tracking for following actions:"
+                #parse by lines
+                while IFS= read -r line; do
+                    # split according to first occurancy of '@'
+                    # parseby :   leftSide  rightSide
+                    IFS=@ read -r occKey occString <<< "$line"
+                    # each line must contain at least 1x : [type]:[string]
+                    if [[ -z "$occKey" || -z "$occString" ]]; then
+                        echo "[Error] Line $line does not fill valid schema 'occurancyKey@occurancyString'"
+                        exit 1
+                    fi
+                    echo "# $occKey @ $occString"
+                    tracked_occurances_arr["$occKey"]="$occString"
+                    tracked_occurances_keys+=("$occKey")
+                done < "$targets_file"
+            else
+                echo "$targets_file loaded. No lines found - the file is empty"
+            fi
         else
-            echo "$targets_file loaded. No lines found - the file is empty"
+            echo "load_tracking_targets: $targets_file not found / accessible. Target File parameter is required!"
         fi
     else
-        echo "load_tracking_targets: $targets_file not found / accessible. Target File parameter is required!"
+        echo "[Info] No target file (-f param) attached"
     fi
 
     if [ ${#tracked_occurances_keys[@]} -eq 0 ]; then
-        echo "[$service_name CLIENT] Searching for defined string in the log is disabled."
+        echo "[$service_name CLIENT] Searching for strings in the log is disabled."
     fi
 }
 
