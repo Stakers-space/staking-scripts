@@ -250,7 +250,7 @@ journalctl -fu $service_name | while read -r line; do
         if (( current_time - last_reset > executor_trigger_periode )); then
             echo "$service_name log monitor | Resetting occurances counter"
             for occKey in "${!occ_counts_arr[@]}"; do
-                echo "# ${occKey} | occ_counts_arr[${occKey}] → 0"
+                echo "# ${tracked_occurances_keys[$occKey]} | ${occ_counts_arr[$occKey]} → 0"
                 occ_counts_arr["$occKey"]=0
             done
             last_reset=$current_time
