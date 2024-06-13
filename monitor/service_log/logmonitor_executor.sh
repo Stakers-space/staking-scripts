@@ -6,7 +6,7 @@ executor_log_file=""
 occurancyKey=$1
 serviceName=$2
 
-declare -r version="1.0.5"
+declare -r version="1.0.6"
 
 get_version() {
   echo -e "LogMonitor Executor version: $version | Powered by https://stakers.space"

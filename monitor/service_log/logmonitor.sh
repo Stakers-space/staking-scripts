@@ -12,7 +12,7 @@ executor_trigger_pause=1200
 #peers_regex=" - peers: ([0-9]+)"
 #min_peers=20
 
-declare -r version="1.0.5"
+declare -r version="1.0.6"
 
 # System variables (do not modify)
 lastLogTimeFile=""
