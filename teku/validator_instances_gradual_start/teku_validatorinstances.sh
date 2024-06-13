@@ -10,7 +10,7 @@ start_instance_if_inactive() {
     local index=$1 
     if [[ index -lt ${#validatorInstances_array[@]} ]]; then
         local service_name="${validatorInstances_array[index]}.service"
-        
+
         if [[ $(systemctl is-active "$service_name") != "active" ]]; then
             echo "Starting $service_name"
             sudo systemctl start "$service_name"

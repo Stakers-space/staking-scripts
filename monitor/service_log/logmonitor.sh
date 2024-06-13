@@ -197,12 +197,6 @@ push_lastLogTimeToFile() {
     else
         echo "[$service_name CLIENT] time $time_to_save succesfuly saved in $lastLogTimeFile"
         last_log_time=$time_to_save
-        #if [ -s "$last_log_time" ]; then
-        #    echo "Last log time is $(cat "$lastLogTimeFile")"
-        #else
-        #    echo "Error: Log time file is empty."
-        #    last_log_time=$(date +%s)
-        #fi  
     fi
 }
 
@@ -216,13 +210,13 @@ process_last_log_time_check() {
         local last_ftime=$(cat $lastLogTimeFile)
         local timeFromLastLog=$((current_ftime - last_ftime))
         echo "[$service_name CLIENT] LL $last_log_time | Time since last log: $timeFromLastLog/$log_maxwaitingtime"
-        if (( $timeFromLastLog > log_maxwaitingtime )); then
+        if (( $timeFromLastLog > log_maxwaitingtime && timeFromLastLog >= 0 )); then
             echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
             if [ "$execution_processor" -eq 1 ]; then
                 # execute action
                 "$executor_shell" "NOLOG" "$service_name"
                 # pause after restart
-                sleep 100
+                # sleep $log_maxwaitingtime
             fi
         fi
         sleep $log_maxwaitingtime
@@ -301,7 +295,7 @@ journalctl -fu $service_name | while read -r line; do
                 # Reset occurancy counters back to 0
                 occ_counts_arr["$occKey"]=0
 
-                unpause_time=$((current_time + executor_trigger_pause))
+                unpause_time=$((current_time + executor_trigger_pause + lastlogfile_updateTimer))
                 readable_time=$(date -d "@$unpause_time" '+%Y-%m-%d %H:%M:%S')
                 echo "$service_name log monitor | Pause for $executor_trigger_pause seconds | Unpause at $readable_time"
                 # pause also last log time monitor (substream)
