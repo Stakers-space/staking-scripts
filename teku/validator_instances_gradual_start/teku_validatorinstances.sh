@@ -24,9 +24,9 @@ if [[ "$command" == "start" ]]; then
 
     echo "Starting Teku validator instances..."
     for (( i=0; i<${#validatorInstances_array[@]}; i+=3 )); do
-        start_service_if_inactive $i
-        start_service_if_inactive $((i+1))
-        start_service_if_inactive $((i+2))
+        start_instance_if_inactive $i
+        start_instance_if_inactive $((i+1))
+        start_instance_if_inactive $((i+2))
 
         echo "Waiting $groupDelay seconds before starting next group of instances."
         sleep $groupDelay
