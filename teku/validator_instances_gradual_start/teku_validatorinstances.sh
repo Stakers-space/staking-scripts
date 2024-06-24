@@ -1,7 +1,7 @@
 #!/bin/bash
-declare -r version="1.0.0"
+declare -r version="1.0.1"
 
-validatorInstances_array="teku-vi1 teku-vi2 teku-vi3 teku-vi4 teku-vi5 teku-vi6 teku-vi7 teku-vi8 teku-vi9"
+validatorInstances_array=("teku-vi1" "teku-vi2" "teku-vi3" "teku-vi4" "teku-vi5" "teku-vi6" "teku-vi7" "teku-vi8" "teku-vi9")
 
 command=$1
 groupDelay=60
@@ -12,8 +12,8 @@ start_instance_if_inactive() {
         local service_name="${validatorInstances_array[index]}.service"
 
         if [[ $(systemctl is-active "$service_name") != "active" ]]; then
-            echo "Starting $service_name"
             sudo systemctl start "$service_name"
+            echo "$service_name started | Current state: $(systemctl is-active $service_name)"
         else
             echo "$service_name is already active."
         fi
@@ -37,6 +37,7 @@ elif [[ "$command" == "stop" ]]; then
     echo "Stopping Teku validator instances..."
     for validatorInstance in "${validatorInstances_array[@]}"; do
         sudo systemctl stop "$validatorInstance.service"
+        echo "$validatorInstance.service stopped | Current state: $(systemctl is-active $validatorInstance)"
     done
 
 else
