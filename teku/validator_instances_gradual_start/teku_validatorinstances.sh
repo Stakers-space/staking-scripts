@@ -31,6 +31,7 @@ if [[ "$command" == "start" ]]; then
         echo "Waiting $groupDelay seconds before starting next group of instances."
         sleep $groupDelay
     done
+    echo "All instances have been processed and started as required."
 
 elif [[ "$command" == "stop" ]]; then
 
@@ -39,7 +40,8 @@ elif [[ "$command" == "stop" ]]; then
         sudo systemctl stop "$validatorInstance.service"
         echo "$validatorInstance.service stopped | Current state: $(systemctl is-active $validatorInstance)"
     done
-
+    echo "All instances have been stopped."
+    
 else
     echo "Invalid command. Please use 'start' or 'stop'."
     exit 1
