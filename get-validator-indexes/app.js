@@ -82,16 +82,11 @@ function GetIndexes(){
                     }
                     a++;
                 }
+                console.log(ddfile,"|", link+ids.toString());
           } else {
                 console.log(`DDFile: ${ddfile}, is not an array`);
           }
         }
     }
-
-
-
-
-
-
 }
 
