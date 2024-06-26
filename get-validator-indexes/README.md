@@ -6,9 +6,9 @@
 ## data structure
 ```
 app.js
-└── data directory
+└── data (directory)
     ├── offline-preparation.json
-    └── deposit_data directory
+    └── deposit_data (directory)
         ├── deposit_data-......json
         ├── deposit_data-......json
         ├── ...
