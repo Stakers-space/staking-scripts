@@ -4,6 +4,7 @@
 - node.js installed
 
 ## data structure
+```
 app.js
 └── data directory
     ├── offline-preparation.json
@@ -12,7 +13,7 @@ app.js
         ├── deposit_data-......json
         ├── ...
         └── deposit_data-......json
-
+```
 ### Usage
 Run `node app.js`.
 There will be an output in a forms of links to the dashboard with validators on the gnosischa.in
