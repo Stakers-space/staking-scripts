@@ -3,7 +3,7 @@
 
 service_name=""
 targets_file=""
-log_maxwaitingtime=1000 #if no new log is received within the time, it may indicate that the service is stucked / does not listen / respond
+log_maxwaitingtime=0 #if no new log is received within the time, it may indicate that the service is stucked / does not listen / respond
 executor_shell="" #logmonitor_executor.sh
 executor_trigger_count=200
 executor_trigger_periode=600
