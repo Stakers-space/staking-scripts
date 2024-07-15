@@ -1,0 +1,16 @@
+# Lodestar Validator folder structure
+├── keystores (created by lodestar client on keys registration)
+├── secrets (created by lodestar client on keys registration)
+├── validator-db (created by validator client on validators registration)
+└── cache (created by validator launch)
+
+# Error log
+Error: Corruption: bad entry in block
+error: Error signing attestation slot=16392383, index=42, head=0xXXXX, validatorIndex=XXXX - Corruption: bad entry in block
+Jul 14 11:07:35 svgn5 lodestar[216965]: Error: Corruption: bad entry in block
+error: Error signing attestation slot=16392383, index=37, head=0xXXXX, validatorIndex=XXXX - Corruption: bad entry in block
+Jul 14 11:07:35 svgn5 lodestar[216965]: Error: Corruption: bad entry in block
+...
+
+# Fix - DB removal
+The fix is associated with stopping the validator instance, removing "validator-db" and "cache" folders and relaunching the vvalidator client after 2 minutes (slash protection)

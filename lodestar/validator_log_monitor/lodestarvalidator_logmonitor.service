@@ -1,0 +1,13 @@
+[Unit]
+Description=Lodestar Validator Log Monitor
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/logmonitor.sh -s "lodestarvalidator" -f "/usr/local/etc/lodestarvalidator_tracking_records.txt" -t 600 -x "/usr/local/bin/logmonitor_executor_lodestarvalidator.sh" -c 80 -d 300 -p 900
+Restart=on-failure
+User=lodestarvalidator
+Group=lodestarvalidator
+
+[Install]
+WantedBy=multi-user.target

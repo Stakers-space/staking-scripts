@@ -1,6 +1,6 @@
 # Beacon node log monitor for Lodestar clients
 
-This utility script monitors lodestar beacon log in real time and check its lines for defined errors. The script allows to set any execution action of lodestar beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the lodestar beacon log service through the `lodestar_tracking_records.txt` file.
+This utility script monitors lodestar beacon log in real time and check its lines for defined errors. The script allows to set any execution action of lodestar beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the lodestar beacon log service through the `lodestarbeacon_tracking_records.txt` file.
 
 ## Installation
 This script uses Service log monitor shell [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on background and extends it with a custom lodestarbeacon related configuration.
@@ -27,11 +27,11 @@ sudo chmod +x /usr/local/bin/logmonitor.sh
 ## Errors list for lodestarbeacon service
 [Stakers.space](https://stakers.space) updates list with lodestarbeacon related errors occuring in a log. Take into notice that the file is kept as small as possible, containing only serious issues. High number of lines can increase CPU usage.
 ```
-sudo curl -o /usr/local/etc/lodestar_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lodestar/beacon_log_monitor/lodestar_tracking_records.txt
+sudo curl -o /usr/local/etc/lodestarbeacon_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lodestar/beacon_log_monitor/lodestarbeacon_tracking_records.txt
 ```
 - Add / remove lines from the file anytime, if required
 ```
-sudo nano /usr/local/etc/lodestar_tracking_records.txt
+sudo nano /usr/local/etc/lodestarbeacon_tracking_records.txt
 ```
 Keep the required line format of `targetType@targetString`, where:
 - `errorType`: custom key under which the target is being tracked
@@ -41,7 +41,7 @@ Keep the required line format of `targetType@targetString`, where:
 > There may be a need to resave the downloaded file for option to read from it.
 
 ## Log monitor executor utility
-Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
+Executor utility allows to execute any action when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
 
