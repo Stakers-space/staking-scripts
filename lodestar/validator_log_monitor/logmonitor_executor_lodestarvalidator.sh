@@ -5,6 +5,7 @@
 executor_log_file=""
 occurancyKey=$1
 serviceName=$2
+validatorDataDirectory="/var/lib/lodestar/i1"
 
 declare -r version="1.0.6"
 
@@ -37,20 +38,20 @@ executor_log_file="/tmp/${serviceName}_monitor.log"
 
 case "$occurancyKey" in
     DBCORRUPTION) 
-        echo "Info | Starting validator instance stop for DBCORRUPTION"
+        log "Info | Starting validator instance stop for DBCORRUPTION"
         # Stop the validator instance
         sudo systemctl stop ${serviceName}
-        echo "Info | Validator instance stopped"
+        log "Info | Validator instance stopped"
         # remove the directories
-        echo "Info | Removing directories"
-        sudo rm -r /var/lib/lodestar/i1/cache
-        sudo rm -r /var/lib/lodestar/i1/validator-db
-        echo "Info | Directories removed"
+        log "Info | Removing directories"
+        sudo rm -r ${validatorDataDirectory}/cache
+        sudo rm -r ${validatorDataDirectory}/validator-db
+        log "Info | Directories removed"
         # wait for at least 2 minutes (slash protection)
-        echo "Info | Sleeping for 180 seconds"
+        log "Info | Sleeping for 180 seconds"
         sleep 180 # seconds
         # start the validator instance again
-        echo "Info | Starting validator instance"
+        log "Info | Starting validator instance"
         sudo systemctl start ${serviceName}
     # ...
     *)
