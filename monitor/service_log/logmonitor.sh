@@ -122,7 +122,8 @@ load_tracking_targets (){
                     fi
                     echo "# $occKey @ $triggerCount @ $occString"
                     tracked_occurances_arr["$occKey"]="$occString"
-                    trigger_count_arr["$occKey"]="$triggerCount"
+                    # trigger_count_arr["$occKey"]="$triggerCount"
+                    trigger_count_arr["$occKey"]=$((triggerCount))
                     tracked_occurances_keys+=("$occKey")
                 done < "$targets_file"
             else
@@ -292,7 +293,7 @@ journalctl -fu $service_name | while read -r line; do
             # Process action if occurancy count is higher than $trigger_count for the key
             if [ "${occ_counts_arr["$occKey"]}" -ge "${trigger_count_arr["$occKey"]}" ]; then
 
-                echo "$service_name pattern detection | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
+                echo "$current_time | $service_name | pattern detection - trigger count reached for $occKey: ${occ_counts_arr["$occKey"]} >= ${trigger_count_arr["$occKey"]}"
 
                 # Execute action
                 "$executor_shell" "$occKey" "$service_name"
