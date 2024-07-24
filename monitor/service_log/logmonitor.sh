@@ -5,20 +5,22 @@ service_name=""
 targets_file=""
 log_maxwaitingtime=0 #if no new log is received within the time, it may indicate that the service is stucked / does not listen / respond
 executor_shell="" #logmonitor_executor.sh
-executor_trigger_count=200
 executor_trigger_periode=600
 executor_trigger_pause=1200
 # add log file (inside /var/lib... service data addressory)
 #peers_regex=" - peers: ([0-9]+)"
 #min_peers=20
 
-declare -r version="1.0.6"
+# ToDo: Move trigger count into target file => support of a custom trigger count for each definition
+
+declare -r version="1.0.7"
 
 # System variables (do not modify)
 lastLogTimeFile=""
 # frequency of updating data in the file
 readonly lastlogfile_updateTimer=60
 declare -A tracked_occurances_arr # from $targets_file file
+declare -A trigger_count_arr; # from $targets_file file
 declare -a tracked_occurances_keys # keys from tracked_occurances_arr
 execution_processor=0
 
@@ -28,9 +30,8 @@ print_variables() {
     echo -e "├── -x|--executor_shell: absolute path to shell script executing actions"
     echo -e "├── -t|--log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service. If no log displayed, an action is processed through executor_shell"
     echo -e "├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log"
-    echo -e "├── -c|--executor_trigger_count: [int] required number of occurances to execute a given action through executor_shell"
-    echo -e "├── -d|--executor_trigger_periode: [seconds] | interval within which executor_trigger_count must occure (e.g. 60 occurances in 60 seconds)"
-    echo -e "└──  -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment"
+    echo -e "├── -d|--executor_trigger_periode: [seconds] | interval within which declared trigger_count must occur (e.g. 60 occurances in 60 seconds)"
+    echo -e "└── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment"
 }
 
 get_version() {
@@ -46,7 +47,7 @@ get_help() {
 
 # Set variables from attached parameters
 use_shell_parameters() {
-    TEMP=$(getopt -o s:f:t:x:c:d:p: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_count:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
+    TEMP=$(getopt -o s:f:t:x:d:p: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_periode:,executor_trigger_pause: -- "$@")
     #echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
 
@@ -72,10 +73,6 @@ use_shell_parameters() {
                 ;;
             -x|--executor_shell) 
                 executor_shell="$2"
-                shift 2
-                ;;
-            -c|--executor_trigger_count) 
-                executor_trigger_count="$2"
                 shift 2
                 ;;
             -d|--executor_trigger_periode) 
@@ -110,14 +107,22 @@ load_tracking_targets (){
                 while IFS= read -r line; do
                     # split according to first occurancy of '@'
                     # parseby :   leftSide  rightSide
-                    IFS=@ read -r occKey occString <<< "$line"
-                    # each line must contain at least 1x : [type]:[string]
-                    if [[ -z "$occKey" || -z "$occString" ]]; then
-                        echo "[Error] Line $line does not fill valid schema 'occurancyKey@occurancyString'"
+                    # IFS=@ read -r occKey triggerCount occString <<< "$line"
+                    # each line must contain at least 1x @ : [type]@[string]
+                    #if [[ -z "$occKey" || -z "$occString" ]]; then
+                    #    echo "[Error] Line $line does not fill valid schema 'occurancyKey@occurancyString'"
+                    #    exit 1
+                    #fi
+                    #echo "# $occKey @ $occString"
+                    IFS=@ read -r occKey triggerCount occString <<< "$line"
+                    # each line must contain at least 2x @ [type]@[count]@[string]
+                    if [[ -z "$occKey" || -z "$triggerCount" || -z "$occString" ]]; then
+                        echo "[Error] Line $line does not fill valid schema 'occurancyKey@triggerCount@occurancyString'"
                         exit 1
                     fi
-                    echo "# $occKey @ $occString"
+                    echo "# $occKey @ $triggerCount @ $occString"
                     tracked_occurances_arr["$occKey"]="$occString"
+                    trigger_count_arr["$occKey"]="$triggerCount"
                     tracked_occurances_keys+=("$occKey")
                 done < "$targets_file"
             else
@@ -275,7 +280,7 @@ journalctl -fu $service_name | while read -r line; do
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
 
-            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/$executor_trigger_count hits in ${executor_trigger_periode}s"
+            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/${trigger_count_arr["$occKey"]} hits in ${executor_trigger_periode}s"
 
             if [ "$execution_processor" -ne 1 ]; then
                 continue
@@ -284,8 +289,8 @@ journalctl -fu $service_name | while read -r line; do
             # Execution processor
                 # If this would be moved into executor, there's possible to set individual trigger count for any error separately (special trigger config file)
                     # Isssue with the sleep for certain time after execution (not known the execution time - although it may be held in execution script as well)
-            # Process action if occurancy count is higher than $executor_trigger_count
-            if [[ ${occ_counts_arr["$occKey"]} -ge $executor_trigger_count ]]; then
+            # Process action if occurancy count is higher than $trigger_count for the key
+            if [ "${occ_counts_arr["$occKey"]}" -ge "${trigger_count_arr["$occKey"]}" ]; then
 
                 echo "$service_name pattern detection | $current_time || $occKey | count: ${occ_counts_arr["$occKey"]}"
 

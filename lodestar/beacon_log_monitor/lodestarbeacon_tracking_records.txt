@@ -1,1 +1,1 @@
-NETWORK@PublishError.NoPeersSubscribedToTopic
+NETWORK@80@PublishError.NoPeersSubscribedToTopic

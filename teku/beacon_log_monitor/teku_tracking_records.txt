@@ -1,1 +1,2 @@
-NETWORK@because no peers were available on the required gossip topic
+NETWORK@200@because no peers were available on the required gossip topic
+EXECUTION@60@Waiting for execution layer sync

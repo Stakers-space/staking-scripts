@@ -24,3 +24,17 @@
 
 
 "WARN  | GossipFailureLogger | Failed to publish attestation(s) for slot" && "because no peers were available on the required gossip topic"
+
+
+# Stucked Execution client state
+XX:XX:XX.040 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 16
+XX:XX:XX.033 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 16
+XX:XX:XX.035 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 15
+XX:XX:XX.034 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 15
+XX:XX:XX.036 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 15
+XX:XX:XX.023 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 14
+XX:XX:XX.042 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 14
+XX:XX:XX.035 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 14
+XX:XX:XX.031 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 14
+XX:XX:XX.036 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 14
+XX:XX:XX.028 INFO  - Syncing     *** Target slot: XXXXXXXX, Head slot: XXXXXXXX, Waiting for execution layer sync, Connected peers: 13

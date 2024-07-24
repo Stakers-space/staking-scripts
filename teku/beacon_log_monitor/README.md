@@ -3,7 +3,7 @@
 This utility script monitors teku beacon log in real time and check its lines for defined errors. The script allows to set any execution action of teku beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the teku beacon log service through the `teku_tracking_records.txt` file.
 
 ## Installation
-This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/log_monitor) on background and extends it with a custom tekubeacon related configuration.
+This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on background and extends it with a custom tekubeacon related configuration.
 ### Log Monitor utility
 1. Check `.logmonitor.sh` availability
 ```

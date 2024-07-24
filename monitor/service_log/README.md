@@ -22,9 +22,8 @@ Utility consists of scripts, definition file and service files for running the u
 ├── -x|--executor_shell: absolute path to shell script executing actions
 ├── -t|--log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service. If no log displayed, an action is processed through executor_shell
 ├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log
-├── -c|--executor_trigger_count: [int] required number of occurances to execute a given action through executor_shell
-├── -d|--executor_trigger_periode: [seconds] | interval within which executor_trigger_count must occure (e.g. 60 occurances in 60 seconds)
-└──  -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment
+├── -d|--executor_trigger_periode: [seconds] | interval within which trigger_count for the key defined in the target file must occur (e.g. 60 occurances in 60 seconds)
+└── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment
 ```
 
 ## Installation
@@ -51,25 +50,27 @@ sudo nano /usr/local/etc/lodestarbeaconlog_patterns.txt
 ```
 - Define strings the utility should search for within each log line in the following format:
 ```
-occurancyKey@occurancyString
+occurancyKey@triggerCount@occurancyString
 ```
 Where:
  - `occurancyKey` = categorization. e.g. `network`, `client` etc. You can set own custom value. You can have 1 `occurancyKey` for each line as well as use same `occurancyKey` for numerous lines. In such case, more occurances are counted under one `occurancyKey`.
  - `@` = parser
+ - `triggerCount` = trigger count (within specified time through `-d|--executor_trigger_periode` param) for executing an action
+ - `@` = parser
  - `occurancyString` = string the utility should search for in each line, e.g. `Error: PublishError.NoPeersSubscribedToTopic`
     `/usr/local/etc/lodestarbeaconlog_patterns.txt` content Sample:
  ```
-    NETWORK@Error: Connect ECONNREFUSED
-    NETWORK@Error: Timeout
-    NETWORK_INVALIDREQUEST@Error: RESPONSE_ERROR_INVALID_REQUEST: stream reset
-    NETWORK_UnexpectedEnd@Error: unexpected end of input
-    NETWORK_ErrorDial@Error: REQUEST_ERROR_DIAL_ERROR
-    NETWORK_RATELIMIT@Error: Request_Error_RATE_LIMITED
-    NETWORK_MaxPeerAddr@CodeError: Peer had more than maxPeerAddrsToDial
-    NETWORK_MulltiaddrAggr@AggregateCodeError: All multiaddr dials failed
-    NETWORK_InconsistentState@Error: Inconsistent state, blobSidecar blockRoot=
-    PUBLISH_NoPeers@Error: PublishError.NoPeersSubscribedToTopic
-    PUBLISH_NoPeers@Error: Multiple errors on submitPoolSyncCommitteeSignatures
+    NETWORK@100@Error: Connect ECONNREFUSED
+    NETWORK@50@Error: Timeout
+    NETWORK_INVALIDREQUEST@100@Error: RESPONSE_ERROR_INVALID_REQUEST: stream reset
+    NETWORK_UnexpectedEnd@100@Error: unexpected end of input
+    NETWORK_ErrorDial@100@Error: REQUEST_ERROR_DIAL_ERROR
+    NETWORK_RATELIMIT@100@Error: Request_Error_RATE_LIMITED
+    NETWORK_MaxPeerAddr@100@CodeError: Peer had more than maxPeerAddrsToDial
+    NETWORK_MulltiaddrAggr@100@AggregateCodeError: All multiaddr dials failed
+    NETWORK_InconsistentState@100@Error: Inconsistent state, blobSidecar blockRoot=
+    PUBLISH_NoPeers@100@Error: PublishError.NoPeersSubscribedToTopic
+    PUBLISH_NoPeers@100@Error: Multiple errors on submitPoolSyncCommitteeSignatures
 ```
 Alternatively, you can find ready-to use pattern file for the specified client, see:
  - [Nethermind Log Monitor](nethermind/log_monitor)
