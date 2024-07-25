@@ -20,7 +20,7 @@ lastLogTimeFile=""
 # frequency of updating data in the file
 readonly lastlogfile_updateTimer=60
 declare -A tracked_occurances_arr # from $targets_file file
-declare -A trigger_count_arr; # from $targets_file file
+declare -A trigger_count_arr # from $targets_file file
 declare -a tracked_occurances_keys # keys from tracked_occurances_arr
 execution_processor=0
 
@@ -120,7 +120,8 @@ load_tracking_targets (){
                         echo "[Error] Line $line does not fill valid schema 'occurancyKey@triggerCount@occurancyString'"
                         exit 1
                     fi
-                    echo "# $occKey @ $triggerCount @ $occString"
+                    echo "# key: $occKey | triggerCount: $triggerCount in $executor_trigger_periode seconds | occurancyString: $occString"
+                    
                     tracked_occurances_arr["$occKey"]="$occString"
                     # trigger_count_arr["$occKey"]="$triggerCount"
                     trigger_count_arr["$occKey"]=$((triggerCount))
@@ -281,7 +282,7 @@ journalctl -fu $service_name | while read -r line; do
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
 
-            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/${trigger_count_arr["$occKey"]} hits in ${executor_trigger_periode}s"
+            echo "!!![$service_name] $occKey @ ${tracked_occurances_arr["$occKey"]} | ${occ_counts_arr["$occKey"]}/${trigger_count_arr["$occKey"]} hits in ${executor_trigger_periode}s."
 
             if [ "$execution_processor" -ne 1 ]; then
                 continue
