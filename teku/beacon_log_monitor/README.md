@@ -46,7 +46,10 @@ Executor utility allows to execute any acction when certain pattern is reached (
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
 
-1. Check `.logmonitor_executor.sh` availability
+1. Based on zour preference usage, check `.logmonitor_executor.sh` (general) or `.logmonitor_executor_tekubeacon.sh` (service-related) availability
+```
+/usr/local/bin/logmonitor_executor_tekubeacon.sh version
+```
 ```
 /usr/local/bin/logmonitor_executor.sh version
 ```
@@ -59,16 +62,15 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mo
 ```
 sudo curl -o /usr/local/bin/logmonitor_executor_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor_executor_tekubeacon.sh
-```
 - Open the file and configurate execution actions
 ```
 sudo nano /usr/local/bin/logmonitor_executor_tekubeacon.sh
 ```
+- Enable execution of the shell script
+```
+sudo chmod +x /usr/local/bin/logmonitor_executor_tekubeacon.sh
+```
 - Executor is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
-
 
 
 ### Log monitor service
