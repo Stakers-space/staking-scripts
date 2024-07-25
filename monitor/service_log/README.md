@@ -81,11 +81,11 @@ Alternatively, you can find ready-to use pattern file for the specified client, 
 
 - Launch the shell script
 ```
-/usr/local/bin/logmonitor.sh --service "serviceName" --targets="definition_file"
+/usr/local/bin/logmonitor.sh --service_name "serviceName" --targets="definition_file"
 ```
 Sample:
 ```
-/usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt"
+/usr/local/bin/logmonitor.sh --service_name "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt"
 ```
 The script prints warning if any specified patter is found in the log. It also may process any execution action through `logmonitor_executor.sh` (see running executer section).
 
@@ -93,16 +93,16 @@ The script prints warning if any specified patter is found in the log. It also m
 `logmonitor.sh` includes a simple timer utility that triggers an action if no log line was printed within a defined time. It's automatically activated by attaching parameter `--log_maxwaitingtime` defining maximum enabled time without any new log line. After activation, the `.logmonitor.sh` prints a warning by deafault. It `.logmonitor.sh` is connected with `logmonitor_executor.sh`, an action defined under key `nolog` is being triggered through the `logmonitor_executor.sh`. (Typical action is restarting the client).
 Sample:
 ```
-/usr/local/bin/logmonitor.sh --service "serviceName" --log_maxwaitingtime="500"
+/usr/local/bin/logmonitor.sh --service_name "serviceName" --log_maxwaitingtime="500"
 ```
 
 ### Monitoring both at once
 ```
-/usr/local/bin/logmonitor.sh --service "serviceName" --targets_file="definition_file" --log_maxwaitingtime="MaxnabledTimeFromPreviousLogLine"
+/usr/local/bin/logmonitor.sh --service_name "serviceName" --targets_file="definition_file" --log_maxwaitingtime="MaxnabledTimeFromPreviousLogLine"
 ```
 Sample:
 ```
-/usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets_file="/usr/local/etc/lodestarbeaconlog_patterns.txt" --log_maxwaitingtime="500"
+/usr/local/bin/logmonitor.sh --service_name "lodestarBeacon.service" --targets_file="/usr/local/etc/lodestarbeaconlog_patterns.txt" --log_maxwaitingtime="500"
 ```
 
 ## Running executor
@@ -128,11 +128,11 @@ sudo chmod +x /usr/local/bin/logmonitor_executor.sh
 ```
 - Activate executor with adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`.
 ```
-/usr/local/bin/logmonitor.sh --service "serviceName" --targets="definition_file" --executer_trigger_pause="MaxnabledTimeFromPreviousLogLine" ...
+/usr/local/bin/logmonitor.sh --service_name "serviceName" --targets="definition_file" --executer_trigger_pause="MaxnabledTimeFromPreviousLogLine" ...
 ```
 Sample:
 ```
-/usr/local/bin/logmonitor.sh --service "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt" --executer_trigger_pause="500" ...
+/usr/local/bin/logmonitor.sh --service_name "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt" --executer_trigger_pause="500" ...
 ```
 
 Note:

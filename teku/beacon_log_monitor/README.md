@@ -1,6 +1,6 @@
 # Beacon node log monitor for Teku client
 
-This utility script monitors teku beacon log in real time and check its lines for defined errors. The script allows to set any execution action of teku beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the teku beacon log service through the `teku_tracking_records.txt` file.
+This utility script monitors teku beacon log in real time and check its lines for defined errors. The script allows to set any execution action of teku beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the teku beacon log service through the `tekubeacon_tracking_records.txt` file.
 
 ## Installation
 This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on background and extends it with a custom tekubeacon related configuration.
@@ -12,11 +12,11 @@ This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scrip
 If the shell script is not available, install it
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor.sh
+sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
 ```
 - Enable execution of the shell script
 ```
@@ -26,15 +26,17 @@ sudo chmod +x /usr/local/bin/logmonitor.sh
 2. Download errors list for tekubeacon service
 [Stakers.space](https://stakers.space) updates list with tekubeacon related errors occuring in a log. Take into notice that the file is kept as small as possible, containing only serious issues. High number of lines can increase CPU usage.
 ```
-sudo curl -o /usr/local/etc/teku_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/beacon_log_monitor/teku_tracking_records.txt
+sudo curl -o /usr/local/etc/tekubeacon_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/beacon_log_monitor/tekubeacon_tracking_records.txt
 ```
 - Add / remove lines from the file anytime, if required
 ```
-sudo nano /usr/local/etc/teku_tracking_records.txt
+sudo nano /usr/local/etc/tekubeacon_tracking_records.txt
 ```
-Keep the required line format of `targetType@targetString`, where:
+Keep the required line format of `targetType@triggerCount@targetString`, where:
 - `errorType`: custom key under which the target is being tracked
 - `@`: parser element
+- `triggerCount` = trigger count (within specified time through `-d|--executor_trigger_periode` param) for executing an action
+ - `@` = parser
 - `errorString`: each log line is checked whether it contains this string.
 > [!NOTE]
 > There may be a need to resave the downloaded file for option to read from it.
@@ -51,11 +53,11 @@ Executor utility allows to execute any acction when certain pattern is reached (
 If the shell script is not available, install it
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor_executor_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_executor.sh
+sudo curl -o /usr/local/bin/logmonitor_executor_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Enable execution of the shell script
 ```
@@ -67,31 +69,6 @@ sudo nano /usr/local/bin/logmonitor_executor_tekubeacon.sh
 ```
 - Executor is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
 
-### Log monitor sleeper utility
-`logmonitor_sleeper.sh` checks log for regular updates. Once there's no new line for certain defined periode, it may be considered that the service is stucked. In such case sleeper utility allows automatically restart it. The utility allows to configurate the maximum waiting time for new line as well as action to execute on occuration.
-
-1. Check `.logmonitor_sleeper.sh` availability
-```
-/usr/local/bin/logmonitor_sleeper.sh version
-```
-If the shell script is not available, install it
-- View the script
-```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
-```
-- Download the script to `/usr/local/bin` directory
-```
-sudo curl -o /usr/local/bin/logmonitor_sleeper_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/log_monitor/logmonitor_sleeper.sh
-```
-- Open the file and configurate execution actions
-```
-sudo nano /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
-```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor_sleeper_tekubeacon.sh
-```
-- Sleeper is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
 
 
 ### Log monitor service
@@ -125,3 +102,6 @@ journalctl -f -u tekubeacon.service -u tekubeacon_logmonitor.service
 ```
 sudo systemctl enable tekubeacon_logmonitor.service
 ```
+
+### Set proper permissions for actions executed through the executor
+See section [Running Executor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log#running-executor)
