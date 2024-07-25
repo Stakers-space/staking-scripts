@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/logmonitor.sh --service_name "tekubeacon" --executor_shell "/usr/local/bin/logmonitor_executor.sh" --log_maxwaitingtime 300 --targets_file "/usr/local/etc/tekubeacon_tracking_records.txt" --executor_trigger_periode 360 --executor_trigger_pause 1200
+ExecStart=/usr/local/bin/logmonitor.sh --service_name "tekubeacon" --executor_shell "/usr/local/bin/logmonitor_executor_tekubeacon.sh" --log_maxwaitingtime 300 --targets_file "/usr/local/etc/tekubeacon_tracking_records.txt" --executor_trigger_periode 360 --executor_trigger_pause 1200
 Restart=on-failure
 User=tekubeacon
 Group=tekubeacon

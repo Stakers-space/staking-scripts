@@ -141,14 +141,15 @@ If you use `sudo` commands within the executor, be sure you enabled that for the
 ```
 sudo visudo
 ```
-- Eanble sudo execution of `/usr/local/bin/sampleService` by `specificServiceUser` through adding following line at the end
+- Enable sudo execution of `/usr/local/bin/sampleService` by `specificServiceUser` through adding following line at the end
 ```
 specificServiceUser ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart sampleService
 ```
 
 ## Service files configuration
 Configurate serivce file and run the logmonitor under a service on background.
-Example services:
+### Execution Clients:
 - [Nethermind Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/nethermind/log_monitor)
+### Consensus Clients
 - [Lodestar Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/lodestar/beacon_log_monitor)
-...
+- [Teku Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/teku/beacon_log_monitor)

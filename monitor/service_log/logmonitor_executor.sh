@@ -36,7 +36,7 @@ fi
 executor_log_file="/tmp/${serviceName}_monitor.log"
 
 case "$occurancyKey" in
-    NETWORK) 
+    NETWORK)
         if [ ! -f "/usr/local/bin/mullvad_change_server.sh" ]; then
             log "[Warn] /usr/local/bin/mullvad_change_server.sh not found"
             exit 1
@@ -45,7 +45,7 @@ case "$occurancyKey" in
             #/usr/local/bin/mullvad_change_server.sh
         fi
         ;;
-    CLIENT) 
+    CLIENT)
         log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
         # sudo systemctl restart $serviceName
         ;;
