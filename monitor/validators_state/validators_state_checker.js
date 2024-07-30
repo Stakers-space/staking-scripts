@@ -16,14 +16,17 @@ GetBeaconApiData("/headers", function(err,resp){
         console.error(err);
         return;
     }
-    console.log("headers data:", resp);
+    
+    const slot = resp[data].header.message.slot;
+    console.log("headers data:", resp, "slot:", slot);
 
     // Get Attestations data for last slot
-    GetBeaconApiData("/blocks/16588429/attestations", function(err,resp){
+    GetBeaconApiData("/blocks/"+slot+"/attestations", function(err,resp){
         if(err) {
             console.error(err);
             return;
         }
+
         console.log("attestations data:", resp);
 
         GetPubKeyStateData(instanceIndex, pubKeyIndex, function(err,resp){
@@ -43,7 +46,7 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
         if(err) {
             return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
         }
-        console.log("data", resp);
+        console.log(pubkeyIndex,"/",instanceIndex, "| val data", resp);
         // Compare to public_keys_list
             // prepare aggregated state (if everything ok, then "OK" only)
 
