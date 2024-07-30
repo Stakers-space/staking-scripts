@@ -1,4 +1,4 @@
-// Version 1.0.0
+// Version 1.0.1
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconClientUrl = "http://localhost:9596/eth/v1/beacon";
 
@@ -46,10 +46,11 @@ GetBeaconApiData("/headers", function(err,resp){
 
 function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in a single thread - what's the time of the whole iteration? Split it into more threads?
     const instanceData = pubKeysList[pubKeys_instances[instanceIndex]];
+    const instancePubKey = instanceData.pubKeys[pubKeyIndex];
 
     // Get data from beacon api
-    console.log(`Loading data for ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${instanceData.count} || ${instanceData.pubKeys[pubKeyIndex]}`);
-    GetBeaconApiData("/states/head/validators?id="+instanceData.pubKeys[pubKeyIndex], function(err,resp){
+    console.log(`Loading data for ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${pubKeys_instances.length} || ${instancePubKey}`);
+    GetBeaconApiData("/states/head/validators?id="+instancePubKey, function(err,resp){
         if(err) {
             return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
         }
@@ -59,11 +60,13 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
 
         // continue on the next pubkey
         pubkeyIndex++;
+        console.log(`compare | pubkeyIndex ${pubkeyIndex} === instanceData.count ${instanceData.count} | results`, (pubkeyIndex === instanceData.count));
         if(pubkeyIndex === instanceData.count) {
             instanceIndex++
             pubkeyIndex = 0;
         }
-        if(instanceIndex === pubKeys_instances.length - 1) {
+        console.log(`compare | instanceIndex ${instanceIndex} === pubKeys_instances.length ${pubKeys_instances.length} | results`, (instanceIndex === pubKeys_instances.length));
+        if(instanceIndex === pubKeys_instances.length) {
             return cb();
         } else {
             GetPubKeyStateData(instanceIndex, pubkeyIndex, cb);
