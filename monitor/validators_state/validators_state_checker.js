@@ -7,6 +7,8 @@ const pubKeys_instances = Object.keys(pubKeysList);
 var instanceIndex = 0;
 var pubKeyIndex = 0;
 
+console.log("pubKeys_instances:", pubKeys_instances);
+
 const http = require('http');
 const startTime = new Date().getTime();
 
@@ -46,12 +48,12 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
     const instanceData = pubKeysList[pubKeys_instances[instanceIndex]];
 
     // Get data from beacon api
-    console.log(`Loading data for pubkey ${instanceData.pubKeys[pubKeyIndex]}`);
+    console.log(`Loading data for ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${instanceData.count} || ${instanceData.pubKeys[pubKeyIndex]}`);
     GetBeaconApiData("/states/head/validators?id="+instanceData.pubKeys[pubKeyIndex], function(err,resp){
         if(err) {
             return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
         }
-        console.log(`pubkey ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${instanceData.count} | pub_indices:`, resp);
+        console.log(`pubkey data:`, resp);
         // Compare to public_keys_list
             // prepare aggregated state (if everything ok, then "OK" only)
 
@@ -61,7 +63,7 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
             instanceIndex++
             pubkeyIndex = 0;
         }
-        if(instanceIndex === pubKeys_instances.length) {
+        if(instanceIndex === pubKeys_instances.length - 1) {
             return cb();
         } else {
             GetPubKeyStateData(instanceIndex, pubkeyIndex, cb);
