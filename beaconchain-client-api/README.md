@@ -2,6 +2,10 @@
 
 API is standardized across most consensus clients
 
+## Default Ports
+- Lighthouse beacon: `5052`
+- Lodestar beacon: `9596`
+
 ## Requests
 Note: Change `PORT`, for the port used by the beaconchain client
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/headers"` > Get headers

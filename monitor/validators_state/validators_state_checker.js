@@ -1,6 +1,6 @@
 
 const pubKeysList = require("./public_keys_testlist.json");
-const beaconClientUrl = "http://localhost:5052/eth/v1/beacon";
+const beaconClientUrl = "http://localhost:9596/eth/v1/beacon";
 
 // script variables and resources
 const pubKeys_instances = Object.keys(pubKeysList);
@@ -49,7 +49,10 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
 
         // continue on the next pubkey
         pubkeyIndex++;
-        if(pubkeyIndex === instanceData.count) instanceIndex++
+        if(pubkeyIndex === instanceData.count) {
+            instanceIndex++
+            pubkeyIndex = 0;
+        }
         if(instanceIndex === pubKeys_instances.length) {
             return cb();
         } else {
