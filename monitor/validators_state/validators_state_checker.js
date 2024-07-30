@@ -47,22 +47,19 @@ GetBeaconApiData("/headers", function(err,resp){
 function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in a single thread - what's the time of the whole iteration? Split it into more threads?
     const instanceData = pubKeysList[pubKeys_instances[instanceIndex]];
     const instancePubKey = pubKeysList[pubKeys_instances[instanceIndex]].pubKeys[pubkeyIndex];
-    console.log(`GetPubKeyStateData iteration`, instanceIndex, pubkeyIndex);
-
+    
     // Get data from beacon api
-    console.log(`Loading data for ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${pubKeys_instances.length} || ${instancePubKey}`);
     GetBeaconApiData("/states/head/validators?id="+instancePubKey, function(err,resp){
         if(err) {
             return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
         }
-        console.log(`pubkey data:`, resp);
+        console.log(`GetPubKeyStateData iteration | pubkey ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${pubKeys_instances.length} | ${instancePubKey}`);
         // Compare to public_keys_list
             // prepare aggregated state (if everything ok, then "OK" only)
 
         // continue on the next pubkey
         pubkeyIndex++;
-        console.log(`pubKey increased to ${pubkeyIndex}`);
-        console.log(`compare | pubkeyIndex === instanceData.count || ${pubkeyIndex} === ${instanceData.count} =>`, (pubkeyIndex === instanceData.count));
+        console.log(`pubKey increased to ${pubkeyIndex} | pubkeyIndex === instanceData.count || ${pubkeyIndex} === ${instanceData.count} =>`, (pubkeyIndex === instanceData.count));
         if(pubkeyIndex === instanceData.count) {
             instanceIndex++
             pubkeyIndex = 0;
