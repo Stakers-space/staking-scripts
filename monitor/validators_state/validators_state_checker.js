@@ -1,4 +1,4 @@
-// Version 1.0.2
+// Version 1.0.3
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconClientUrl = "http://localhost:9596/eth/v1/beacon";
 
@@ -46,11 +46,10 @@ GetBeaconApiData("/headers", function(err,resp){
 
 function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in a single thread - what's the time of the whole iteration? Split it into more threads?
     const instanceData = pubKeysList[pubKeys_instances[instanceIndex]];
-    const instancePubKey = instanceData.pubKeys[pubKeyIndex];
-    console.log(`GetPubKeyStateData`, instanceIndex, pubkeyIndex, "instanceData:", instanceData);
+    const instancePubKey = pubKeysList[pubKeys_instances[instanceIndex]].pubKeys[pubkeyIndex];
+    console.log(`GetPubKeyStateData iteration`, instanceIndex, pubkeyIndex);
 
     // Get data from beacon api
-    console.log(pubKeysList[pubKeys_instances[instanceIndex]].pubKeys[pubkeyIndex]);
     console.log(`Loading data for ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${pubKeys_instances.length} || ${instancePubKey}`);
     GetBeaconApiData("/states/head/validators?id="+instancePubKey, function(err,resp){
         if(err) {
@@ -62,12 +61,14 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
 
         // continue on the next pubkey
         pubkeyIndex++;
-        console.log(`compare | pubkeyIndex ${pubkeyIndex} === instanceData.count ${instanceData.count} | results`, (pubkeyIndex === instanceData.count));
+        console.log(`pubKey increased to ${pubkeyIndex}`);
+        console.log(`compare | pubkeyIndex === instanceData.count || ${pubkeyIndex} === ${instanceData.count} =>`, (pubkeyIndex === instanceData.count));
         if(pubkeyIndex === instanceData.count) {
             instanceIndex++
             pubkeyIndex = 0;
+            console.log(`instanceIndex increased to ${instanceIndex} | pubKey reseted to ${pubkeyIndex}`);
         }
-        console.log(`compare | instanceIndex ${instanceIndex} === pubKeys_instances.length ${pubKeys_instances.length} | results`, (instanceIndex === pubKeys_instances.length));
+        console.log(`compare | instanceIndex === pubKeys_instances.length || ${instanceIndex} === ${pubKeys_instances.length} =>`, (instanceIndex === pubKeys_instances.length));
         if(instanceIndex === pubKeys_instances.length) {
             return cb();
         } else {
