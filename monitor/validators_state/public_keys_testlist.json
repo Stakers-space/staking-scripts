@@ -1,0 +1,17 @@
+{
+    "i1":{
+        "count": 3,
+        "pubKeys": [
+            "0xa64acd64e7d274fb22f7125d0ff7bb790fbf8895fdfb46d127ff95553b49f7cbcfd70ec9f9cf8609c6522918bfd237bd",
+            "0x997e0071510b939067dd0a7497d996d19e9ca238c2bbb43ad8aa519607db8d264fde9a0bf6cd8b5e409e85a5b23620aa",
+            "0xa5c09998729d39e190921ed158dfda544279a7f78024db32e8e8c125e3cdb689018e1cfe238452f852c6bcd8bad7ac16"
+        ]
+    },
+    "i2":{
+        "count": 2,
+        "pubKeys": [
+            "0x9979839aef719bb0c52db5e97a960160da4c78de0740cdc750042162123374ac5f775e22da449eeed487b734a1ed1bb7",
+            "0xa96917d109fc4d0641ccd5230cb59f688c8105a590bd00d29a7955e12f2ba4b54a72d622b40da7be1fa2f6d6ab885fdb"
+        ]
+    }
+}

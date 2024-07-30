@@ -1,27 +1,51 @@
 
-const pubKeys = require("./public_keys_list.json");
-const pubKeys_instances = Object.keys(pubKeys);
+const pubKeysList = require("./public_keys_testlist.json");
+const beaconClientUrl = "http://localhost:5052/eth/v1/beacon";
+
+// script variables and resources
+const pubKeys_instances = Object.keys(pubKeysList);
 var instanceIndex = 0;
 var pubKeyIndex = 0;
 
 const http = require('http');
-
 const startTime = new Date().getTime();
 
 // Get slot from Headers data
+GetBeaconApiData("/headers", function(err,resp){
+    if(err) {
+        console.error(err);
+        return;
+    }
+    console.log("headers data:", resp);
 
-// Get Attestations data for last slot
+    // Get Attestations data for last slot
+    GetBeaconApiData("/blocks/16588429/attestations", function(err,resp){
+        if(err) {
+            console.error(err);
+            return;
+        }
+        console.log("attestations data:", resp);
+
+        GetPubKeyStateData(instanceIndex, pubKeyIndex, function(err,resp){
+            //console.log(err,resp);
+            // process aggregated state update
+            console.log("Monitor state completed in", new Date().getTime() - startTime);
+        });
+    });
+});
+
 
 function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in a single thread - what's the time of the whole iteration? Split it into more threads?
-    const instanceData = pubKeys[pubKeys_instances[instanceIndex]];
+    const instanceData = pubKeysList[pubKeys_instances[instanceIndex]];
 
     // Get data from beacon api
-    GetBeaconApiData("http://localhost:5052/eth/v1/beacon/states/head/validators?id="+instanceData.pubKeys[pubKeyIndex], function(err,resp){
+    GetBeaconApiData("/states/head/validators?id="+instanceData.pubKeys[pubKeyIndex], function(err,resp){
         if(err) {
             return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
         }
         console.log("data", resp);
-            // process info write
+        // Compare to public_keys_list
+            // prepare aggregated state (if everything ok, then "OK" only)
 
         // continue on the next pubkey
         pubkeyIndex++;
@@ -34,9 +58,8 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
     });
 }
 
-
-function GetBeaconApiData(url, cb){
-    http.get(url, (resp) => {
+function GetBeaconApiData(path, cb){
+    http.get(beaconClientUrl+path, (resp) => {
         let data = '';
         resp.on('data', (chunk) => {
             data += chunk;
@@ -47,18 +70,14 @@ function GetBeaconApiData(url, cb){
         });
       
     }).on("error", (err) => {
-        console.log("Error: " + err.message);
         return cb(err, null);
     });
 }
 
-GetPubKeyStateData(instanceIndex, pubKeyIndex, function(err,resp){
-    console.log(err,resp);
-
-    console.log("processingTime:", new Date().getTime() - startTime);
-});
-// load keys from public_keys_list
-
-// Get data from Beaconchain api
-    // Compare to public_keys_list
-        // send aggregated state (if everything ok, then "OK" only)
+function cleanUpAndExit() {
+    console.log("exiting");
+    // exit services
+    process.exit(0);
+}
+process.on('SIGTERM', cleanUpAndExit);
+process.on('SIGINT', cleanUpAndExit);
