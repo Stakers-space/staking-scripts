@@ -2,19 +2,22 @@
  * Load all files
  * Get indexes from offline-preparation for pubids in deposit files
  */
-
 const fs = require('fs');
 const path = require('path');
-const directoryPath = "./data/deposit_data"
+const GetFilesContent = require('../utils/get_files_content/get-files-data-in-directory');
+
+const directoryPath = path.join(__dirname, '..', 'get-validator-indexes/data/deposit_data');
+const offlinePreparationFilePath = path.join(__dirname, '..', 'get-validator-indexes/data/offline-preparation.json');
+
+console.log("directoryPath:", directoryPath, "| offlinePreparationFilePath:",offlinePreparationFilePath);
 
 var offlinePreparationData = {};
 var depositDataFiles = {};
 var callbacks = 2;
 
-fs.readFile('./data/offline-preparation.json', 'utf8', (err, data) => {
+fs.readFile(offlinePreparationFilePath, 'utf8', (err, data) => {
     if (err) {
         console.error(err);
-        return res.status(500).send('Error reading JSON file');
     }
 
     var opd = JSON.parse(data).validators,
@@ -26,33 +29,15 @@ fs.readFile('./data/offline-preparation.json', 'utf8', (err, data) => {
     GetIndexes();
 });
 
-fs.readdir(directoryPath, (err, files) => {
+GetFilesContent(directoryPath, 'deposit_data-', '.json', (err, content) => {
     if (err) {
-      return console.log('Unable to scan directory: ' + err);
+        console.error('Error:', err);
+    } else {
+        console.log('Files Content | keys:', Object.keys(content));
+        depositDataFiles = content;
+        GetIndexes();
     }
-  
-    files.forEach((file) => {
-        if (file.startsWith('deposit_data-') && file.endsWith('.json')) {
-            const filePath = path.join(directoryPath, file);
-    
-            fs.readFile(filePath, 'utf8', (err, data) => {
-            if (err) {
-                return console.log('Error reading file:', err);
-            }
-    
-            try {
-                const jsonData = JSON.parse(data);
-                depositDataFiles[filePath] = jsonData;
-            } catch (e) {
-                console.log('Error parsing JSON:', e);
-            }
-            });
-        }
-    });
-
-    GetIndexes();
 });
-
 
 function GetIndexes(){
     callbacks--;
@@ -89,4 +74,3 @@ function GetIndexes(){
         }
     }
 }
-

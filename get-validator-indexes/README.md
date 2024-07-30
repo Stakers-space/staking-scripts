@@ -5,14 +5,18 @@
 
 ## data structure
 ```
-app.js
-└── data (directory)
-    ├── offline-preparation.json
-    └── deposit_data (directory)
-        ├── deposit_data-......json
-        ├── deposit_data-......json
-        ├── ...
-        └── deposit_data-......json
+get-validator-indexes
+    app.js
+    └── data (directory)
+        ├── offline-preparation.json
+        └── deposit_data (directory)
+            ├── deposit_data-......json
+            ├── deposit_data-......json
+            ├── ...
+            └── deposit_data-......json
+utils
+    get_files_content
+    └── get-files-data-in-directory.js
 ```
 ### Usage
 Run `node app.js`.
