@@ -1,4 +1,4 @@
-// Version 1.0.6
+// Version 1.0.7
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconClientUrl = "http://localhost:9596/eth/v1/beacon";
 
@@ -93,14 +93,14 @@ function GetBeaconApiData(path, cb){
     });
 }
 
-async function getValidatorLiveness(pubKeys) {
+async function getValidatorLiveness() {
     try {
-        const body = JSON.stringify({ indices: pubKeys });
+        const body = JSON.stringify(["1","2","3","4","5"]);
 
         const options = {
             hostname: 'localhost',
             port: 9596,
-            path: '/eth/v1/validator/liveness',
+            path: '/eth/v1/validator/liveness/1042840', // block 1042840
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -119,12 +119,9 @@ async function getValidatorLiveness(pubKeys) {
                 res.on('end', () => {
                     resolve(JSON.parse(data));
                 });
-            });
-
-            req.on('error', (err) => {
+            }).on('error', (err) => {
                 reject(err);
             });
-
             req.write(body);
             req.end();
         });
@@ -135,12 +132,7 @@ async function getValidatorLiveness(pubKeys) {
 }
 
 (async () => {
-    const pubKeys = [
-        '0xa1d1ad0714035353258038e964ae9675dc0252ee22cea896825c01458e1807bfad2f9969338798548d9858a571f7425c'
-        // Přidejte další pub keys podle potřeby
-    ];
-
-    const validatorLiveness = await getValidatorLiveness(pubKeys);
+    const validatorLiveness = await getValidatorLiveness();
     console.log(validatorLiveness);
 })();
 
