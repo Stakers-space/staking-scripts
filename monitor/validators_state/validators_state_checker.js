@@ -1,4 +1,4 @@
-// Version 1.0.4
+// Version 1.0.5
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconClientUrl = "http://localhost:9596/eth/v1/beacon";
 
@@ -18,7 +18,7 @@ GetBeaconApiData("/headers", function(err,resp){
         console.error(err);
         return;
     }
-    
+
     const slot = resp["data"][0].header.message.slot;
     //console.log("headers data:", resp["data"], "slot:", slot);
 
@@ -57,7 +57,7 @@ function GetPubKeyStateData(instanceIndex, pubkeyIndex, cb){ // synchronously in
         console.log(`GetPubKeyStateData iteration | pubkey ${pubkeyIndex}/${instanceData.count} in instance ${instanceIndex}/${pubKeys_instances.length} | ${instancePubKey}`);
         // Compare to public_keys_list
             // prepare aggregated state (if everything ok, then "OK" only)
-            console.log("validator resp:", resp);
+            console.log("validator resp:", resp, resp.data[0].validator);
 
         // continue on the next pubkey
         pubkeyIndex++;
@@ -147,16 +147,19 @@ async function getBlockAttestations(slot) {
 async function getLastAttestation(pubKey) {
     try {
         const validatorInfo = await getValidatorInfo(pubKey);
-        const lastAttestationSlot = validatorInfo.index;
+        console.log(validatorInfo);
+       
+        const lastAttestationSlot = 16588429/*validatorInfo.index*/;
 
         const attestations = await getBlockAttestations(lastAttestationSlot);
+        console.log(attestations);
         const validatorAttestation = attestations.find(attestation =>
             attestation.data.attesting_indices.includes(validatorInfo.validator.index)
         );
 
         return {
-            pubKey,
-            lastAttestation: validatorAttestation ? validatorAttestation.data : null
+            pubKey/*,
+            lastAttestation: validatorAttestation ? validatorAttestation.data : null*/
         };
     } catch (error) {
         console.error('Error fetching last attestation:', error);
