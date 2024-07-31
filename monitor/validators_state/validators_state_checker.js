@@ -153,9 +153,9 @@ async function getLastAttestation(pubKey) {
 
         const attestations = await getBlockAttestations(lastAttestationSlot);
         console.log(attestations);
-        const validatorAttestation = attestations.find(attestation =>
+        /*const validatorAttestation = attestations.find(attestation =>
             attestation.data.attesting_indices.includes(validatorInfo.validator.index)
-        );
+        );*/
 
         return {
             pubKey/*,
