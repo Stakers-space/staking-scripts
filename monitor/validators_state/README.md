@@ -17,6 +17,8 @@ sudo curl -o /srv/validators-monitor/validators_state_checker.js https://raw.git
 - Download the sample  `public_keys_testlist.json` file
 ```
 curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/public_keys_testlist.json
+```
+```
 sudo curl -o /srv/validators-monitor/public_keys_testlist.json https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/public_keys_testlist.json
 ```
 

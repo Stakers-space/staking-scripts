@@ -101,7 +101,9 @@ class MonitorValidators {
             const valIndexesL = resp.length;
             for(var i=0;i<valIndexesL;i++){
                 app.aggregatedStates[instanceIdentificator].c++;
-                if(!resp[i].is_live) app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
+                if(!resp[i].is_live) {
+                    app.aggregatedStates[instanceIdentificator].o.push(Number(resp[i].index));
+                }
             }
             
             pubKeyStartIndex += app.indexesBanch;
@@ -109,7 +111,7 @@ class MonitorValidators {
             if(endIndex === instanceData.c) {
                  instanceIndex++
                  pubKeyStartIndex = 0;
-                 console.log(`instanceIndex increased to ${instanceIndex} | pubKeyStartIndex reseted to ${pubKeyStartIndex}`);
+                 //console.log(`instanceIndex increased to ${instanceIndex} | pubKeyStartIndex reseted to ${pubKeyStartIndex}`);
             }
             //console.log(`compare | instanceIndex === pubKeys_instances.length || ${instanceIndex} === ${pubKeys_instances.length} =>`, (instanceIndex === pubKeys_instances.length));
             if(instanceIndex === pubKeys_instances.length) {
