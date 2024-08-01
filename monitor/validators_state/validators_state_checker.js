@@ -76,10 +76,10 @@ class MonitorValidators {
                     // aggregation
                     total += report.c;
                     online += onlineValidators;
-                    offline.push(...postObj[instance]);
+                    if(report.o.length > 0) offline.push(...report.o);
                 }
-                console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline}`);
-                console.log("├─ Posting aggregated data", postObj);
+                console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
+                //console.log("├─ Posting aggregated data", postObj);
                 console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
                 app.isRunning = false;
             });
