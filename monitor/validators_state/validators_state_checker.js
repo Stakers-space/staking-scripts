@@ -59,7 +59,6 @@ class MonitorValidators {
                 }
                 const now = new Date().getTime();
                 const totalProcessingTime = now - app.startTime;
-                console.log(`${now} MonitorValidators | iteration completed in ${totalProcessingTime}`);
                 console.log("Aggregated result:", this.aggregatedStates);
 
                 // generate post object
@@ -68,12 +67,13 @@ class MonitorValidators {
                 for (const [instance, report] of Object.entries(this.aggregatedStates)) {
                     const offlineValidators = report.o.length,
                           onlineValidators = report.c - offlineValidators;
-                    console.log(`${instance} | online ${onlineValidators}/${report.c} | offline: ${report.o}`);
+                    console.log(`├─ ${instance} | online ${onlineValidators}/${report.c} | offline: ${report.o}`);
                     postObj[instance] = report.o;
                 }
 
-                console.log("Posting aggregated data", postObj);
+                console.log("├─ Posting aggregated data", postObj);
                 app.isRunning = false;
+                console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
             });
         });
     }
