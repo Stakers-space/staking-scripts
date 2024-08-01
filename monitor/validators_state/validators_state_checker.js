@@ -1,4 +1,4 @@
-// Version 1.0.12
+// Version 1.0.14
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 
@@ -49,12 +49,12 @@ class MonitorValidators {
             }
             
             //console.log("Epochs",resp);
-            const epochNumber = resp["data"]["current_justified"].epoch;
+            const epochNumber = (Number(resp["data"]["current_justified"].epoch) - 1);
             console.log(`├─ epoch: ${epochNumber}`);
             // Process Check
             app.ProcessCheck(0,0, epochNumber, function(err){
                 if(err) {
-                   console.error(err); 
+                   console.error("ProcessCheck err:",err); 
                    return;
                 }
                 const now = new Date().getTime();
@@ -90,10 +90,12 @@ class MonitorValidators {
         // Get data from beacon api
         this.GetValidatorLivenessState(validatorIndexes, epochNumber, function(err,resp){
              // parse data
-             try { resp = JSON.parse(resp).data; } catch(e){ err = e; }
+             try { resp = JSON.parse(resp); } catch(e){ err = e; }
              if(err) {
                 return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
             }
+
+            if(resp.data) resp = resp.data;
 
             // processResponse aggregation
             //console.log(resp);
