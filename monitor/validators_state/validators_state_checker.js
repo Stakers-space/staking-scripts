@@ -1,4 +1,4 @@
-// Version 1.0.9
+// Version 1.0.10
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 
@@ -36,12 +36,11 @@ class MonitorValidators {
                 return;
             }
             
-            console.log(resp);
-            console.log(resp["data"][0]);
-            const finalizedEpochNumber = resp["data"]["finalized"].epoch; // replace to block
-            console.log(`├─ latest finalized epoch: ${finalizedEpochNumber}`);
+            console.log("Epochs",resp);
+            const epochNumber = resp["data"]["current_justified"].epoch;
+            console.log(`├─ epoch: ${epochNumber}`);
             // Process Check
-            app.ProcessCheck(0,0, finalizedEpochNumber, function(err){
+            app.ProcessCheck(0,0, epochNumber, function(err){
                 if(err) {
                    console.error(err); 
                    return;
@@ -87,7 +86,7 @@ class MonitorValidators {
             if(instanceIndex === pubKeys_instances.length) {
                  return cb();
             } else {
-                app.ProcessCheck(instanceIndex, pubKeyStartIndex, blockNumber, cb);
+                app.ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb);
             }
         });
     }
@@ -122,7 +121,7 @@ class MonitorValidators {
         const options = {
             hostname: 'localhost',
             port: beaconChainPort,
-            path: `/eth/v1/validator/liveness/${epochNumber}`, // block 1042840
+            path: `/eth/v1/validator/liveness/${epochNumber}`,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -137,7 +136,7 @@ class MonitorValidators {
     }
 }
 
-// each 60 seconds = 1 block
+// each 60 seconds = 1 epoch
 new MonitorValidators().CronWorker();
 
 // Testing
