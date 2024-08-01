@@ -1,4 +1,4 @@
-// Version 1.0.8
+// Version 1.0.9
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 
@@ -28,9 +28,9 @@ class MonitorValidators {
         this.aggregatedStates = {};
         this.startTime = new Date().getTime();
         console.log(`${this.startTime} Starting MonitorValidators iteration`);
-        this.GetLatestBlockNumber(function(err,resp){            
+        this.GetFinalityCheckpoint(function(err,resp){            
             // parse data
-            try { resp = JSON.parse(resp); } catch(e){ err = e; }
+            if(!err) try { resp = JSON.parse(resp); } catch(e){ err = e; }
             if(err) {
                 console.log(err);
                 return;
@@ -38,17 +38,17 @@ class MonitorValidators {
             
             console.log(resp);
             console.log(resp["data"][0]);
-            const blockNumber = resp["data"][0].header.message.slot; // replace to block
-            console.log(`├─ latest block: ${blockNumber}`);
+            const finalizedEpochNumber = resp["data"]["finalized"].epoch; // replace to block
+            console.log(`├─ latest finalized epoch: ${finalizedEpochNumber}`);
             // Process Check
-            app.ProcessCheck(0,0, blockNumber, function(err){
+            app.ProcessCheck(0,0, finalizedEpochNumber, function(err){
                 if(err) {
                    console.error(err); 
                    return;
                 }
                 const now = new Date().getTime();
                 const totalProcessingTime = now - app.startTime;
-                console.log(`${now} MonitorValidators iteration completed in ${totalProcessingTime}`);
+                console.log(`${now} MonitorValidators | iteration completed in ${totalProcessingTime}`);
 
                 console.log("Posting aggregated data");
                 app.isRunning = false;
@@ -56,7 +56,7 @@ class MonitorValidators {
         });
     }
 
-    ProcessCheck(instanceIndex, pubKeyStartIndex, blockNumber, cb){
+    ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
         const instanceData = pubKeysList[pubKeys_instances[instanceIndex]];
         const instancePubKeys = instanceData.v;
 
@@ -65,7 +65,7 @@ class MonitorValidators {
         const validatorIndexes = instancePubKeys.slice(pubKeyStartIndex, endIndex);
 
         // Get data from beacon api
-        this.GetValidatorLivenessState(validatorIndexes, blockNumber, function(err,resp){
+        this.GetValidatorLivenessState(validatorIndexes, epochNumber, function(err,resp){
              // parse data
              try { resp = JSON.parse(resp); } catch(e){ err = e; }
              if(err) {
@@ -104,11 +104,11 @@ class MonitorValidators {
         req.end();
     }
 
-    GetLatestBlockNumber(cb){
+    GetFinalityCheckpoint(cb){
         const options = {
             hostname: 'localhost',
             port: beaconChainPort,
-            path: `/eth/v1/beacon/headers`,
+            path: `/eth/v1/beacon/states/head/finality_checkpoints`,
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
@@ -117,12 +117,12 @@ class MonitorValidators {
         this.HttpRequest(options, null, cb);
     }
 
-    GetValidatorLivenessState(validatorIndexes, blockNumber, cb) {
+    GetValidatorLivenessState(validatorIndexes, epochNumber, cb) {
         const body = JSON.stringify(validatorIndexes);
         const options = {
             hostname: 'localhost',
             port: beaconChainPort,
-            path: `/eth/v1/validator/liveness/${blockNumber}`, // block 1042840
+            path: `/eth/v1/validator/liveness/${epochNumber}`, // block 1042840
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

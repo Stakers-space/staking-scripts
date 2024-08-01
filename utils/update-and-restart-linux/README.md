@@ -2,7 +2,7 @@
 
 OS update restarts updated services that may results in overwriting custom setups made with the server startup. To configurate them after the OS update, automatical OS restart is beneficial as it's done regardless you are kicked off the SSH acces through the processed OS update or not.
 
-Using this script is necessary e.g. when you have active [Mullvad and Tailscale VPN at teh same time](https://github.com/Stakers-space/staking-scripts/tree/main/mullvad/enable_tailscale)
+Using this script is necessary e.g. when you have active [Mullvad and Tailscale VPN at the same time](https://github.com/Stakers-space/staking-scripts/tree/main/mullvad/enable_tailscale)
 
 - Check the `update-and-restart-linux.sh` script
 ```
