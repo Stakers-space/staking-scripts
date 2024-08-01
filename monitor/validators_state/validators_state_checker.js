@@ -68,7 +68,7 @@ class MonitorValidators {
                     const offlineValidators = report.o.length,
                           onlineValidators = report.c - offlineValidators;
                     console.log(`├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
-                    postObj[instance] = report.o;
+                    postObj[instance] = report.o.toString();
                 }
 
                 console.log("├─ Posting aggregated data", postObj);
@@ -102,7 +102,7 @@ class MonitorValidators {
             for(var i=0;i<valIndexesL;i++){
                 app.aggregatedStates[instanceIdentificator].c++;
                 if(!resp[i].is_live) {
-                    app.aggregatedStates[instanceIdentificator].o.push(Number(resp[i].index));
+                    app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
                 }
             }
             
