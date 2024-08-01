@@ -1,13 +1,20 @@
-// Version 1.0.10
+// Version 1.0.11
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 
 // script variables and resources
 const pubKeys_instances = Object.keys(pubKeysList);
-console.log("pubKeys_instances:", pubKeys_instances);
 
 const http = require('http');
 var app = null;
+
+
+class InstanceReportDataModel {
+    constructor(){
+        this.c = 0; // number of checked calidators
+        this.o = []; // list of offline indexes
+    }
+}
 
 class MonitorValidators {
     constructor(){
@@ -25,7 +32,12 @@ class MonitorValidators {
 
     PromptManagerScript(){
         this.isRunning = true;
+        // define aggregation file
         this.aggregatedStates = {};
+        for (const instanceIndex in pubKeys_instances) {
+            this.aggregatedStates[pubKeys_instances[instanceIndex]] = new InstanceReportDataModel();
+        }
+
         this.startTime = new Date().getTime();
         console.log(`${this.startTime} Starting MonitorValidators iteration`);
         this.GetFinalityCheckpoint(function(err,resp){            
@@ -36,7 +48,7 @@ class MonitorValidators {
                 return;
             }
             
-            console.log("Epochs",resp);
+            //console.log("Epochs",resp);
             const epochNumber = resp["data"]["current_justified"].epoch;
             console.log(`├─ epoch: ${epochNumber}`);
             // Process Check
@@ -48,15 +60,27 @@ class MonitorValidators {
                 const now = new Date().getTime();
                 const totalProcessingTime = now - app.startTime;
                 console.log(`${now} MonitorValidators | iteration completed in ${totalProcessingTime}`);
+                console.log("Aggregated result:", this.aggregatedStates);
 
-                console.log("Posting aggregated data");
+                // generate post object
+                var postObj = {};
+
+                for (const [instance, report] of Object.entries(this.aggregatedStates)) {
+                    const offlineValidators = report.o.length,
+                          onlineValidators = report.c - offlineValidators;
+                    console.log(`${instance} | online ${onlineValidators}/${report.c} | offline: ${report.o}`);
+                    postObj[instance] = report.o;
+                }
+
+                console.log("Posting aggregated data", postObj);
                 app.isRunning = false;
             });
         });
     }
 
     ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
-        const instanceData = pubKeysList[pubKeys_instances[instanceIndex]];
+        const instanceIdentificator = pubKeys_instances[instanceIndex];
+        const instanceData = pubKeysList[instanceIdentificator];
         const instancePubKeys = instanceData.v;
 
         const indexesNumToRequest = (pubKeyStartIndex + this.indexesBanch <= instanceData.c) ? ((this.indexesBanch <= instanceData.c) ? this.indexesBanch : instanceData.c) : (instanceData.c - pubKeyStartIndex);
@@ -66,15 +90,20 @@ class MonitorValidators {
         // Get data from beacon api
         this.GetValidatorLivenessState(validatorIndexes, epochNumber, function(err,resp){
              // parse data
-             try { resp = JSON.parse(resp); } catch(e){ err = e; }
+             try { resp = JSON.parse(resp).data; } catch(e){ err = e; }
              if(err) {
                 return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
             }
 
             // processResponse aggregation
             console.log(resp);
-            // app.aggregatedStates
-
+            // iterate over val indices
+            const valIndexesL = resp.length;
+            for(var i=0;i<valIndexesL;i++){
+                app.aggregatedStates[instanceIdentificator].c++;
+                if(!resp[i].is_live) app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
+            }
+            
             pubKeyStartIndex += app.indexesBanch;
             //console.log(`pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
