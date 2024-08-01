@@ -65,6 +65,9 @@ sudo nano /usr/local/etc/mullvad-tailscale_netfilters.rules
 /usr/local/bin/netfilter_manager.sh list-rules
 ```
 
+> [!IMPORTANT]
+> SSH connection through Tailscale may be broken by processing SSH update (part of OS upgrade) that overwrites the netfilter. To avoid that, process OS updates with [update-and-restart-linux Utility](https://github.com/Stakers-space/staking-scripts/tree/main/utils/update-and-restart-linux).
+
 
 ## Launch through service file on Ubuntu Server startup
 1. Download service file
