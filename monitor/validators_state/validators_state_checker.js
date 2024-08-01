@@ -1,4 +1,4 @@
-// Version 1.0.15
+// Version 1.0.16
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 
@@ -63,17 +63,25 @@ class MonitorValidators {
 
                 // generate post object
                 var postObj = {};
+                let online = 0,
+                    total = 0,
+                    offline = [];
 
                 for (const [instance, report] of Object.entries(app.aggregatedStates)) {
                     const offlineValidators = report.o.length,
                           onlineValidators = report.c - offlineValidators;
-                    console.log(`├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
                     postObj[instance] = report.o.toString();
+                    
+                    console.log(`├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
+                    // aggregation
+                    total += report.c;
+                    online += onlineValidators;
+                    offline.push(...postObj[instance]);
                 }
-
+                console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline}`);
                 console.log("├─ Posting aggregated data", postObj);
-                app.isRunning = false;
                 console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
+                app.isRunning = false;
             });
         });
     }
