@@ -1,17 +1,17 @@
 [Unit]
-Description=Lodestar Beacon Chain Log Monitor
+Description=Lighthouse Beacon Log Monitor
 After=network.target
 
 [Service]
-User=lodestarbeacon
-Group=lodestarbeacon
+User=lighthousebeacon
+Group=lighthousebeacon
 Type=simple
 Restart=on-failure
 ExecStart=/usr/local/bin/logmonitor.sh \
-    --service_name "lodestarbeacon" \
+    --service_name "lighthousebeacon" \
     --executor_shell "/usr/local/bin/logmonitor_executor.sh" \
-    --log_maxwaitingtime 300 \
-    --targets_file "/usr/local/etc/lodestarbeacon_tracking_records.txt" \
+    #--log_maxwaitingtime 300 \
+    --targets_file "/usr/local/etc/lighthousebeacon_tracking_records.txt" \
     --executor_trigger_periode 360 \
     --executor_trigger_pause 1200
 

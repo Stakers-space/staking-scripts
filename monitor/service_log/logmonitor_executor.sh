@@ -6,7 +6,7 @@ executor_log_file=""
 occurancyKey=$1
 serviceName=$2
 
-declare -r version="1.0.7"
+declare -r version="1.0.8"
 
 get_version() {
   echo -e "LogMonitor Executor version: $version | Powered by https://stakers.space"
@@ -55,7 +55,12 @@ case "$occurancyKey" in
         ;;
     NOLOG)
         log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
-        # sudo systemctl restart $serviceName
+        sudo systemctl restart $serviceName
+        ;;
+    STOPSTART)
+        log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
+        sudo systemctl stop $serviceName
+        sudo systemctl start $serviceName
         ;;
     # ...
     *)

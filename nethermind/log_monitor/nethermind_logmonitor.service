@@ -3,12 +3,18 @@ Description=Nethermind Log Monitor
 After=network.target
 
 [Service]
-Type=simple
-ExecStart=/usr/local/bin/logmonitor.sh -s "nethermind" -f "/usr/local/etc/nethermind_tracking_records.txt" -t 600 -x "/usr/local/bin/logmonitor_executor_nethermind.sh" -d 240 -p 1800
-Restart=on-failure
 User=nethermind
 Group=nethermind
+Type=simple
+Restart=on-failure
 KillMode=control-group
+ExecStart=/usr/local/bin/logmonitor.sh \
+    --service_name "nethermind" \
+    --executor_shell "/usr/local/bin/logmonitor_executor.sh" \
+    --log_maxwaitingtime 300 \
+#    --targets_file "/usr/local/etc/nethermind_tracking_records.txt" \
+#    --executor_trigger_periode 360 \
+    --executor_trigger_pause 1200
 
 [Install]
 WantedBy=multi-user.target
