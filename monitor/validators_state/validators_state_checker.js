@@ -100,10 +100,10 @@ class MonitorValidators {
                 if(app.dataEncryption.active) postObj = app.ExtraEncryption(postObj);
 
                 console.log(`${now} Posting data |`, postObj);
-                app.HttpRequest({
-                    //host: 'localhost',
-                    //path: app.postDataUrl,
-                    url: app.postDataUrl,
+                app.HttpsRequest({
+                    hostname: app.postDataUrl.hostname,
+                    path: app.postDataUrl.path,
+                    //url: app.postDataUrl,
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -256,7 +256,7 @@ class MonitorValidators {
 }
 
 // each 60 seconds = 1 epoch
-//new MonitorValidators().CronWorker();
+new MonitorValidators().CronWorker();
 //console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));
 
 // Testing
