@@ -27,9 +27,9 @@ class MonitorValidators {
     }
 
     CronWorker(){
-        //this.cron = setInterval(function(){
+        this.cron = setInterval(function(){
             if(!this.isRunning) this.PromptManagerScript();
-        //}, 60000);
+        }, 60000);
     }
 
     PromptManagerScript(){
@@ -81,6 +81,7 @@ class MonitorValidators {
                     if(report.o.length > 0) offline.push(...report.o);
                 }
                 console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
+                console.log('offlineTracker_periodesCache:', app.offlineTracker_periodesCache);
 
                 //console.log("├─ Posting aggregated data", postObj);
                 console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
@@ -129,7 +130,10 @@ class MonitorValidators {
                     } else {
                         app.offlineTracker_periodesCache[resp[i].index] = 1;
                     }
-                    if(app.offlineTracker_periodesCache[resp[i].index] >= app.trigger_numberOfPeriodesOffline) app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
+                    if(app.offlineTracker_periodesCache[resp[i].index] >= app.trigger_numberOfPeriodesOffline) {
+                        app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
+                        //delete app.offlineTracker_periodesCache[resp[i].index]; // keep it increasing
+                    }
                 } else if(app.offlineTracker_periodesCache[resp[i].index]){
                     // reported as online - remove from the offline indexes cache
                     delete app.offlineTracker_periodesCache[resp[i].index];
