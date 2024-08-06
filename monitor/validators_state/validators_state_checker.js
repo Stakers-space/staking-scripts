@@ -1,6 +1,7 @@
-// Version 1.0.17
+// Version 1.0.18
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
+const crypto = require('crypto');
 
 // script variables and resources
 const pubKeys_instances = Object.keys(pubKeysList);
@@ -18,17 +19,24 @@ class InstanceReportDataModel {
 
 class MonitorValidators {
     constructor(){
-        this.indexesBanch = 100;
+        this.postDataUrl = 'https://api.stakers.space';
+        this.trigger_numberOfPeriodesOffline = 4;
+        this.dataEncryption = {
+            active: true,
+            key: "(Bh6HN.Oj{r?OO~pE;ot1rKjcS_Ic9yp", // 32-long string
+            iv: "ZQMiwj5c9qc<er,l" // 16-long string
+        }
+        this.indexesBanch = 200;
         this.isRunning = false;
         this.aggregatedStates = null;
         this.offlineTracker_periodesCache = {};
-        this.trigger_numberOfPeriodesOffline = 3;
+        
         app = this;
     }
 
     CronWorker(){
         this.cron = setInterval(function(){
-            if(!this.isRunning) this.PromptManagerScript();
+            if(!app.isRunning) app.PromptManagerScript();
         }, 60000);
     }
 
@@ -64,7 +72,7 @@ class MonitorValidators {
                 //console.log("Aggregated result:", app.aggregatedStates);
 
                 // generate post object
-                var postObj = {};
+                var postObj = {"epoch": epochNumber};
                 let online = 0,
                     total = 0,
                     offline = [];
@@ -81,11 +89,25 @@ class MonitorValidators {
                     if(report.o.length > 0) offline.push(...report.o);
                 }
                 console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
-                console.log('offlineTracker_periodesCache:', app.offlineTracker_periodesCache);
+                console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
 
                 //console.log("├─ Posting aggregated data", postObj);
-                console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
-                app.isRunning = false;
+                postObj = JSON.stringify(postObj);
+                if(app.dataEncryption.active) postObj = app.ExtraEncryption(postObj);
+
+                app.HttpRequest({
+                    //host: 'localhost',
+                    //path: app.postDataUrl,
+                    url: app.postDataUrl,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': postObj.length
+                    }
+                }, postObj,function(err){
+                    console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
+                    app.isRunning = false;
+                });
             });
         });
     }
@@ -196,13 +218,28 @@ class MonitorValidators {
         this.HttpRequest(options, body, cb);
     }
 
+    ExtraEncryption(strData){
+        var cipher = crypto.createCipheriv('aes-256-cbc', this.dataEncryption.key, this.dataEncryption.iv),
+        crypted = cipher.update(strData, 'utf8', 'base64');
+        crypted += cipher.final('base64');
+        return crypted;
+    }
+
+    DataDecryption(encData){
+        var decipher = crypto.createDecipheriv('aes-256-cbc', this.dataEncryption.key, this.dataEncryption.iv),
+        decrypted = decipher.update(encData, 'base64', 'utf8');
+        decrypted += decipher.final('utf8');
+        return decrypted;
+    }
+
     Exit(){
         clearInterval(cronInterval);
     }
 }
 
 // each 60 seconds = 1 epoch
-new MonitorValidators().CronWorker();
+//new MonitorValidators().CronWorker();
+//console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));
 
 // Testing
 /*app.ProcessCheck(0,0, 0, function(err){
