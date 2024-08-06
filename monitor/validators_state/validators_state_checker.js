@@ -1,4 +1,4 @@
-// Version 1.0.18
+// Version 1.0.19
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 const crypto = require('crypto');
@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const pubKeys_instances = Object.keys(pubKeysList);
 
 const http = require('http');
+const https = require('https');
 var app = null;
 
 
@@ -19,13 +20,16 @@ class InstanceReportDataModel {
 
 class MonitorValidators {
     constructor(){
-        this.postDataUrl = 'https://api.stakers.space';
+        this.postDataUrl = {
+            hostname: 'https://api.stakers.space',
+            path: '/api/report'
+        };
         this.trigger_numberOfPeriodesOffline = 4;
         this.dataEncryption = {
             active: true,
             key: "(Bh6HN.Oj{r?OO~pE;ot1rKjcS_Ic9yp", // 32-long string
             iv: "ZQMiwj5c9qc<er,l" // 16-long string
-        }
+        };
         this.indexesBanch = 200;
         this.isRunning = false;
         this.aggregatedStates = null;
@@ -95,6 +99,7 @@ class MonitorValidators {
                 postObj = JSON.stringify(postObj);
                 if(app.dataEncryption.active) postObj = app.ExtraEncryption(postObj);
 
+                console.log(`${now} Posting data |`, postObj);
                 app.HttpRequest({
                     //host: 'localhost',
                     //path: app.postDataUrl,
@@ -104,8 +109,9 @@ class MonitorValidators {
                         'Content-Type': 'application/json',
                         'Content-Length': postObj.length
                     }
-                }, postObj,function(err){
-                    console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
+                }, postObj, function(err, res){
+                    if(err) console.log(err);
+                    console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`, res);
                     app.isRunning = false;
                 });
             });
@@ -180,6 +186,18 @@ class MonitorValidators {
 
     HttpRequest(options, body, cb){
         const req = http.request(options, (res) => {
+            let response = '';
+            res.on('data', (chunk) => { response += chunk; });
+            res.on('end', () => { return cb(null, response); });     
+        }).on('error', (err) => {
+            cb(err);
+        });
+        if(body) req.write(body);
+        req.end();
+    }
+
+    HttpsRequest(options, body, cb){
+        const req = https.request(options, (res) => {
             let response = '';
             res.on('data', (chunk) => { response += chunk; });
             res.on('end', () => { return cb(null, response); });     
