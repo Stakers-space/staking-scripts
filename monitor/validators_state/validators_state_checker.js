@@ -1,4 +1,4 @@
-// Version 1.0.16
+// Version 1.0.17
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 
@@ -11,8 +11,8 @@ var app = null;
 
 class InstanceReportDataModel {
     constructor(){
-        this.c = 0; // number of checked calidators
-        this.o = []; // list of offline indexes
+        this.c = 0; // number of checked validators
+        this.o = []; // array of offline indexes
     }
 }
 
@@ -21,6 +21,8 @@ class MonitorValidators {
         this.indexesBanch = 100;
         this.isRunning = false;
         this.aggregatedStates = null;
+        this.offlineTracker_periodesCache = {};
+        this.trigger_numberOfPeriodesOffline = 3;
         app = this;
     }
 
@@ -79,6 +81,7 @@ class MonitorValidators {
                     if(report.o.length > 0) offline.push(...report.o);
                 }
                 console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
+
                 //console.log("├─ Posting aggregated data", postObj);
                 console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`);
                 app.isRunning = false;
@@ -117,10 +120,22 @@ class MonitorValidators {
             for(var i=0;i<valIndexesL;i++){
                 app.aggregatedStates[instanceIdentificator].c++;
                 if(!resp[i].is_live) {
-                    app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
+                    /**
+                     * Increase the number of offline periodes in the row
+                     * If higher than defined threshold, push vali index on the list of offline validators
+                    */ 
+                    if(app.offlineTracker_periodesCache[resp[i].index]) {
+                        app.offlineTracker_periodesCache[resp[i].index]++;
+                    } else {
+                        app.offlineTracker_periodesCache[resp[i].index] = 1;
+                    }
+                    if(app.offlineTracker_periodesCache[resp[i].index] >= app.trigger_numberOfPeriodesOffline) app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
+                } else if(app.offlineTracker_periodesCache[resp[i].index]){
+                    // reported as online - remove from the offline indexes cache
+                    delete app.offlineTracker_periodesCache[resp[i].index];
                 }
             }
-            
+
             pubKeyStartIndex += app.indexesBanch;
             //console.log(`pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
