@@ -21,8 +21,8 @@ class InstanceReportDataModel {
 class MonitorValidators {
     constructor(){
         this.postDataUrl = {
-            hostname: 'https://api.stakers.space',
-            path: '/api/report'
+            hostname: 'stakersspace.azurewebsites.net',
+            path: '/api/validator-state'
         };
         this.trigger_numberOfPeriodesOffline = 4;
         this.dataEncryption = {
@@ -103,7 +103,7 @@ class MonitorValidators {
                 app.HttpsRequest({
                     hostname: app.postDataUrl.hostname,
                     path: app.postDataUrl.path,
-                    //url: app.postDataUrl,
+                    port: app.postDataUrl.port,
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
