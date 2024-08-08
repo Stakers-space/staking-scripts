@@ -14,9 +14,9 @@ sudo curl -o /usr/local/bin/update-and-restart-linux.sh https://raw.githubuserco
 ```
 - Enable execution of the shell script
 ```
-sudo chmod +x /usr/local/bin/lupdate-and-restart-linux.sh
+sudo chmod +x /usr/local/bin/update-and-restart-linux.sh
 ```
 - Use the utility (= process OS update followed by server restart)
 ```
-/usr/local/bin/lupdate-and-restart-linux.sh
+/usr/local/bin/update-and-restart-linux.sh
 ```

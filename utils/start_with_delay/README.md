@@ -20,10 +20,6 @@ sudo nano /usr/local/bin/delayed-start.sh
 ```
 sudo chmod +x /usr/local/bin/delayed-start.sh
 ```
-- Use the utility (= process OS update followed by server restart)
-```
-/usr/local/bin/lupdate-and-restart-linux.sh
-```
 
 ## Install `delayed-start.service`
 - Check the `delayed-start.service` file
