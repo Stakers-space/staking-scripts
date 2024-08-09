@@ -1,5 +1,5 @@
 #!/bin/bash
-declare -r version="1.0.1"
+declare -r version="1.0.2"
 
 validatorInstances_array=("teku-vi1" "teku-vi2" "teku-vi3" "teku-vi4" "teku-vi5" "teku-vi6" "teku-vi7" "teku-vi8" "teku-vi9")
 
@@ -43,7 +43,14 @@ elif [[ "$command" == "stop" ]]; then
     done
     echo "All instances have been stopped."
     exit 0
-
+elif [[ "$command" == "status" ]]; then
+    echo "Checking Teku validator instances..."
+    for validatorInstance in "${validatorInstances_array[@]}"; do
+        sudo systemctl status "$validatorInstance.service"
+        echo "$validatorInstance.service | Status: $(systemctl is-active $validatorInstance)"
+    done
+    echo "All instances have been displayed."
+    exit 0
 else
     echo "Invalid command. Please use 'start' or 'stop'."
     exit 1

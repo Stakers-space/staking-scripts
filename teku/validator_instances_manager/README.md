@@ -1,13 +1,13 @@
-# Spread Teku validartor instances load over longer time to decrease CPU overhead
+# Manage instances status. On load, spread Teku validartor instances over longer time to decrease CPU overhead
 
 ## Install
 - Check the `teku_validatorinstances.sh` script
 ```
-curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/validator_instances_gradual_start/teku_validatorinstances.sh
+curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/validator_instances_manager/teku_validatorinstances.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/teku_validatorinstances.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/validator_instances_gradual_start/teku_validatorinstances.sh
+sudo curl -o /usr/local/bin/teku_validatorinstances.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/validator_instances_manager/teku_validatorinstances.sh
 ```
 - Modify `validatorInstances_array` and `groupDelay`
 ```
@@ -26,6 +26,10 @@ sudo chmod +x /usr/local/bin/teku_validatorinstances.sh
 - Stop Validator instances
 ```
 /usr/local/bin/teku_validatorinstances.sh stop
+```
+- Check Validator instances
+```
+/usr/local/bin/teku_validatorinstances.sh status
 ```
 
 ### Create service that will start instances gradually on server startup
