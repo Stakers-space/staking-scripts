@@ -1,4 +1,4 @@
-// Version 1.0.28 testing / debugging
+// Version 1.0.29 testing / debugging
 
 class Config {
     constructor(){
@@ -41,6 +41,7 @@ class AccountDataModel {
     Generate(pubKeysListContent){
         // Get all accounts
         const accounts = pubKeysListContent.length;
+        console.log(`Generating DataModel for ${accounts} accounts`);
         // Get all instances for the account
         for(var a=0;a<accounts;a++){
             this[pubKeysListContent[a].accountId] = {
@@ -131,12 +132,12 @@ class MonitorValidators {
     }
 
     PromptManagerScript(epochNumber){
-        this.isRunning = true;
-        this.startTime = new Date().getTime();
+        app.isRunning = true;
+        app.startTime = new Date().getTime();
         console.log(`${this.startTime} Monitorig validators state for epoch ${epochNumber}`);
 
         // define aggregation file
-        this.accountData.ResetStates();
+        app.accountData.ResetStates();
 
         // Process Check
         app.ProcessCheck(0,0,0, epochNumber, function(err){
