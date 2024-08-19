@@ -18,7 +18,7 @@ class Config {
                 iv: "ZQMiwj5c9qc<er,l" // 16-long string
             }
         };
-        this.detailedLog = true;
+        this.detailedLog = false;
     }
 }
 const config = new Config();
@@ -42,9 +42,9 @@ class StateCache {
     OfflineValidator(pubId, epoch){
         if(this[pubId]){
             this[pubId].d++;
-            if (this.detailedLog) console.log(`validator ${pubId} status reported as offline for ${this[pubId].d++} periodes now`);
+            if (config.detailedLog) console.log(`validator ${pubId} status reported as offline for ${this[pubId].d++} periodes now`);
         } else {
-            if (this.detailedLog) console.log(`validator ${pubId} status reported as offline`);
+            if (config.detailedLog) console.log(`validator ${pubId} status reported as offline`);
             this[pubId] = {
                 i: pubId,
                 e: epoch,
@@ -56,7 +56,7 @@ class StateCache {
     OnlineValidator(pubId){
         if(this[pubId]) {
             delete this[pubId];
-            if (this.detailedLog) console.log(`validator ${pubId} status reported back as online`);
+            if (config.detailedLog) console.log(`validator ${pubId} status reported back as online`);
         }
     }
 }
