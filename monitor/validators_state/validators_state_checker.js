@@ -1,4 +1,4 @@
-// Version 1.0.33
+// Version 1.0.34
 
 class Config {
     constructor(){
@@ -160,10 +160,11 @@ class MonitorValidators {
             var postObj = new PostObjectDataModel(epochNumber);
             for (const [accountId, accountData] of Object.entries(app.accountData)) {
                 postObj.AddAccount(accountId);
-
+                console.log(`├─ acc: ${accountId}`);
                 let online = 0,
                     total = 0,
                     offline = [];
+                
                 for (const [instance, report] of Object.entries(accountData.aggregatedStates)) {
 
                     const offlineValidators = report.o.length,
@@ -171,14 +172,13 @@ class MonitorValidators {
     
                     // Add instance into report
                     if(offlineValidators > 0) postObj.AddInstance(accountId, instance, report.c, report.o);
-    
-                    console.log(`├─ acc: ${accountId} | ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
+                    console.log(`|  ├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
                     // account aggregation
                     total += report.c;
                     online += onlineValidators;
                     if(report.o.length > 0) offline.push(...report.o);
                 }
-                console.log(`├─ AccountID ${accountId} Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
+                console.log(`|  ├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
             }
 
             if (config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
@@ -188,7 +188,7 @@ class MonitorValidators {
             postObj = JSON.stringify(postObj);
             if(config.postData.encryption.active) {
                 postObj = app.ExtraEncryption(postObj);
-                console.log("├─ Data encrzpted to", postObj);
+                console.log("├─ Data encrypted to", postObj);
             }
 
             app.HttpsRequest({
@@ -212,10 +212,9 @@ class MonitorValidators {
         const accounts = app.accountData.GetAccounts();
         if(accountIndex >= accounts.length) return cb();
         
-        const accountId = accounts[accountIndex];
+        const accountId = config.pubKeysList[accountIndex].accountId;
         const account = app.accountData.GetAccountData(accountId);
         const instanceIdentificator = account.pubKeys_instances[instanceIndex];
-
         const instanceData = config.pubKeysList[accountIndex].instances[instanceIdentificator];
         const instancePubKeys = instanceData.v;
 
@@ -223,7 +222,7 @@ class MonitorValidators {
         const endIndex = pubKeyStartIndex + indexesNumToRequest;
         const validatorIndexes = instancePubKeys.slice(pubKeyStartIndex, endIndex);
 
-        console.log("ProcessCheck", accountIndex, instanceIndex, pubKeyStartIndex, validatorIndexes);
+        if(config.detailedLog) console.log("ProcessCheck", accountIndex, instanceIndex, pubKeyStartIndex, validatorIndexes);
 
         // Get data from beacon api
         this.GetValidatorLivenessState(validatorIndexes, epochNumber, function(err,resp){
@@ -259,13 +258,13 @@ class MonitorValidators {
             }
 
             pubKeyStartIndex += config.indexesBanch;
-            if(config.detailedLog) console.log(`acc ${accountId} || pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
+            //if(config.detailedLog) console.log(`acc ${accountId} || pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
                  instanceIndex++
                  pubKeyStartIndex = 0;
                  //console.log(`instanceIndex increased to ${instanceIndex} | pubKeyStartIndex reseted to ${pubKeyStartIndex}`);
             }
-            if(config.detailedLog) console.log(`acc ${accountId} || compare | instanceIndex === account.pubKeys_instances.length || ${instanceIndex} === ${account.pubKeys_instances.length} =>`, (instanceIndex === account.pubKeys_instances.length));
+            //if(config.detailedLog) console.log(`acc ${accountId} || compare | instanceIndex === account.pubKeys_instances.length || ${instanceIndex} === ${account.pubKeys_instances.length} =>`, (instanceIndex === account.pubKeys_instances.length));
             if(instanceIndex === account.pubKeys_instances.length) {
                 instanceIndex = 0;
                 pubKeyStartIndex = 0;
