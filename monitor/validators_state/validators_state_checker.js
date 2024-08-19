@@ -1,4 +1,4 @@
-// Version 1.0.20
+// Version 1.0.21
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 const crypto = require('crypto');
@@ -123,7 +123,7 @@ class MonitorValidators {
                     port: app.postDataUrl.port,
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': (app.dataEncryption.active) ? 'text/plain' : 'application/json',
                         'Content-Length': postObj.length
                     }
                 }, postObj, function(err, res){
@@ -215,7 +215,6 @@ class MonitorValidators {
 
     HttpsRequest(options, body, cb){
         const req = https.request(options, (res) => {
-            console.log(options);
             let response = '';
             res.on('data', (chunk) => { response += chunk; });
             res.on('end', () => { return cb(null, response); });     
