@@ -1,4 +1,4 @@
-// Version 1.0.31 testing / debugging
+// Version 1.0.32 - testing / debugging
 
 class Config {
     constructor(){
@@ -210,9 +210,9 @@ class MonitorValidators {
         console.log("ProcessCheck", accountIndex, instanceIndex, pubKeyStartIndex);
         const accounts = app.accountData.GetAccounts();
         if(accountIndex >= accounts.length) return cb();
-
-        const account = app.accountData.GetAccountData(accounts[accountIndex]);
-        console.log("account:",account);
+        
+        const accountId = accounts[accountIndex];
+        const account = app.accountData.GetAccountData(accountId);
         const instanceIdentificator = account.pubKeys_instances[instanceIndex];
 
         const instanceData = config.pubKeysList[accountIndex].instances[instanceIdentificator];
@@ -239,7 +239,7 @@ class MonitorValidators {
             // iterate over val indices
             const valIndexesL = resp.length;
             for(var i=0;i<valIndexesL;i++){
-                app.accountData[account.accountId].aggregatedStates[instanceIdentificator].c++;
+                app.accountData[accountId].aggregatedStates[instanceIdentificator].c++;
                 
                 const validatorPubId = resp[i].index;
                 if(!resp[i].is_live) {
@@ -248,7 +248,7 @@ class MonitorValidators {
                          * Increase the number of offline periodes in the row
                          * If higher than defined threshold, push vali index on the list of offline validators
                         */ 
-                        app.accountData[account.accountId].aggregatedStates[instanceIdentificator].o.push(app.offlineTracker_periodesCache[validatorPubId]);
+                        app.accountData[accountId].aggregatedStates[instanceIdentificator].o.push(app.offlineTracker_periodesCache[validatorPubId]);
                     }
                 } else {
                     app.offlineTracker_periodesCache.OnlineValidator(validatorPubId);
@@ -256,13 +256,13 @@ class MonitorValidators {
             }
 
             pubKeyStartIndex += config.indexesBanch;
-            console.log(`acc ${account.accountId} || pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
+            console.log(`acc ${accountId} || pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
                  instanceIndex++
                  pubKeyStartIndex = 0;
                  //console.log(`instanceIndex increased to ${instanceIndex} | pubKeyStartIndex reseted to ${pubKeyStartIndex}`);
             }
-            console.log(`acc ${account.accountId} || compare | instanceIndex === account.pubKeys_instances.length || ${instanceIndex} === ${account.pubKeys_instances.length} =>`, (instanceIndex === account.pubKeys_instances.length));
+            console.log(`acc ${accountId} || compare | instanceIndex === account.pubKeys_instances.length || ${instanceIndex} === ${account.pubKeys_instances.length} =>`, (instanceIndex === account.pubKeys_instances.length));
             if(instanceIndex === account.pubKeys_instances.length) {
                 instanceIndex = 0;
                 pubKeyStartIndex = 0;
