@@ -1,4 +1,4 @@
-// Version 1.0.30 testing / debugging
+// Version 1.0.31 testing / debugging
 
 class Config {
     constructor(){
@@ -35,6 +35,12 @@ class InstanceReportDataModel {
         this.c = 0; // number of checked validators
         this.o = []; // array of offline indexes of type StateCache extended for pubId
     }
+    Increase(){
+        this.c++;
+    }
+    Generate(){
+
+    }
 }
 class AccountDataModel {
     constructor(){}
@@ -46,14 +52,16 @@ class AccountDataModel {
         for(var a=0;a<accounts;a++){
             this[pubKeysListContent[a].accountId] = {
                 pubKeys_instances: Object.keys(pubKeysListContent[a].instances), // list of instances keys - static
-                aggregatedStates: new InstanceReportDataModel() // dynamic
+                aggregatedStates: {} // dynamic
             }
         }
     }
     ResetStates(){
         for (let accountId in this) {
             if (this.hasOwnProperty(accountId)) {
-                this[accountId].aggregatedStates = new InstanceReportDataModel();
+                for (let vInstance of this[accountId].pubKeys_instances) {
+                    this[accountId].aggregatedStates[vInstance] = new InstanceReportDataModel();
+                }
             }
         }
     }
@@ -61,7 +69,7 @@ class AccountDataModel {
         return Object.keys(this);
     }
     GetAccountData(accountId){
-        this[accountId];
+        return this[accountId];
     }
 }
 
@@ -232,7 +240,7 @@ class MonitorValidators {
             const valIndexesL = resp.length;
             for(var i=0;i<valIndexesL;i++){
                 app.accountData[account.accountId].aggregatedStates[instanceIdentificator].c++;
-            
+                
                 const validatorPubId = resp[i].index;
                 if(!resp[i].is_live) {
                     if(app.offlineTracker_periodesCache.OfflineValidator(validatorPubId,epochNumber) >= config.trigger_numberOfPeriodesOffline) {
