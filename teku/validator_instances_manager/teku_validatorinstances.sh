@@ -4,7 +4,7 @@ declare -r version="1.0.2"
 validatorInstances_array=("teku-vi1" "teku-vi2" "teku-vi3" "teku-vi4" "teku-vi5" "teku-vi6" "teku-vi7" "teku-vi8" "teku-vi9")
 
 command=$1
-groupDelay=60
+groupDelay=280
 
 start_instance_if_inactive() {
     local index=$1 

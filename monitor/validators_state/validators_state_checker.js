@@ -1,4 +1,4 @@
-// Version 1.0.19
+// Version 1.0.20
 const pubKeysList = require("./public_keys_testlist.json");
 const beaconChainPort = 9596;
 const crypto = require('crypto');
@@ -18,13 +18,26 @@ class InstanceReportDataModel {
     }
 }
 
+class PostObjectDataModel {
+    constructor(epochNumber){
+        this.epoch = epochNumber;
+    }
+    AddInstance(instanceName, instanceValidators, offlineValidators){
+        this[instanceName] = {
+            v:instanceValidators,
+            o:offlineValidators
+        }
+    }
+}
+
 class MonitorValidators {
     constructor(){
         this.postDataUrl = {
             hostname: 'stakersspace.azurewebsites.net',
-            path: '/api/validator-state'
+            path: '/api/validator-state',
+            port: 443
         };
-        this.trigger_numberOfPeriodesOffline = 4;
+        this.trigger_numberOfPeriodesOffline = 5;
         this.dataEncryption = {
             active: true,
             key: "(Bh6HN.Oj{r?OO~pE;ot1rKjcS_Ic9yp", // 32-long string
@@ -34,8 +47,6 @@ class MonitorValidators {
         this.isRunning = false;
         this.aggregatedStates = null;
         this.offlineTracker_periodesCache = {};
-        
-        app = this;
     }
 
     CronWorker(){
@@ -61,7 +72,7 @@ class MonitorValidators {
                 console.log(err);
                 return;
             }
-            
+
             //console.log("Epochs",resp);
             const epochNumber = Number(resp["data"]["current_justified"].epoch);
             console.log(`├─ epoch: ${epochNumber}`);
@@ -76,7 +87,7 @@ class MonitorValidators {
                 //console.log("Aggregated result:", app.aggregatedStates);
 
                 // generate post object
-                var postObj = {"epoch": epochNumber};
+                var postObj = new PostObjectDataModel(epochNumber);
                 let online = 0,
                     total = 0,
                     offline = [];
@@ -84,18 +95,24 @@ class MonitorValidators {
                 for (const [instance, report] of Object.entries(app.aggregatedStates)) {
                     const offlineValidators = report.o.length,
                           onlineValidators = report.c - offlineValidators;
-                    postObj[instance] = report.o.toString();
-                    
+
+                    // Add instance into report
+                    if(offlineValidators > 0) postObj.AddInstance(instance, report.c, report.o);
+
                     console.log(`├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
                     // aggregation
                     total += report.c;
                     online += onlineValidators;
                     if(report.o.length > 0) offline.push(...report.o);
                 }
+
                 console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
                 console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
 
                 //console.log("├─ Posting aggregated data", postObj);
+                // removeinstances with no detection
+                
+
                 postObj = JSON.stringify(postObj);
                 if(app.dataEncryption.active) postObj = app.ExtraEncryption(postObj);
 
@@ -198,6 +215,7 @@ class MonitorValidators {
 
     HttpsRequest(options, body, cb){
         const req = https.request(options, (res) => {
+            console.log(options);
             let response = '';
             res.on('data', (chunk) => { response += chunk; });
             res.on('end', () => { return cb(null, response); });     
@@ -256,10 +274,11 @@ class MonitorValidators {
 }
 
 // each 60 seconds = 1 epoch
-new MonitorValidators().CronWorker();
+app = new MonitorValidators();
+app.CronWorker();
 //console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));
 
-// Testing
+// Testing of getting val states
 /*app.ProcessCheck(0,0, 0, function(err){
     if(err) {
        console.error(err); 
@@ -267,6 +286,21 @@ new MonitorValidators().CronWorker();
     }
     console.log(`${now} MonitorValidators test iteration completed`);
 });*/
+
+// Test post request
+/*app.HttpsRequest({
+    hostname: app.postDataUrl.hostname,
+    path: app.postDataUrl.path,
+    port: app.postDataUrl.port,
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': JSON.stringify({"hello":"world"}).length
+    }
+}, JSON.stringify({"hello":"world"}), function(err, res){
+    console.log(err,res);
+});*/
+
 
 function cleanUpAndExit() {
     console.log("exiting");
