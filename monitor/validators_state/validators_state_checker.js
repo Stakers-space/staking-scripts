@@ -87,7 +87,8 @@ class MonitorValidators {
                         return null;
                     }
                     const epoch = Number(resp["data"]["current_justified"].epoch);
-                    if(epoch && epoch !== app._lastEpochChecked) app.PromptManagerScript(currentEpoch);
+                    if(epoch && epoch !== app._lastEpochChecked) app.PromptManagerScript(epoch);
+                    app._lastEpochChecked = epoch;
                 }); 
             }
         }, 45000);
@@ -96,7 +97,7 @@ class MonitorValidators {
     PromptManagerScript(epochNumber){
         this.isRunning = true;
         this.startTime = new Date().getTime();
-        console.log(`${this.startTime} Monitorig state for epoch ${epochNumber}`);
+        console.log(`${this.startTime} Monitorig validators state for epoch ${epochNumber}`);
 
         // define aggregation file
         this.aggregatedStates = {};
