@@ -1,25 +1,62 @@
-// Version 1.0.21
-const pubKeysList = require("./public_keys_testlist.json");
-const beaconChainPort = 9596;
+// Version 1.0.22
+
+class Config {
+    constructor(){
+        this.pubKeysList = require("./public_keys_testlist.json");
+        this.beaconChainPort = 9596;
+        this.trigger_numberOfPeriodesOffline = 4;
+        this.indexesBanch = 200;
+        this.postData = {
+            server:{
+                hostname: 'stakersspace.azurewebsites.net',
+                path: '/api/validator-state',
+                port: 443
+            },
+            encryption: {
+                active: true,
+                key: "(Bh6HN.Oj{r?OO~pE;ot1rKjcS_Ic9yp", // 32-long string
+                iv: "ZQMiwj5c9qc<er,l" // 16-long string
+            }
+        };
+    }
+}
+const config = new Config();
+
 const crypto = require('crypto');
-
-// script variables and resources
-const pubKeys_instances = Object.keys(pubKeysList);
-
 const http = require('http');
 const https = require('https');
+// script variables and resources
+const pubKeys_instances = Object.keys(config.pubKeysList);
 var app = null;
-
 
 class InstanceReportDataModel {
     constructor(){
         this.c = 0; // number of checked validators
-        this.o = []; // array of offline indexes
+        this.o = []; // array of offline indexes of type StateCache extended for pubId
+    }
+}
+
+class StateCache {
+    constructor(){}
+    OfflineValidator(pubId, epoch){
+        if(this[pubId]){
+            this[pubId].d++;
+        } else {
+            this[pubId] = {
+                e: epoch,
+                d: 1
+            }
+        }
+        return this[pubId].d;
+    }
+    OnlineValidator(pubId){
+        if(this[pubId]) delete this[pubId];
     }
 }
 
 class PostObjectDataModel {
     constructor(epochNumber){
+        this.acc = 0;
         this.epoch = epochNumber;
     }
     AddInstance(instanceName, instanceValidators, offlineValidators){
@@ -32,30 +69,36 @@ class PostObjectDataModel {
 
 class MonitorValidators {
     constructor(){
-        this.postDataUrl = {
-            hostname: 'stakersspace.azurewebsites.net',
-            path: '/api/validator-state',
-            port: 443
-        };
-        this.trigger_numberOfPeriodesOffline = 5;
-        this.dataEncryption = {
-            active: true,
-            key: "(Bh6HN.Oj{r?OO~pE;ot1rKjcS_Ic9yp", // 32-long string
-            iv: "ZQMiwj5c9qc<er,l" // 16-long string
-        };
-        this.indexesBanch = 200;
         this.isRunning = false;
         this.aggregatedStates = null;
-        this.offlineTracker_periodesCache = {};
+        this.offlineTracker_periodesCache = new StateCache();
+        this._lastEpochChecked = 0;
     }
 
     CronWorker(){
         this.cron = setInterval(function(){
-            if(!app.isRunning) app.PromptManagerScript();
-        }, 60000);
+            if(!app.isRunning) {
+                const currentEpoch = GetCurrentEpoch();
+                if(currentEpoch !== app._lastEpochChecked) app.PromptManagerScript(currentEpoch);
+            }  
+        }, 45000);
     }
 
-    PromptManagerScript(){
+    GetCurrentEpoch(){
+        this.GetFinalityCheckpoint(function(err,resp){            
+            // parse data
+            if(!err){
+                try { 
+                    resp = JSON.parse(resp); 
+                    return Number(resp["data"]["current_justified"].epoch);
+                } catch(e){ err = e; }
+            }
+            console.log(err);
+            return;
+        });
+    }
+
+    PromptManagerScript(epochNumber){
         this.isRunning = true;
         // define aggregation file
         this.aggregatedStates = {};
@@ -65,82 +108,70 @@ class MonitorValidators {
 
         this.startTime = new Date().getTime();
         console.log(`${this.startTime} Starting MonitorValidators iteration`);
-        this.GetFinalityCheckpoint(function(err,resp){            
-            // parse data
-            if(!err) try { resp = JSON.parse(resp); } catch(e){ err = e; }
+        console.log(`├─ epoch: ${epochNumber}`);
+           
+        // Process Check
+        app.ProcessCheck(0,0, epochNumber, function(err){
             if(err) {
-                console.log(err);
-                return;
+               console.error("ProcessCheck err:",err); 
+               return;
+            }
+            const now = new Date().getTime();
+            const totalProcessingTime = now - app.startTime;
+            //console.log("Aggregated result:", app.aggregatedStates);
+
+            // generate post object
+            var postObj = new PostObjectDataModel(epochNumber);
+            let online = 0,
+                total = 0,
+                offline = [];
+
+            for (const [instance, report] of Object.entries(app.aggregatedStates)) {
+                const offlineValidators = report.o.length,
+                      onlineValidators = report.c - offlineValidators;
+
+                // Add instance into report
+                if(offlineValidators > 0) postObj.AddInstance(instance, report.c, report.o);
+
+                console.log(`├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
+                // aggregation
+                total += report.c;
+                online += onlineValidators;
+                if(report.o.length > 0) offline.push(...report.o);
             }
 
-            //console.log("Epochs",resp);
-            const epochNumber = Number(resp["data"]["current_justified"].epoch);
-            console.log(`├─ epoch: ${epochNumber}`);
-            // Process Check
-            app.ProcessCheck(0,0, epochNumber, function(err){
-                if(err) {
-                   console.error("ProcessCheck err:",err); 
-                   return;
-                }
-                const now = new Date().getTime();
-                const totalProcessingTime = now - app.startTime;
-                //console.log("Aggregated result:", app.aggregatedStates);
-
-                // generate post object
-                var postObj = new PostObjectDataModel(epochNumber);
-                let online = 0,
-                    total = 0,
-                    offline = [];
-
-                for (const [instance, report] of Object.entries(app.aggregatedStates)) {
-                    const offlineValidators = report.o.length,
-                          onlineValidators = report.c - offlineValidators;
-
-                    // Add instance into report
-                    if(offlineValidators > 0) postObj.AddInstance(instance, report.c, report.o);
-
-                    console.log(`├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
-                    // aggregation
-                    total += report.c;
-                    online += onlineValidators;
-                    if(report.o.length > 0) offline.push(...report.o);
-                }
-
-                console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
-                console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
-
-                //console.log("├─ Posting aggregated data", postObj);
-                // removeinstances with no detection
+            console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
+            console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
+            console.log("├─ Posting aggregated data", postObj);
+            // removeinstances with no detection
                 
+            postObj = JSON.stringify(postObj);
+            if(config.postData.encryption.active) postObj = app.ExtraEncryption(postObj);
 
-                postObj = JSON.stringify(postObj);
-                if(app.dataEncryption.active) postObj = app.ExtraEncryption(postObj);
-
-                console.log(`${now} Posting data |`, postObj);
-                app.HttpsRequest({
-                    hostname: app.postDataUrl.hostname,
-                    path: app.postDataUrl.path,
-                    port: app.postDataUrl.port,
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': (app.dataEncryption.active) ? 'text/plain' : 'application/json',
-                        'Content-Length': postObj.length
-                    }
-                }, postObj, function(err, res){
-                    if(err) console.log(err);
-                    console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`, res);
-                    app.isRunning = false;
-                });
+            console.log(`${now} Posting data |`, postObj);
+            app.HttpsRequest({
+                hostname: app.postData.server.hostname,
+                path: app.postData.server.path,
+                port: app.postData.server.port,
+                method: 'POST',
+                headers: {
+                    'Content-Type': (config.postData.encryption.active) ? 'text/plain' : 'application/json',
+                    'Content-Length': postObj.length
+                }
+            }, postObj, function(err, res){
+                if(err) console.log(err);
+                console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`, res);
+                app.isRunning = false;
             });
         });
     }
 
     ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
         const instanceIdentificator = pubKeys_instances[instanceIndex];
-        const instanceData = pubKeysList[instanceIdentificator];
+        const instanceData = config.pubKeysList[instanceIdentificator];
         const instancePubKeys = instanceData.v;
 
-        const indexesNumToRequest = (pubKeyStartIndex + this.indexesBanch <= instanceData.c) ? ((this.indexesBanch <= instanceData.c) ? this.indexesBanch : instanceData.c) : (instanceData.c - pubKeyStartIndex);
+        const indexesNumToRequest = (pubKeyStartIndex + config.indexesBanch <= instanceData.c) ? ((config.indexesBanch <= instanceData.c) ? config.indexesBanch : instanceData.c) : (instanceData.c - pubKeyStartIndex);
         const endIndex = pubKeyStartIndex + indexesNumToRequest;
         const validatorIndexes = instancePubKeys.slice(pubKeyStartIndex, endIndex);
 
@@ -160,32 +191,26 @@ class MonitorValidators {
             }
 
             // processResponse aggregation
-            //console.log(resp);
             // iterate over val indices
             const valIndexesL = resp.length;
             for(var i=0;i<valIndexesL;i++){
                 app.aggregatedStates[instanceIdentificator].c++;
+                const validatorPubId = resp[i].index;
                 if(!resp[i].is_live) {
                     /**
                      * Increase the number of offline periodes in the row
                      * If higher than defined threshold, push vali index on the list of offline validators
                     */ 
-                    if(app.offlineTracker_periodesCache[resp[i].index]) {
-                        app.offlineTracker_periodesCache[resp[i].index]++;
-                    } else {
-                        app.offlineTracker_periodesCache[resp[i].index] = 1;
+                    if(app.offlineTracker_periodesCache.OfflineValidator(validatorPubId) >= config.trigger_numberOfPeriodesOffline) {
+                        app.offlineTracker_periodesCache[validatorPubId].i = validatorPubId;
+                        app.aggregatedStates[instanceIdentificator].o.push(app.offlineTracker_periodesCache[validatorPubId].i);
                     }
-                    if(app.offlineTracker_periodesCache[resp[i].index] >= app.trigger_numberOfPeriodesOffline) {
-                        app.aggregatedStates[instanceIdentificator].o.push(resp[i].index);
-                        //delete app.offlineTracker_periodesCache[resp[i].index]; // keep it increasing
-                    }
-                } else if(app.offlineTracker_periodesCache[resp[i].index]){
-                    // reported as online - remove from the offline indexes cache
-                    delete app.offlineTracker_periodesCache[resp[i].index];
+                } else {
+                    app.offlineTracker_periodesCache.OnlineValidator(validatorPubId);
                 }
             }
 
-            pubKeyStartIndex += app.indexesBanch;
+            pubKeyStartIndex += config.indexesBanch;
             //console.log(`pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
                  instanceIndex++
@@ -228,7 +253,7 @@ class MonitorValidators {
     GetFinalityCheckpoint(cb){
         const options = {
             hostname: 'localhost',
-            port: beaconChainPort,
+            port: config.beaconChainPort,
             path: `/eth/v1/beacon/states/head/finality_checkpoints`,
             method: 'GET',
             headers: {
@@ -242,7 +267,7 @@ class MonitorValidators {
         const body = JSON.stringify(validatorIndexes);
         const options = {
             hostname: 'localhost',
-            port: beaconChainPort,
+            port: config.beaconChainPort,
             path: `/eth/v1/validator/liveness/${epochNumber}`,
             method: 'POST',
             headers: {
@@ -254,14 +279,14 @@ class MonitorValidators {
     }
 
     ExtraEncryption(strData){
-        var cipher = crypto.createCipheriv('aes-256-cbc', this.dataEncryption.key, this.dataEncryption.iv),
+        var cipher = crypto.createCipheriv('aes-256-cbc', config.postData.encryption.key, config.postData.encryption.iv),
         crypted = cipher.update(strData, 'utf8', 'base64');
         crypted += cipher.final('base64');
         return crypted;
     }
 
     DataDecryption(encData){
-        var decipher = crypto.createDecipheriv('aes-256-cbc', this.dataEncryption.key, this.dataEncryption.iv),
+        var decipher = crypto.createDecipheriv('aes-256-cbc', config.postData.encryption.key, config.postData.encryption.iv),
         decrypted = decipher.update(encData, 'base64', 'utf8');
         decrypted += decipher.final('utf8');
         return decrypted;
@@ -276,30 +301,6 @@ class MonitorValidators {
 app = new MonitorValidators();
 app.CronWorker();
 //console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));
-
-// Testing of getting val states
-/*app.ProcessCheck(0,0, 0, function(err){
-    if(err) {
-       console.error(err); 
-       return;
-    }
-    console.log(`${now} MonitorValidators test iteration completed`);
-});*/
-
-// Test post request
-/*app.HttpsRequest({
-    hostname: app.postDataUrl.hostname,
-    path: app.postDataUrl.path,
-    port: app.postDataUrl.port,
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': JSON.stringify({"hello":"world"}).length
-    }
-}, JSON.stringify({"hello":"world"}), function(err, res){
-    console.log(err,res);
-});*/
-
 
 function cleanUpAndExit() {
     console.log("exiting");
