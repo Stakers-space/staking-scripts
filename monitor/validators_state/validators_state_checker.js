@@ -1,4 +1,4 @@
-// Version 1.0.29 testing / debugging
+// Version 1.0.30 testing / debugging
 
 class Config {
     constructor(){
@@ -41,7 +41,7 @@ class AccountDataModel {
     Generate(pubKeysListContent){
         // Get all accounts
         const accounts = pubKeysListContent.length;
-        console.log(`Generating DataModel for ${accounts} accounts`);
+        console.log(`Generating DataModel for ${accounts} account(s)`);
         // Get all instances for the account
         for(var a=0;a<accounts;a++){
             this[pubKeysListContent[a].accountId] = {
@@ -52,7 +52,7 @@ class AccountDataModel {
     }
     ResetStates(){
         for (let accountId in this) {
-            if (this.hasOwnProperty(key)) {
+            if (this.hasOwnProperty(accountId)) {
                 this[accountId].aggregatedStates = new InstanceReportDataModel();
             }
         }
@@ -108,10 +108,10 @@ class PostObjectDataModel {
 class MonitorValidators {
     constructor(){
         this.isRunning = false;
-        this.accountData = new AccountDataModel().Generate(config.pubKeysList);
+        this.accountData = new AccountDataModel();
+        this.accountData.Generate(config.pubKeysList);
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
-        console.log(this.accountData);
     }
 
     CronWorker(){ this.cron = setInterval(app.Process, 45000); }
@@ -204,6 +204,7 @@ class MonitorValidators {
         if(accountIndex >= accounts.length) return cb();
 
         const account = app.accountData.GetAccountData(accounts[accountIndex]);
+        console.log("account:",account);
         const instanceIdentificator = account.pubKeys_instances[instanceIndex];
 
         const instanceData = config.pubKeysList[accountIndex].instances[instanceIdentificator];
