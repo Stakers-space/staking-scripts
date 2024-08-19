@@ -1,4 +1,4 @@
-// Version 1.0.26
+// Version 1.0.27
 
 class Config {
     constructor(){
@@ -63,8 +63,8 @@ class StateCache {
 
 class PostObjectDataModel {
     constructor(epochNumber){
-        this.acc = 0;
-        this.epoch = epochNumber;
+        this.a = 0; // account
+        this.e = epochNumber; // epoch
     }
     AddInstance(instanceName, instanceValidators, offlineValidators){
         this[instanceName] = {
