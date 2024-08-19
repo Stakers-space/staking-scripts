@@ -18,7 +18,7 @@ class Config {
                 iv: "ZQMiwj5c9qc<er,l" // 16-long string
             }
         };
-        this.detailedLog = false;
+        this.detailedLog = true;
     }
 }
 const config = new Config();
@@ -93,14 +93,14 @@ class StateCache {
 
 class PostObjectDataModel {
     constructor(epochNumber){
-        this.a = 0; // account
         this.e = epochNumber; // epoch
+        this.a = {};
     }
     AddAccount(accountId){
-        this[accountId] = {};
+        this.a[accountId] = {};
     }
     AddInstance(accountId, instanceName, instanceValidators, offlineValidators){
-        this[accountId][instanceName] = {
+        this.a[accountId][instanceName] = {
             v:instanceValidators,
             o:offlineValidators
         }
@@ -110,9 +110,10 @@ class PostObjectDataModel {
 class MonitorValidators {
     constructor(){
         this.isRunning = false;
-        this.accountData = new AccountDataModel();
+        this.accountData = new AccountDataModel().Generate(config.pubKeysList);
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
+        console.log(this.accountData);
     }
 
     CronWorker(){
@@ -201,6 +202,7 @@ class MonitorValidators {
     }
 
     ProcessCheck(accountIndex, instanceIndex, pubKeyStartIndex, epochNumber, cb){
+        console.log("ProcessCheck", accountIndex, instanceIndex, pubKeyStartIndex);
         const accounts = app.accountData.GetAccounts();
         if(accountIndex >= accounts.length) return cb();
 
@@ -248,13 +250,13 @@ class MonitorValidators {
             }
 
             pubKeyStartIndex += config.indexesBanch;
-            //console.log(`pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
+            console.log(`acc ${account.accountId} || pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
                  instanceIndex++
                  pubKeyStartIndex = 0;
                  //console.log(`instanceIndex increased to ${instanceIndex} | pubKeyStartIndex reseted to ${pubKeyStartIndex}`);
             }
-            //console.log(`compare | instanceIndex === account.pubKeys_instances.length || ${instanceIndex} === ${account.pubKeys_instances.length} =>`, (instanceIndex === account.pubKeys_instances.length));
+            console.log(`acc ${account.accountId} || compare | instanceIndex === account.pubKeys_instances.length || ${instanceIndex} === ${account.pubKeys_instances.length} =>`, (instanceIndex === account.pubKeys_instances.length));
             if(instanceIndex === account.pubKeys_instances.length) {
                 instanceIndex = 0;
                 pubKeyStartIndex = 0;
