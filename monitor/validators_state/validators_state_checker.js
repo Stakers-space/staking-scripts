@@ -1,4 +1,4 @@
-// Version 1.0.28 - Account segmentation
+// Version 1.0.28
 
 class Config {
     constructor(){
@@ -43,7 +43,10 @@ class AccountDataModel {
         const accounts = pubKeysListContent.length;
         // Get all instances for the account
         for(var a=0;a<accounts;a++){
-           this.AddAccount(pubKeysListContent[a].accountId);
+            this[pubKeysListContent[a].accountId] = {
+                pubKeys_instances: Object.keys(pubKeysListContent[a].instances), // list of instances keys - static
+                aggregatedStates: new InstanceReportDataModel() // dynamic
+            }
         }
     }
     ResetStates(){
@@ -51,12 +54,6 @@ class AccountDataModel {
             if (this.hasOwnProperty(key)) {
                 this[accountId].aggregatedStates = new InstanceReportDataModel();
             }
-        }
-    }
-    AddAccount(accountId){
-        this[accountId] = {
-            pubKeys_instances: Object.keys(pubKeysListContent[a].instances), // list of instances keys - static
-            aggregatedStates: new InstanceReportDataModel() // dynamic
         }
     }
     GetAccounts(){
@@ -114,24 +111,26 @@ class MonitorValidators {
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
         console.log(this.accountData);
+        this.Process();
     }
 
     CronWorker(){
-        this.cron = setInterval(function(){
-            if(!app.isRunning) {
-                // Get Current Epoch
-                app.GetFinalityCheckpoint(function(err,resp){
-                    try { resp = JSON.parse(resp); } catch(e){ err = e; }
-                    if(err) {
-                        console.log("GetFinalityCheckpoint err:", err);
-                        return null;
-                    }
-                    const epoch = Number(resp["data"]["current_justified"].epoch);
-                    if(epoch && epoch !== app._lastEpochChecked) app.PromptManagerScript(epoch);
-                    app._lastEpochChecked = epoch;
-                }); 
-            }
-        }, 45000);
+        this.cron = setInterval(app.Process, 45000);
+    }
+
+    Process(){
+        if(!app.isRunning){
+            app.GetFinalityCheckpoint(function(err,resp){
+                try { resp = JSON.parse(resp); } catch(e){ err = e; }
+                if(err) {
+                    console.log("GetFinalityCheckpoint err:", err);
+                    return null;
+                }
+                const epoch = Number(resp["data"]["current_justified"].epoch);
+                if(epoch && epoch !== app._lastEpochChecked) app.PromptManagerScript(epoch);
+                app._lastEpochChecked = epoch;
+            }); 
+        }
     }
 
     PromptManagerScript(epochNumber){
