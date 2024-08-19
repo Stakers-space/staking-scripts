@@ -1,4 +1,4 @@
-// Version 1.0.25
+// Version 1.0.26
 
 class Config {
     constructor(){
@@ -18,6 +18,7 @@ class Config {
                 iv: "ZQMiwj5c9qc<er,l" // 16-long string
             }
         };
+        this.detailedLog = true;
     }
 }
 const config = new Config();
@@ -41,7 +42,9 @@ class StateCache {
     OfflineValidator(pubId, epoch){
         if(this[pubId]){
             this[pubId].d++;
+            if (this.detailedLog) console.log(`validator ${pubId} status reported as offline for ${this[pubId].d++} periodes now`);
         } else {
+            if (this.detailedLog) console.log(`validator ${pubId} status reported as offline`);
             this[pubId] = {
                 i: pubId,
                 e: epoch,
@@ -51,7 +54,10 @@ class StateCache {
         return this[pubId].d;
     }
     OnlineValidator(pubId){
-        if(this[pubId]) delete this[pubId];
+        if(this[pubId]) {
+            delete this[pubId];
+            if (this.detailedLog) console.log(`validator ${pubId} status reported back as online`);
+        }
     }
 }
 
@@ -113,7 +119,6 @@ class MonitorValidators {
             }
             const now = new Date().getTime();
             const totalProcessingTime = now - app.startTime;
-            //console.log("Aggregated result:", app.aggregatedStates);
 
             // generate post object
             var postObj = new PostObjectDataModel(epochNumber);
@@ -136,10 +141,10 @@ class MonitorValidators {
             }
 
             console.log(`├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
-            console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
+            if (config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
             console.log("├─ Posting aggregated data", postObj);
             // removeinstances with no detection
-                
+
             postObj = JSON.stringify(postObj);
             if(config.postData.encryption.active) postObj = app.ExtraEncryption(postObj);
 
@@ -155,7 +160,7 @@ class MonitorValidators {
                 }
             }, postObj, function(err, res){
                 if(err) console.log(err);
-                console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}`, res);
+                console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}ms`, res);
                 app.isRunning = false;
             });
         });
