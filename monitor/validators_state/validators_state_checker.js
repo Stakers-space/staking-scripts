@@ -1,4 +1,4 @@
-// Version 1.0.22
+// Version 1.0.23
 
 class Config {
     constructor(){
@@ -43,6 +43,7 @@ class StateCache {
             this[pubId].d++;
         } else {
             this[pubId] = {
+                i: pubId,
                 e: epoch,
                 d: 1
             }
@@ -78,38 +79,38 @@ class MonitorValidators {
     CronWorker(){
         this.cron = setInterval(function(){
             if(!app.isRunning) {
-                const currentEpoch = GetCurrentEpoch();
-                if(currentEpoch !== app._lastEpochChecked) app.PromptManagerScript(currentEpoch);
+                const currentEpoch = app.GetCurrentEpoch();
+                if(currentEpoch && currentEpoch !== app._lastEpochChecked) app.PromptManagerScript(currentEpoch);
             }  
         }, 45000);
     }
 
     GetCurrentEpoch(){
-        this.GetFinalityCheckpoint(function(err,resp){            
+        this.GetFinalityCheckpoint(function(err,resp){
             // parse data
             if(!err){
-                try { 
-                    resp = JSON.parse(resp); 
+                try {
+                    resp = JSON.parse(resp);
+                    console.log(resp);
                     return Number(resp["data"]["current_justified"].epoch);
                 } catch(e){ err = e; }
             }
-            console.log(err);
-            return;
+            console.log("GetFinalityCheckpoint err:", err);
+            return null;
         });
     }
 
     PromptManagerScript(epochNumber){
         this.isRunning = true;
+        this.startTime = new Date().getTime();
+        console.log(`${this.startTime} Monitorig state for epoch ${epochNumber}`);
+
         // define aggregation file
         this.aggregatedStates = {};
         for (const instanceIndex in pubKeys_instances) {
             this.aggregatedStates[pubKeys_instances[instanceIndex]] = new InstanceReportDataModel();
         }
 
-        this.startTime = new Date().getTime();
-        console.log(`${this.startTime} Starting MonitorValidators iteration`);
-        console.log(`├─ epoch: ${epochNumber}`);
-           
         // Process Check
         app.ProcessCheck(0,0, epochNumber, function(err){
             if(err) {
@@ -150,9 +151,9 @@ class MonitorValidators {
 
             console.log(`${now} Posting data |`, postObj);
             app.HttpsRequest({
-                hostname: app.postData.server.hostname,
-                path: app.postData.server.path,
-                port: app.postData.server.port,
+                hostname: config.postData.server.hostname,
+                path: config.postData.server.path,
+                port: config.postData.server.port,
                 method: 'POST',
                 headers: {
                     'Content-Type': (config.postData.encryption.active) ? 'text/plain' : 'application/json',
@@ -186,10 +187,8 @@ class MonitorValidators {
                 err = resp;
             }
 
-            if(err) {
-                return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
-            }
-
+            if(err) return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
+            
             // processResponse aggregation
             // iterate over val indices
             const valIndexesL = resp.length;
@@ -197,13 +196,12 @@ class MonitorValidators {
                 app.aggregatedStates[instanceIdentificator].c++;
                 const validatorPubId = resp[i].index;
                 if(!resp[i].is_live) {
-                    /**
-                     * Increase the number of offline periodes in the row
-                     * If higher than defined threshold, push vali index on the list of offline validators
-                    */ 
-                    if(app.offlineTracker_periodesCache.OfflineValidator(validatorPubId) >= config.trigger_numberOfPeriodesOffline) {
-                        app.offlineTracker_periodesCache[validatorPubId].i = validatorPubId;
-                        app.aggregatedStates[instanceIdentificator].o.push(app.offlineTracker_periodesCache[validatorPubId].i);
+                    if(app.offlineTracker_periodesCache.OfflineValidator(validatorPubId,epochNumber) >= config.trigger_numberOfPeriodesOffline) {
+                        /**
+                         * Increase the number of offline periodes in the row
+                         * If higher than defined threshold, push vali index on the list of offline validators
+                        */ 
+                        app.aggregatedStates[instanceIdentificator].o.push(app.offlineTracker_periodesCache[validatorPubId]);
                     }
                 } else {
                     app.offlineTracker_periodesCache.OnlineValidator(validatorPubId);
