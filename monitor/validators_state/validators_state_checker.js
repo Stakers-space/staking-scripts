@@ -1,4 +1,4 @@
-// Version 1.0.23
+// Version 1.0.24
 
 class Config {
     constructor(){
@@ -79,25 +79,18 @@ class MonitorValidators {
     CronWorker(){
         this.cron = setInterval(function(){
             if(!app.isRunning) {
-                const currentEpoch = app.GetCurrentEpoch();
-                if(currentEpoch && currentEpoch !== app._lastEpochChecked) app.PromptManagerScript(currentEpoch);
-            }  
-        }, 45000);
-    }
-
-    GetCurrentEpoch(){
-        this.GetFinalityCheckpoint(function(err,resp){
-            // parse data
-            if(!err){
-                try {
-                    resp = JSON.parse(resp);
-                    console.log(resp);
-                    return Number(resp["data"]["current_justified"].epoch);
-                } catch(e){ err = e; }
+                // Get Current Epoch
+                app.GetFinalityCheckpoint(function(err,resp){
+                    try { resp = JSON.parse(resp); } catch(e){ err = e; }
+                    if(err) {
+                        console.log("GetFinalityCheckpoint err:", err);
+                        return null;
+                    }
+                    const epoch = Number(resp["data"]["current_justified"].epoch);
+                    if(epoch && epoch !== app._lastEpochChecked) app.PromptManagerScript(currentEpoch);
+                }); 
             }
-            console.log("GetFinalityCheckpoint err:", err);
-            return null;
-        });
+        }, 45000);
     }
 
     PromptManagerScript(epochNumber){
