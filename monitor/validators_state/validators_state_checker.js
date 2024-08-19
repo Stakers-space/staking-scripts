@@ -1,4 +1,4 @@
-// Version 1.0.28
+// Version 1.0.28 testing / debugging
 
 class Config {
     constructor(){
@@ -111,12 +111,9 @@ class MonitorValidators {
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
         console.log(this.accountData);
-        this.Process();
     }
 
-    CronWorker(){
-        this.cron = setInterval(app.Process, 45000);
-    }
+    CronWorker(){ this.cron = setInterval(app.Process, 45000); }
 
     Process(){
         if(!app.isRunning){
@@ -339,6 +336,7 @@ class MonitorValidators {
 // each 60 seconds = 1 epoch
 app = new MonitorValidators();
 app.CronWorker();
+app.Process();
 //console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));
 
 function cleanUpAndExit() {
