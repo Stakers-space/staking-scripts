@@ -38,7 +38,7 @@ async function GetFilesContent(directoryPath, startsPrefix, endsPrefix, cb) {
 module.exports = GetFilesContent;
 
 /*var directoryPath = path.join(__dirname, '..', '..', 'get-validator-indexes/data/deposit_data');
-getFilesContent(directoryPath, 'deposit_data-', '.json', (err, content) => {
+GetFilesContent(directoryPath, 'deposit_data-', '.json', (err, content) => {
     if (err) {
         console.error('Error:', err);
     } else {

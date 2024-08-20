@@ -183,7 +183,7 @@ class MonitorValidators {
 
             if (config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
             
-            console.log("├─ ", postObj);
+            console.log("├─", postObj);
 
             postObj = JSON.stringify(postObj);
             if(config.postData.encryption.active) {
