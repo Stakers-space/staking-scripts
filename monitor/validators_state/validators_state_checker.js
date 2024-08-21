@@ -168,10 +168,6 @@ class MonitorValidators {
                 }
                 const epoch = Number(resp["data"]["current_justified"].epoch);
                 if(epoch && epoch !== app._lastEpochChecked) {
-                    if(app.this._dynamicPubKeysFile){
-                        // reload pubkeys file
-                        config.pubKeysList = app.LoadPubKeysListSync();
-                    }
                     app.PromptManagerScript(epoch);
                     app._lastEpochChecked = epoch;
                 }
@@ -184,6 +180,9 @@ class MonitorValidators {
         app.startTime = new Date().getTime();
         console.log(`${this.startTime} Monitorig validators state for epoch ${epochNumber}`);
 
+        // reload pubkeys file
+        if(app._dynamicPubKeysFile) config.pubKeysList = app.LoadPubKeysListSync();
+        
         // define aggregation file
         app.accountData.ResetStates();
 
