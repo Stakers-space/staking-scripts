@@ -1,4 +1,8 @@
-// Version 1.0.34
+// Version 1.0.36
+
+/* run on localhost through console
+ * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
+*/
 
 class Config {
     constructor(){
@@ -26,7 +30,8 @@ const config = new Config();
 const crypto = require('crypto');
 const http = require('http');
 const https = require('https');
-// script variables and resources
+const fs = require("fs");
+const path = require("path");
 
 var app = null;
 
@@ -120,6 +125,30 @@ class MonitorValidators {
         this.accountData.Generate(config.pubKeysList);
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
+        this._dynamicPubKeysFile = false;
+
+        // use pubkeys and port from attribute, if attached
+        console.log(process.argv);
+        const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
+        const pubkeysArgIndex = args.indexOf('--pubkeys');
+        if (pubkeysArgIndex !== -1 && pubkeysArgIndex + 1 < args.length) {
+            const pubkeysPath = args[pubkeysArgIndex + 1];
+            config.pubKeysList = require(pubkeysPath);
+            console.log(`Pubkeys file set to: ${pubkeysPath} from attached param`);
+            this._dynamicPubKeysFile = true;
+        }
+        const beaconChainPort_param = args.indexOf('--port');
+        if (beaconChainPort_param !== -1 && beaconChainPort_param + 1 < args.length) {
+            const beaconchainPort = args[beaconChainPort_param + 1];
+            config.beaconChainPort = beaconchainPort;
+            console.log(`BeaconChain port set to: ${beaconchainPort} from attached param`);
+        }
+        const epochs_param = args.indexOf('--epochsoffline_trigger');
+        if (epochs_param !== -1 && epochs_param + 1 < args.length) {
+            const epochsOfflineTrigger = args[epochs_param + 1];
+            config.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
+            console.log(`Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
+        }
     }
 
     CronWorker(){ this.cron = setInterval(app.Process, 45000); }
@@ -127,14 +156,25 @@ class MonitorValidators {
     Process(){
         if(!app.isRunning){
             app.GetFinalityCheckpoint(function(err,resp){
-                try { resp = JSON.parse(resp); } catch(e){ err = e; }
                 if(err) {
                     console.log("GetFinalityCheckpoint err:", err);
                     return null;
                 }
+                try { 
+                    resp = JSON.parse(resp); 
+                } catch(e){ 
+                    console.log("GetFinalityCheckpoint parsing err:", e);
+                    return null;
+                }
                 const epoch = Number(resp["data"]["current_justified"].epoch);
-                if(epoch && epoch !== app._lastEpochChecked) app.PromptManagerScript(epoch);
-                app._lastEpochChecked = epoch;
+                if(epoch && epoch !== app._lastEpochChecked) {
+                    if(app.this._dynamicPubKeysFile){
+                        // reload pubkeys file
+                        config.pubKeysList = app.LoadPubKeysListSync();
+                    }
+                    app.PromptManagerScript(epoch);
+                    app._lastEpochChecked = epoch;
+                }
             }); 
         }
     }
@@ -178,7 +218,7 @@ class MonitorValidators {
                     online += onlineValidators;
                     if(report.o.length > 0) offline.push(...report.o);
                 }
-                console.log(`|  ├─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
+                console.log(`|  └─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
             }
 
             if (config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
@@ -338,6 +378,17 @@ class MonitorValidators {
         decrypted = decipher.update(encData, 'base64', 'utf8');
         decrypted += decipher.final('utf8');
         return decrypted;
+    }
+
+    LoadPubKeysListSync() {
+        const filePath = path.join(__dirname, "public_keys_testlist.json");
+        try {
+            const data = fs.readFileSync(filePath, "utf8");
+            return JSON.parse(data);
+        } catch (error) {
+            console.error("Error reading file:", error);
+            return null;
+        }
     }
 
     Exit(){
