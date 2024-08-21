@@ -32,6 +32,7 @@ node /srv/validators-monitor/validators_state_checker.js --pubkeys ./public_keys
 - `--port` - beaconchain port. Default value: `9596` 
 - `--epochsoffline_trigger` - Number of successive epochs for which the validator ID must be reported as offline to trigger notification. Default value: `4`
 - `--pubkeys` - Path to pubkeys file. Default value: `./public_keys_testlist.json`
+- `--pubkeys_dynamic` - Reload file for each epoch. Default value: `false`
 
 ## Set auto start on system startup
 - Check the `validators-state-monitor.service` file

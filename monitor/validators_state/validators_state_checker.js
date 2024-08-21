@@ -7,7 +7,6 @@
 class Config {
     constructor(){
         this.pubKeysListPath = "./public_keys_testlist.json";
-        this.pubKeysList = require(pubKeysListPath);
         this.pubKeysList_dynamic = false; // reload file data for each epoch?
         this.beaconChainPort = 9596;
         this.trigger_numberOfPeriodesOffline = 4;
@@ -26,8 +25,12 @@ class Config {
         };
         this.detailedLog = false;
     }
+    SetPubKeyList(){
+        this.pubKeysList = require(this.pubKeysListPath);
+    }
 }
 const config = new Config();
+config.SetPubKeyList();
 
 const crypto = require('crypto');
 const http = require('http');
@@ -147,6 +150,12 @@ class MonitorValidators {
             const epochsOfflineTrigger = args[epochs_param + 1];
             config.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
             console.log(`└─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
+        }
+        const pubkeys_dynamic_param = args.indexOf('--pubkeys_dynamic');
+        if (pubkeys_dynamic_param !== -1 && pubkeys_dynamic_param + 1 < args.length) {
+            const pubkeys_dynamic = args[pubkeys_dynamic_param + 1];
+            config.pubKeysList_dynamic = (pubkeys_dynamic === "true") ? true : false;
+            console.log(`└─ PubKeysList_dynamic set to: ${config.pubKeysList_dynamic.toString()} from attached param`);
         }
 
         this.accountData.Generate(config.pubKeysList);
