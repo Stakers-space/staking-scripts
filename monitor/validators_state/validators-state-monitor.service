@@ -6,8 +6,7 @@ After=network.target
 User=lodestarbeacon
 Type=simple
 Restart=on-failure
-Environment="PATH=/home/myserveruser/.nvm/versions/node/v20.14.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStart=/srv/validators-monitor/validators_state_checker.js \
+ExecStart=/home/myserveruser/.nvm/versions/node/v20.14.0/bin/node /srv/validators-monitor/validators_state_checker.js \
     --port 9596 \
     --epochsoffline_trigger 4 \
     --pubkeys ./public_keys_testlist.json
