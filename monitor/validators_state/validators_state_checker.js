@@ -149,7 +149,7 @@ class MonitorValidators {
         if (epochs_param !== -1 && epochs_param + 1 < args.length) {
             const epochsOfflineTrigger = args[epochs_param + 1];
             config.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
-            console.log(`└─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
+            console.log(`├─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
         }
         const pubkeys_dynamic_param = args.indexOf('--pubkeys_dynamic');
         if (pubkeys_dynamic_param !== -1 && pubkeys_dynamic_param + 1 < args.length) {

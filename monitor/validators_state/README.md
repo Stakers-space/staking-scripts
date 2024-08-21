@@ -59,7 +59,7 @@ sudo systemctl start validators-state-monitor.service
 systemctl status validators-state-monitor.service
 ```
 ```
-journalctl -u validators-state-monitor.service
+journalctl -f -u validators-state-monitor.service
 ```
 - Activate automatic start on OS startup
 ```
