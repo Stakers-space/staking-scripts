@@ -1,4 +1,4 @@
-// Version 1.0.36
+// Version 1.0.37
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
@@ -6,7 +6,9 @@
 
 class Config {
     constructor(){
-        this.pubKeysList = require("./public_keys_testlist.json");
+        this.pubKeysListPath = "./public_keys_testlist.json";
+        this.pubKeysList = require(pubKeysListPath);
+        this.pubKeysList_dynamic = false; // reload file data for each epoch?
         this.beaconChainPort = 9596;
         this.trigger_numberOfPeriodesOffline = 4;
         this.indexesBanch = 200;
@@ -122,19 +124,17 @@ class MonitorValidators {
     constructor(){
         this.isRunning = false;
         this.accountData = new AccountDataModel();
-        this.accountData.Generate(config.pubKeysList);
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
-        this._dynamicPubKeysFile = false;
 
         // use pubkeys and port from attribute, if attached
         const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
         const pubkeysArgIndex = args.indexOf('--pubkeys');
         if (pubkeysArgIndex !== -1 && pubkeysArgIndex + 1 < args.length) {
             const pubkeysPath = args[pubkeysArgIndex + 1];
-            config.pubKeysList = require(pubkeysPath);
+            config.pubKeysListPath = pubkeysPath;
+            config.pubKeysList = require(config.pubKeysListPath);
             console.log(`├─ Pubkeys file set to: ${pubkeysPath} from attached param`);
-            this._dynamicPubKeysFile = true;
         }
         const beaconChainPort_param = args.indexOf('--port');
         if (beaconChainPort_param !== -1 && beaconChainPort_param + 1 < args.length) {
@@ -148,6 +148,8 @@ class MonitorValidators {
             config.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
             console.log(`└─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
         }
+
+        this.accountData.Generate(config.pubKeysList);
     }
 
     CronWorker(){ this.cron = setInterval(app.Process, 45000); }
@@ -180,7 +182,10 @@ class MonitorValidators {
         console.log(`${this.startTime} Monitorig validators state for epoch ${epochNumber}`);
 
         // reload pubkeys file
-        if(app._dynamicPubKeysFile) config.pubKeysList = app.LoadPubKeysListSync();
+        if(config.pubKeysList_dynamic) {
+            config.pubKeysList = app.LoadPubKeysListSync();
+            app.accountData.Generate(config.pubKeysList);
+        }
         
         // define aggregation file
         app.accountData.ResetStates();
@@ -379,7 +384,7 @@ class MonitorValidators {
     }
 
     LoadPubKeysListSync() {
-        const filePath = path.join(__dirname, "public_keys_testlist.json");
+        const filePath = path.join(__dirname, config.pubKeysListPath);
         try {
             const data = fs.readFileSync(filePath, "utf8");
             return JSON.parse(data);
