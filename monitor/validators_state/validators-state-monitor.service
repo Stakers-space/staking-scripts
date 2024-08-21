@@ -6,6 +6,7 @@ After=network.target
 User=lodestarbeacon
 Type=simple
 Restart=on-failure
+RestartSec=5
 ExecStart=/home/myserveruser/.nvm/versions/node/v20.14.0/bin/node /srv/validators-monitor/validators_state_checker.js \
     --port 9596 \
     --epochsoffline_trigger 4 \

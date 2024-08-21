@@ -52,7 +52,7 @@ class AccountDataModel {
     Generate(pubKeysListContent){
         // Get all accounts
         const accounts = pubKeysListContent.length;
-        console.log(`Generating DataModel for ${accounts} account(s)`);
+        console.log(`\nGenerating DataModel for ${accounts} account(s)`);
         // Get all instances for the account
         for(var a=0;a<accounts;a++){
             this[pubKeysListContent[a].accountId] = {
@@ -128,26 +128,25 @@ class MonitorValidators {
         this._dynamicPubKeysFile = false;
 
         // use pubkeys and port from attribute, if attached
-        console.log(process.argv);
         const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
         const pubkeysArgIndex = args.indexOf('--pubkeys');
         if (pubkeysArgIndex !== -1 && pubkeysArgIndex + 1 < args.length) {
             const pubkeysPath = args[pubkeysArgIndex + 1];
             config.pubKeysList = require(pubkeysPath);
-            console.log(`Pubkeys file set to: ${pubkeysPath} from attached param`);
+            console.log(`├─ Pubkeys file set to: ${pubkeysPath} from attached param`);
             this._dynamicPubKeysFile = true;
         }
         const beaconChainPort_param = args.indexOf('--port');
         if (beaconChainPort_param !== -1 && beaconChainPort_param + 1 < args.length) {
             const beaconchainPort = args[beaconChainPort_param + 1];
             config.beaconChainPort = beaconchainPort;
-            console.log(`BeaconChain port set to: ${beaconchainPort} from attached param`);
+            console.log(`├─ BeaconChain port set to: ${beaconchainPort} from attached param`);
         }
         const epochs_param = args.indexOf('--epochsoffline_trigger');
         if (epochs_param !== -1 && epochs_param + 1 < args.length) {
             const epochsOfflineTrigger = args[epochs_param + 1];
             config.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
-            console.log(`Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
+            console.log(`└─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
         }
     }
 
