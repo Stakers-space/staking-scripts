@@ -29,11 +29,11 @@ sudo curl -o /srv/validators-monitor/public_keys_testlist.json https://raw.githu
 node /srv/validators-monitor/validators_state_checker.js --pubkeys ./public_keys_testlist.json
 ```
 ### Params
- `--port` - beaconchain port. Default value: `9596` 
- `--epochsoffline_trigger` - Number of successive epochs for which the validator ID must be reported as offline to trigger notification. Default value: `4`
- `--pubkeys` - Path to pubkeys file. Default value: `./public_keys_testlist.json`
+- `--port` - beaconchain port. Default value: `9596` 
+- `--epochsoffline_trigger` - Number of successive epochs for which the validator ID must be reported as offline to trigger notification. Default value: `4`
+- `--pubkeys` - Path to pubkeys file. Default value: `./public_keys_testlist.json`
 
-## Set auto start on szstem startup
+## Set auto start on system startup
 - Check the `validators-state-monitor.service` file
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/validators-state-monitor.service
@@ -41,6 +41,10 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mo
 - Download the script to `/etc/systemd/system` directory
 ```
 sudo curl -o /etc/systemd/system/validators-state-monitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/validators-state-monitor.service
+```
+- Edit service params
+```
+sudo nano /etc/systemd/system/validators-state-monitor.service
 ```
 ```
 sudo systemctl daemon-reload
