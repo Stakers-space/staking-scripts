@@ -10,7 +10,6 @@ Restart=on-failure
 ExecStart=/usr/local/bin/logmonitor.sh \
     --service_name "lodestarvalidator" \
     --targets_file "/usr/local/etc/lodestarvalidator_tracking_records.txt" \
-    --log_maxwaitingtime 600 \
     --executor_shell "/usr/local/bin/logmonitor_executor_lodestarvalidator.sh" \
     --executor_trigger_periode 300 \
     --executor_trigger_pause 900 \

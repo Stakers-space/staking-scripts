@@ -111,4 +111,4 @@ sudo systemctl enable lodestarvalidator_logmonitor.service
 > - Open Suborders file
 > ```sudo visudo```
 > - Add serviceUser specific permissions for specified service
->```validatorservice ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop validatorservice, /usr/bin/systemctl start validatorservice, /usr/bin/rm -r /var/lib/lodestar/validators/i1/cache, /usr/bin/rm -r /var/lib/lodestar/validators/i1/validator-db```
+> ```validatorservice ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop validatorservice, /usr/bin/systemctl start validatorservice, /usr/bin/rm -r /var/lib/lodestar/validators/i1/cache, /usr/bin/rm -r /var/lib/lodestar/validators/i1/validator-db```

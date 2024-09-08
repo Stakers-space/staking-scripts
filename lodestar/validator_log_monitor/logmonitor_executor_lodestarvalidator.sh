@@ -56,8 +56,8 @@ case "$occurancyKey" in
         log "Info | Directories removed"
 
         # wait for at least 2 minutes (slash protection)
-        log "Info | Sleeping for 180 seconds"
-        sleep 180 # seconds
+        log "Info | Sleeping for 150 seconds"
+        sleep 150 # seconds
 
         # start the validator instance again
         log "Info | Starting validator instance"
