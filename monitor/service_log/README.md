@@ -28,6 +28,11 @@ Utility consists of scripts, definition file and service files for running the u
 ```
 
 ## Installation
+- Check the `logmonitor.sh` version installed on the server
+```
+/usr/local/bin/logmonitor.sh version
+```
+If there is no or old version installed, install the latest one
 - Check the `logmonitor.sh` script
 ```
 curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
@@ -110,7 +115,6 @@ Sample:
 Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename its default name `logmonitor_executor.sh` for your custom client-based related name.
-
 - Check the `logmonitor_executor.sh` script
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh

@@ -43,7 +43,7 @@ log() {
 
 case "$occurancyKey" in
     DBCORRUPTION) 
-        log "Info | Starting validator instance stop for DBCORRUPTION"
+        log "Info | DBCORRUPTION occured detected"
 
         # Stop the validator instance
         sudo systemctl stop ${serviceName}
