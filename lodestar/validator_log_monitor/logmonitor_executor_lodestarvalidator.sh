@@ -44,24 +44,25 @@ log() {
 case "$occurancyKey" in
     DBCORRUPTION) 
         log "Info | Starting validator instance stop for DBCORRUPTION"
-       
+
         # Stop the validator instance
         sudo systemctl stop ${serviceName}
         log "Info | Validator instance stopped"
-        
+
         # remove the directories
         log "Info | Removing directories"
         sudo rm -r ${validatorDataDirectory}/cache
         sudo rm -r ${validatorDataDirectory}/validator-db
         log "Info | Directories removed"
-        
+
         # wait for at least 2 minutes (slash protection)
         log "Info | Sleeping for 180 seconds"
         sleep 180 # seconds
-        
+
         # start the validator instance again
         log "Info | Starting validator instance"
         sudo systemctl start ${serviceName}
+        ;;
     # ...
     *)
     log "Warning | Unknown parameter $1"
