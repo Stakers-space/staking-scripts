@@ -68,6 +68,12 @@ sudo chmod +x /usr/local/bin/logmonitor_executor_lodestarvalidator.sh
 ```
 - Executor is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
 
+> [!IMPORTANT]  
+> When using `logmonitor_executor_lodestarvalidator.sh` for removing database file, there is a need to apply a measure before being slashed of following situation:
+> 1. DB Corruption error is detected → logmonitor_executor_lodestarvalidator.sh removes database
+> 2. For any reason, the server is restarted (e.g, quick power failure)
+> 3. Server automatically starts and launches validator instance before a secure time
+> A simple prevention is not to use `enable` for launching validator services, but [Start With Delay](https://github.com/Stakers-space/staking-scripts/tree/main/utils/start_with_delay) util instead
 
 ## Log monitor service
 Log monitor service starts the log monitor with active executor and sleeper utility (both optionals) automatically on OS startup.
@@ -99,3 +105,6 @@ journalctl -f -u lodestarvalidator.service -u lodestarvalidator_logmonitor.servi
 ```
 sudo systemctl enable lodestarvalidator_logmonitor.service
 ```
+
+> [!NOTE]  
+> There's a need to set proper permission settings for starting / stoping service despite there is the same user behind validator and validator_monitor service. Check `suborders`section at [Service Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log)
