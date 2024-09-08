@@ -24,7 +24,7 @@ Utility consists of scripts, definition file and service files for running the u
 ├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log
 ├── -d|--executor_trigger_periode: [seconds] | interval within which trigger_count for the key defined in the target file must occur (e.g. 60 occurances in 60 seconds)
 ├── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment
-└── -sd|--service_data | directory path to the service data
+└── -b|--service_data | directory path to the service data
 ```
 
 ## Installation

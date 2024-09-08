@@ -85,7 +85,7 @@ use_shell_parameters() {
                 executor_trigger_pause="$2"
                 shift 2
                 ;;
-            -sd|--service_data)
+            -b|--service_data)
                 service_data_directory="$2"
                 shift 2
                 ;;
