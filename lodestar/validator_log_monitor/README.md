@@ -107,4 +107,8 @@ sudo systemctl enable lodestarvalidator_logmonitor.service
 ```
 
 > [!NOTE]  
-> There's a need to set proper permission settings for starting / stoping service despite there is the same user behind validator and validator_monitor service. Check `suborders`section at [Service Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log)
+> There's a need to set proper permission settings for starting / stoping the service despite there is the same user behind validator and validator_monitor service.
+> Open Suborders file
+> ```sudo visudo```
+> Add serviceUser specific permissions for specified service
+> ```validatorservice ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop validatorservice, /usr/bin/systemctl start validatorservice```

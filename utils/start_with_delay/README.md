@@ -42,7 +42,7 @@ sudo systemctl start delayed-start.service
 ```
 - Stop the service
 ```
-sudo systemctl start delayed-start.service
+sudo systemctl stop delayed-start.service
 ```
 - Check the service
 ```
