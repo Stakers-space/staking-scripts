@@ -227,7 +227,7 @@ process_last_log_time_check() {
             echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
             if [ "$execution_processor" -eq 1 ]; then
                 # execute action
-                "$executor_shell" "NOLOG" "$service_name" "$service_data"
+                "$executor_shell" "NOLOG" "$service_name" "$service_data_directory"
                 # pause after restart
                 # sleep $log_maxwaitingtime
             fi
@@ -303,7 +303,7 @@ journalctl -fu $service_name | while read -r line; do
                 echo "$current_time | $service_name | pattern detection - trigger count reached for $occKey: ${occ_counts_arr["$occKey"]} >= ${trigger_count_arr["$occKey"]}"
 
                 # Execute action
-                "$executor_shell" "$occKey" "$service_name" "$service_data"
+                "$executor_shell" "$occKey" "$service_name" "$service_data_directory"
 
                 # Reset occurancy counters back to 0
                 occ_counts_arr["$occKey"]=0
