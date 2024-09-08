@@ -108,7 +108,7 @@ sudo systemctl enable lodestarvalidator_logmonitor.service
 
 > [!NOTE]  
 > There's a need to set proper permission settings for starting / stoping the service despite there is the same user behind validator and validator_monitor service.
-> Open Suborders file
+> - Open Suborders file
 > ```sudo visudo```
-> Add serviceUser specific permissions for specified service
-> ```validatorservice ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop validatorservice, /usr/bin/systemctl start validatorservice```
+> - Add serviceUser specific permissions for specified service
+>```validatorservice ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop validatorservice, /usr/bin/systemctl start validatorservice, /usr/bin/rm -r /var/lib/lodestar/validators/i1/cache, /usr/bin/rm -r /var/lib/lodestar/validators/i1/validator-db```
