@@ -47,16 +47,16 @@ Executor utility allows to execute any action when certain pattern is reached (e
 
 - Check `.logmonitor_executor.sh` availability
 ```
-/usr/local/bin/logmonitor_executor.sh version
+/usr/local/bin/logmonitor_executor_lodestarvalidator.sh version
 ```
 If the shell script is not available, install it
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor_lodestarvalidator.sh
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lodestar/validator_log_monitor/logmonitor_executor_lodestarvalidator.sh
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor_executor_lodestarvalidator.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor_lodestarvalidator.sh
+sudo curl -o /usr/local/bin/logmonitor_executor_lodestarvalidator.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lodestar/validator_log_monitor/logmonitor_executor_lodestarvalidator.sh
 ```
 - Open the file and configurate execution actions
 ```

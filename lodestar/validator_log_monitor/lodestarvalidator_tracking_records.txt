@@ -1,1 +1,1 @@
-DBCORRUPTION@ Error: Corruption: bad entry in block
+DBCORRUPTION@40@ Error: Corruption: bad entry in block

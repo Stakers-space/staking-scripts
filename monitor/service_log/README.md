@@ -23,7 +23,8 @@ Utility consists of scripts, definition file and service files for running the u
 ├── -t|--log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service. If no log displayed, an action is processed through executor_shell
 ├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log
 ├── -d|--executor_trigger_periode: [seconds] | interval within which trigger_count for the key defined in the target file must occur (e.g. 60 occurances in 60 seconds)
-└── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment
+├── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment
+└── -sd|--service_data | directory path to the service data
 ```
 
 ## Installation
@@ -153,3 +154,5 @@ Configurate serivce file and run the logmonitor under a service on background.
 ### Consensus Clients
 - [Lodestar Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/lodestar/beacon_log_monitor)
 - [Teku Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/teku/beacon_log_monitor)
+### Validator Clients
+- [Lodestar Validator Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/lodestar/validator_log_monitor)

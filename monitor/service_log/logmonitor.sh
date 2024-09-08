@@ -7,13 +7,14 @@ log_maxwaitingtime=0 #if no new log is received within the time, it may indicate
 executor_shell="" #logmonitor_executor.sh
 executor_trigger_periode=600
 executor_trigger_pause=1200
+service_data_directory=""
 # add log file (inside /var/lib... service data addressory)
 #peers_regex=" - peers: ([0-9]+)"
 #min_peers=20
 
 # ToDo: Move trigger count into target file => support of a custom trigger count for each definition
 
-declare -r version="1.0.7"
+declare -r version="1.0.8"
 
 # System variables (do not modify)
 lastLogTimeFile=""
@@ -31,7 +32,8 @@ print_variables() {
     echo -e "├── -t|--log_maxwaitingtime: [seconds] Maximum enabled time between 2 printed logs by the tracked service. If no log displayed, an action is processed through executor_shell"
     echo -e "├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log"
     echo -e "├── -d|--executor_trigger_periode: [seconds] | interval within which declared trigger_count must occur (e.g. 60 occurances in 60 seconds)"
-    echo -e "└── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment"
+    echo -e "├── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment"
+    echo -e "└── -sd|--service_data | directory path to the service data"
 }
 
 get_version() {
@@ -81,6 +83,10 @@ use_shell_parameters() {
                 ;;
             -p|--executor_trigger_pause) 
                 executor_trigger_pause="$2"
+                shift 2
+                ;;
+            -sd|--service_data)
+                service_data_directory="$2"
                 shift 2
                 ;;
             --) shift
@@ -221,7 +227,7 @@ process_last_log_time_check() {
             echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
             if [ "$execution_processor" -eq 1 ]; then
                 # execute action
-                "$executor_shell" "NOLOG" "$service_name"
+                "$executor_shell" "NOLOG" "$service_name" "$service_data"
                 # pause after restart
                 # sleep $log_maxwaitingtime
             fi
@@ -297,7 +303,7 @@ journalctl -fu $service_name | while read -r line; do
                 echo "$current_time | $service_name | pattern detection - trigger count reached for $occKey: ${occ_counts_arr["$occKey"]} >= ${trigger_count_arr["$occKey"]}"
 
                 # Execute action
-                "$executor_shell" "$occKey" "$service_name"
+                "$executor_shell" "$occKey" "$service_name" "$service_data"
 
                 # Reset occurancy counters back to 0
                 occ_counts_arr["$occKey"]=0

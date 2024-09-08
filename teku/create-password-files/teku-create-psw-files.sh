@@ -31,7 +31,7 @@ for f in $folders; do
         else
             # create .txt keystore file with content from reference file
             cp "$referrentPasswordFile" "${directory_path%/}/$keystoreName.txt"
-            echo "Vytvoren soubor $directory_path/$keystoreName.txt was created"
+            echo "File $directory_path/$keystoreName.txt was created"
         fi
     fi
 done

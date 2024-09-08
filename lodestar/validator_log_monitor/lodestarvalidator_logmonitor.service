@@ -4,10 +4,17 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/logmonitor.sh -s "lodestarvalidator" -f "/usr/local/etc/lodestarvalidator_tracking_records.txt" -t 600 -x "/usr/local/bin/logmonitor_executor_lodestarvalidator.sh" -c 80 -d 300 -p 900
-Restart=on-failure
 User=lodestarvalidator
 Group=lodestarvalidator
+Restart=on-failure
+ExecStart=/usr/local/bin/logmonitor.sh \
+    --service_name "lodestarvalidator" \
+    --targets_file "/usr/local/etc/lodestarvalidator_tracking_records.txt" \
+    --log_maxwaitingtime 600 \
+    --executor_shell "/usr/local/bin/logmonitor_executor_lodestarvalidator.sh" \
+    --executor_trigger_periode 300 \
+    --executor_trigger_pause 900 \
+    --service_data "/var/lib/lodestar/validators/i1"
 
 [Install]
 WantedBy=multi-user.target
