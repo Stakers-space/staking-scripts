@@ -1,4 +1,4 @@
-// Version 1.0.37
+// Version 1.0.38t (For testing)
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
@@ -6,7 +6,9 @@
 
 class Config {
     constructor(){
-        this.pubKeysListPath = "./public_keys_testlist.json";
+        this.account_id = null;
+        this.api_token = null;
+        this.pubKeysListPath = "./public_keys_testlist.json"; // service parameter, same as accout id and api_token
         this.pubKeysList_dynamic = false; // reload file data for each epoch?
         this.beaconChainPort = 9596;
         this.trigger_numberOfPeriodesOffline = 4;
@@ -40,46 +42,35 @@ const path = require("path");
 
 var app = null;
 
-class InstanceReportDataModel {
+class InstanceDataModel {
     constructor(){
-        this.c = 0; // number of checked validators
-        this.o = []; // array of offline indexes of type StateCache extended for pubId
+        this.ids_list = [];
+        this.aggregatedStates = {};
     }
-    Increase(){
-        this.c++;
-    }
-    Generate(){
 
-    }
-}
-class AccountDataModel {
-    constructor(){}
-    Generate(pubKeysListContent){
-        // Get all accounts
-        const accounts = pubKeysListContent.length;
-        console.log(`\nGenerating DataModel for ${accounts} account(s)`);
-        // Get all instances for the account
-        for(var a=0;a<accounts;a++){
-            this[pubKeysListContent[a].accountId] = {
-                pubKeys_instances: Object.keys(pubKeysListContent[a].instances), // list of instances keys - static
-                aggregatedStates: {} // dynamic
-            }
+    ResetAggregatedState(instanceId){
+        this[instanceId].aggregatedStates = {
+            c: 0, // number of checked validators
+            o: [] // array of offline indexes of type StateCache extended for pubId
         }
     }
+    IncreaseggregatedState(instanceId){
+        this.aggregatedStates[instanceId].c++;
+    }
+    AddOfflineValidator(instanceId, stateCacheValue){
+        this.aggregatedStates[instanceId].o.push(stateCacheValue);
+    }
+
+    GeneratePubkeysArr(pubKeysListContent){
+        for (const [instanceId, instanceData] of Object.entries(pubKeysListContent)) {
+            this.ids_list.push(instanceId);
+        }
+    }
+
     ResetStates(){
-        for (let accountId in this) {
-            if (this.hasOwnProperty(accountId)) {
-                for (let vInstance of this[accountId].pubKeys_instances) {
-                    this[accountId].aggregatedStates[vInstance] = new InstanceReportDataModel();
-                }
-            }
+        for (const instanceId of Object.keys(this)) {
+            this[instanceId].aggregatedStates = this.ResetAggregatedState(instanceId);
         }
-    }
-    GetAccounts(){
-        return Object.keys(this);
-    }
-    GetAccountData(accountId){
-        return this[accountId];
     }
 }
 
@@ -109,14 +100,12 @@ class StateCache {
 
 class PostObjectDataModel {
     constructor(epochNumber){
+        this.t = config.api_token;
         this.e = epochNumber; // epoch
-        this.a = {};
+        this.i = {};
     }
-    AddAccount(accountId){
-        this.a[accountId] = {};
-    }
-    AddInstance(accountId, instanceName, instanceValidators, offlineValidators){
-        this.a[accountId][instanceName] = {
+    AddInstance(instanceId, instanceValidators, offlineValidators){
+        this.i[instanceId] = {
             v:instanceValidators,
             o:offlineValidators
         }
@@ -126,12 +115,23 @@ class PostObjectDataModel {
 class MonitorValidators {
     constructor(){
         this.isRunning = false;
-        this.accountData = new AccountDataModel();
+
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
 
         // use pubkeys and port from attribute, if attached
         const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
+
+        const accountIdArgIndex = args.indexOf('--account_id');
+        if (accountIdArgIndex !== -1 && accountIdArgIndex + 1 < args.length) {
+            config.account_id = args[accountIdArgIndex + 1];
+            console.log(`├─ AccountId: ${config.account_id} from attached param`);
+        }
+        const tokenApiArgIndex = args.indexOf('--token_api');
+        if (tokenApiArgIndex !== -1 && tokenApiArgIndex + 1 < args.length) {
+            config.api_token = args[tokenApiArgIndex + 1];
+            console.log(`├─ ApiToken: ${config.api_token} from attached param`);
+        }
         const pubkeysArgIndex = args.indexOf('--pubkeys');
         if (pubkeysArgIndex !== -1 && pubkeysArgIndex + 1 < args.length) {
             const pubkeysPath = args[pubkeysArgIndex + 1];
@@ -158,7 +158,8 @@ class MonitorValidators {
             console.log(`└─ PubKeysList_dynamic set to: ${config.pubKeysList_dynamic.toString()} from attached param`);
         }
 
-        this.accountData.Generate(config.pubKeysList);
+        this.instances = new InstanceDataModel();
+        this.instances.GeneratePubkeysArr(config.pubKeysList);
     }
 
     CronWorker(){ this.cron = setInterval(app.Process, 45000); }
@@ -193,14 +194,14 @@ class MonitorValidators {
         // reload pubkeys file
         if(config.pubKeysList_dynamic) {
             config.pubKeysList = app.LoadPubKeysListSync();
-            app.accountData.Generate(config.pubKeysList);
+            app.instances.GeneratePubkeysArr(config.pubKeysList);
         }
         
         // define aggregation file
-        app.accountData.ResetStates();
+        app.instances.ResetStates();
 
         // Process Check
-        app.ProcessCheck(0,0,0, epochNumber, function(err){
+        app.ProcessCheck(0,0, epochNumber, function(err){
             if(err) {
                console.error("ProcessCheck err:",err); 
                return;
@@ -210,28 +211,25 @@ class MonitorValidators {
 
             // generate post object
             var postObj = new PostObjectDataModel(epochNumber);
-            for (const [accountId, accountData] of Object.entries(app.accountData)) {
-                postObj.AddAccount(accountId);
-                console.log(`├─ acc: ${accountId}`);
-                let online = 0,
-                    total = 0,
-                    offline = [];
+            
+            let online = 0,
+                total = 0,
+                offline = [];
+            
+            for (const [instanceId, report] of Object.entries(app.instances.aggregatedStates)) {
                 
-                for (const [instance, report] of Object.entries(accountData.aggregatedStates)) {
-
-                    const offlineValidators = report.o.length,
-                          onlineValidators = report.c - offlineValidators;
+                const offlineValidators = report.o.length,
+                      onlineValidators = report.c - offlineValidators;
     
-                    // Add instance into report
-                    if(offlineValidators > 0) postObj.AddInstance(accountId, instance, report.c, report.o);
-                    console.log(`|  ├─ ${instance} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
-                    // account aggregation
-                    total += report.c;
-                    online += onlineValidators;
-                    if(report.o.length > 0) offline.push(...report.o);
-                }
-                console.log(`|  └─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
+                // Add instance into report
+                if(offlineValidators > 0) postObj.AddInstance(instanceId, report.c, report.o);
+                console.log(`|  ├─ ${instanceId} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
+                // account aggregation
+                total += report.c;
+                online += onlineValidators;
+                if(report.o.length > 0) offline.push(...report.o);
             }
+            console.log(`|  └─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
 
             if (config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
             
@@ -245,7 +243,7 @@ class MonitorValidators {
 
             app.HttpsRequest({
                 hostname: config.postData.server.hostname,
-                path: config.postData.server.path,
+                path: config.postData.server.path/* + "?a="+config.account_id*/,
                 port: config.postData.server.port,
                 method: 'POST',
                 headers: {
@@ -260,21 +258,16 @@ class MonitorValidators {
         });
     }
 
-    ProcessCheck(accountIndex, instanceIndex, pubKeyStartIndex, epochNumber, cb){
-        const accounts = app.accountData.GetAccounts();
-        if(accountIndex >= accounts.length) return cb();
-        
-        const accountId = config.pubKeysList[accountIndex].accountId;
-        const account = app.accountData.GetAccountData(accountId);
-        const instanceIdentificator = account.pubKeys_instances[instanceIndex];
-        const instanceData = config.pubKeysList[accountIndex].instances[instanceIdentificator];
+    ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
+        const instanceIdentificator = instances.ids_list[instanceIndex];
+        const instanceData = config.pubKeysList[instanceIdentificator]; // from file
         const instancePubKeys = instanceData.v;
 
         const indexesNumToRequest = (pubKeyStartIndex + config.indexesBanch <= instanceData.c) ? ((config.indexesBanch <= instanceData.c) ? config.indexesBanch : instanceData.c) : (instanceData.c - pubKeyStartIndex);
         const endIndex = pubKeyStartIndex + indexesNumToRequest;
         const validatorIndexes = instancePubKeys.slice(pubKeyStartIndex, endIndex);
 
-        if(config.detailedLog) console.log("ProcessCheck", accountIndex, instanceIndex, pubKeyStartIndex, validatorIndexes);
+        if(config.detailedLog) console.log("ProcessCheck", instanceIndex, pubKeyStartIndex, validatorIndexes);
 
         // Get data from beacon api
         this.GetValidatorLivenessState(validatorIndexes, epochNumber, function(err,resp){
@@ -287,22 +280,22 @@ class MonitorValidators {
                 err = resp;
             }
 
-            if(err) return cb(err, {"accountIndex":accountIndex,"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
+            if(err) return cb(err, {"instanceIndex":instanceIndex,"pubKeyIndex":pubKeyIndex, "pubKey": instanceData.pubKeys[pubKeyIndex]});
             
             // processResponse aggregation
             // iterate over val indices
             const valIndexesL = resp.length;
             for(var i=0;i<valIndexesL;i++){
-                app.accountData[accountId].aggregatedStates[instanceIdentificator].c++;
-                
+                app.instances.IncreaseggregatedState(instanceIdentificator);
+                                
                 const validatorPubId = resp[i].index;
                 if(!resp[i].is_live) {
                     if(app.offlineTracker_periodesCache.OfflineValidator(validatorPubId,epochNumber) >= config.trigger_numberOfPeriodesOffline) {
                         /**
                          * Increase the number of offline periodes in the row
-                         * If higher than defined threshold, push vali index on the list of offline validators
+                         * If higher than defined threshold, push val index on the list of offline validators
                         */ 
-                        app.accountData[accountId].aggregatedStates[instanceIdentificator].o.push(app.offlineTracker_periodesCache[validatorPubId]);
+                        app.instances.AddOfflineValidator(instanceIdentificator, app.offlineTracker_periodesCache[validatorPubId]);
                     }
                 } else {
                     app.offlineTracker_periodesCache.OnlineValidator(validatorPubId);
@@ -310,19 +303,15 @@ class MonitorValidators {
             }
 
             pubKeyStartIndex += config.indexesBanch;
-            //if(config.detailedLog) console.log(`acc ${accountId} || pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
+            //if(config.detailedLog) console.log(`pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
                  instanceIndex++
                  pubKeyStartIndex = 0;
                  //console.log(`instanceIndex increased to ${instanceIndex} | pubKeyStartIndex reseted to ${pubKeyStartIndex}`);
             }
-            //if(config.detailedLog) console.log(`acc ${accountId} || compare | instanceIndex === account.pubKeys_instances.length || ${instanceIndex} === ${account.pubKeys_instances.length} =>`, (instanceIndex === account.pubKeys_instances.length));
-            if(instanceIndex === account.pubKeys_instances.length) {
-                instanceIndex = 0;
-                pubKeyStartIndex = 0;
-                accountIndex++;
-            }
-            app.ProcessCheck(accountIndex, instanceIndex, pubKeyStartIndex, epochNumber, cb);
+
+            if(instanceIndex === instances.ids_list.length) return cb();
+            app.ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb);
         });
     }
 
