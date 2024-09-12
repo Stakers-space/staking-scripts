@@ -1,4 +1,4 @@
-// Version 1.0.38t (For testing)
+// Version 1.0.40t (For testing)
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
@@ -49,7 +49,7 @@ class InstanceDataModel {
     }
 
     ResetAggregatedState(instanceId){
-        this[instanceId].aggregatedStates = {
+        this.aggregatedStates[instanceId] = {
             c: 0, // number of checked validators
             o: [] // array of offline indexes of type StateCache extended for pubId
         }
@@ -69,7 +69,7 @@ class InstanceDataModel {
 
     ResetStates(){
         for (const instanceId of Object.keys(this)) {
-            this[instanceId].aggregatedStates = this.ResetAggregatedState(instanceId);
+            this.aggregatedStates[instanceId] = this.ResetAggregatedState(instanceId);
         }
     }
 }
@@ -259,7 +259,7 @@ class MonitorValidators {
     }
 
     ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
-        const instanceIdentificator = instances.ids_list[instanceIndex];
+        const instanceIdentificator = app.instances.ids_list[instanceIndex];
         const instanceData = config.pubKeysList[instanceIdentificator]; // from file
         const instancePubKeys = instanceData.v;
 
@@ -310,7 +310,7 @@ class MonitorValidators {
                  //console.log(`instanceIndex increased to ${instanceIndex} | pubKeyStartIndex reseted to ${pubKeyStartIndex}`);
             }
 
-            if(instanceIndex === instances.ids_list.length) return cb();
+            if(instanceIndex === app.instances.ids_list.length) return cb();
             app.ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb);
         });
     }

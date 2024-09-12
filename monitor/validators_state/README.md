@@ -26,7 +26,7 @@ sudo curl -o /srv/validators-monitor/public_keys_testlist.json https://raw.githu
 
 ## Launch The script
 ```
-node /srv/validators-monitor/validators_state_checker.js --pubkeys ./public_keys_testlist.json
+node /srv/validators-monitor/validators_state_checker.js --pubkeys /srv/validators-monitor/public_keys_testlist.json
 ```
 ### Params
 - `--port` - beaconchain port. Default value: `9596` 
