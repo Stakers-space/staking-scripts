@@ -1,4 +1,4 @@
-// Version 1.0.40t (For testing)
+// Version 1.0.40
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
@@ -47,7 +47,6 @@ class InstanceDataModel {
         this.ids_list = [];
         this.aggregatedStates = {};
     }
-
     IncreaseggregatedState(instanceId){
         this.aggregatedStates[instanceId].c++;
     }
@@ -55,12 +54,12 @@ class InstanceDataModel {
         this.aggregatedStates[instanceId].o.push(stateCacheValue);
     }
     GeneratePubkeysArr(pubKeysListContent){
-        for (const [instanceId, instanceData] of Object.entries(pubKeysListContent)) {
+        for (const instanceId of Object.keys(pubKeysListContent)) {
             this.ids_list.push(instanceId);
         }
     }
     ResetStates(){
-        for (const instanceId of Object.keys(this)) {
+        for (const instanceId of this.ids_list) {
             this.aggregatedStates[instanceId] = {
                 c: 0, // number of checked validators
                 o: [] // array of offline indexes of type StateCache extended for pubId
