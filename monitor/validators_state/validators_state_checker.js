@@ -48,28 +48,23 @@ class InstanceDataModel {
         this.aggregatedStates = {};
     }
 
-    ResetAggregatedState(instanceId){
-        this.aggregatedStates[instanceId] = {
-            c: 0, // number of checked validators
-            o: [] // array of offline indexes of type StateCache extended for pubId
-        }
-    }
     IncreaseggregatedState(instanceId){
         this.aggregatedStates[instanceId].c++;
     }
     AddOfflineValidator(instanceId, stateCacheValue){
         this.aggregatedStates[instanceId].o.push(stateCacheValue);
     }
-
     GeneratePubkeysArr(pubKeysListContent){
         for (const [instanceId, instanceData] of Object.entries(pubKeysListContent)) {
             this.ids_list.push(instanceId);
         }
     }
-
     ResetStates(){
         for (const instanceId of Object.keys(this)) {
-            this.aggregatedStates[instanceId] = this.ResetAggregatedState(instanceId);
+            this.aggregatedStates[instanceId] = {
+                c: 0, // number of checked validators
+                o: [] // array of offline indexes of type StateCache extended for pubId
+            };
         }
     }
 }
