@@ -34,7 +34,20 @@ node /srv/validators-monitor/validators_state_checker.js --pubkeys /srv/validato
 - `--pubkeys` - Path to pubkeys file. Default value: `./public_keys_testlist.json`
 - `--pubkeys_dynamic` - Reload file for each epoch. Default value: `false`
 
-## Set auto start on system startup
+
+## Configurate service
+- Define service user `stakersspace` (if does not exists yet)
+```
+sudo useradd --system --no-create-home --shell /bin/false stakersspace
+```
+- Add `stakersspace` user into the group with NodeJs user
+```
+sudo usermod -aG myserveruser stakersspace
+```
+- Set ownership of the service dfirectory
+```
+sudo chown -R stakersspace:stakersspace /srv/validators-monitor
+```
 - Check the `validators-state-monitor.service` file
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/validators-state-monitor.service
@@ -61,6 +74,8 @@ systemctl status validators-state-monitor.service
 ```
 journalctl -f -u validators-state-monitor.service
 ```
+
+### Configurate auto start on system startup
 - Activate automatic start on OS startup
 ```
 sudo systemctl enable validators-state-monitor.service

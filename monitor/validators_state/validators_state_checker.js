@@ -1,8 +1,14 @@
-// Version 1.0.40
+// Version 1.0.41
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
 */
+const crypto = require('crypto');
+const http = require('http');
+const https = require('https');
+const fs = require("fs");
+const path = require("path");
+var app = null;
 
 class Config {
     constructor(){
@@ -30,17 +36,46 @@ class Config {
     SetPubKeyList(){
         this.pubKeysList = require(this.pubKeysListPath);
     }
+
+    LoadConfigFromArguments(){
+        const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
+        const accountIdArgIndex = args.indexOf('--account_id');
+        if (accountIdArgIndex !== -1 && accountIdArgIndex + 1 < args.length) {
+            this.account_id = args[accountIdArgIndex + 1];
+            console.log(`├─ AccountId: ${this.account_id} from attached param`);
+        }
+        const tokenApiArgIndex = args.indexOf('--token_api');
+        if (tokenApiArgIndex !== -1 && tokenApiArgIndex + 1 < args.length) {
+            this.api_token = args[tokenApiArgIndex + 1];
+            console.log(`├─ ApiToken: ${this.api_token} from attached param`);
+        }
+        const pubkeysArgIndex = args.indexOf('--pubkeys');
+        if (pubkeysArgIndex !== -1 && pubkeysArgIndex + 1 < args.length) {
+            const pubkeysPath = args[pubkeysArgIndex + 1];
+            this.pubKeysListPath = pubkeysPath;
+            this.pubKeysList = require(this.pubKeysListPath);
+            console.log(`├─ Pubkeys file set to: ${pubkeysPath} from attached param`);
+        }
+        const beaconChainPort_param = args.indexOf('--port');
+        if (beaconChainPort_param !== -1 && beaconChainPort_param + 1 < args.length) {
+            const beaconchainPort = args[beaconChainPort_param + 1];
+            this.beaconChainPort = beaconchainPort;
+            console.log(`├─ BeaconChain port set to: ${beaconchainPort} from attached param`);
+        }
+        const epochs_param = args.indexOf('--epochsoffline_trigger');
+        if (epochs_param !== -1 && epochs_param + 1 < args.length) {
+            const epochsOfflineTrigger = args[epochs_param + 1];
+            this.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
+            console.log(`├─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
+        }
+        const pubkeys_dynamic_param = args.indexOf('--pubkeys_dynamic');
+        if (pubkeys_dynamic_param !== -1 && pubkeys_dynamic_param + 1 < args.length) {
+            const pubkeys_dynamic = args[pubkeys_dynamic_param + 1];
+            this.pubKeysList_dynamic = (pubkeys_dynamic === "true") ? true : false;
+            console.log(`└─ PubKeysList_dynamic set to: ${this.pubKeysList_dynamic.toString()} from attached param`);
+        }
+    }
 }
-const config = new Config();
-config.SetPubKeyList();
-
-const crypto = require('crypto');
-const http = require('http');
-const https = require('https');
-const fs = require("fs");
-const path = require("path");
-
-var app = null;
 
 class InstanceDataModel {
     constructor(){
@@ -73,9 +108,9 @@ class StateCache {
     OfflineValidator(pubId, epoch){
         if(this[pubId]){
             this[pubId].d++;
-            if (config.detailedLog) console.log(`validator ${pubId} status reported as offline for ${this[pubId].d++} periodes now`);
+            if (app.config.detailedLog) console.log(`validator ${pubId} status reported as offline for ${this[pubId].d++} periodes now`);
         } else {
-            if (config.detailedLog) console.log(`validator ${pubId} status reported as offline`);
+            if (app.config.detailedLog) console.log(`validator ${pubId} status reported as offline`);
             this[pubId] = {
                 i: pubId,
                 e: epoch,
@@ -87,14 +122,14 @@ class StateCache {
     OnlineValidator(pubId){
         if(this[pubId]) {
             delete this[pubId];
-            if (config.detailedLog) console.log(`validator ${pubId} status reported back as online`);
+            if (app.config.detailedLog) console.log(`validator ${pubId} status reported back as online`);
         }
     }
 }
 
 class PostObjectDataModel {
     constructor(epochNumber){
-        this.t = config.api_token;
+        this.t = app.config.api_token;
         this.e = epochNumber; // epoch
         this.i = {};
     }
@@ -108,52 +143,25 @@ class PostObjectDataModel {
 
 class MonitorValidators {
     constructor(){
+        this.setupSignalHandlers();
+
+        this.config = new Config();
+        this.config.LoadConfigFromArguments();
+        this.config.SetPubKeyList();
+
         this.isRunning = false;
 
         this.offlineTracker_periodesCache = new StateCache();
         this._lastEpochChecked = 0;
 
-        // use pubkeys and port from attribute, if attached
-        const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
-
-        const accountIdArgIndex = args.indexOf('--account_id');
-        if (accountIdArgIndex !== -1 && accountIdArgIndex + 1 < args.length) {
-            config.account_id = args[accountIdArgIndex + 1];
-            console.log(`├─ AccountId: ${config.account_id} from attached param`);
-        }
-        const tokenApiArgIndex = args.indexOf('--token_api');
-        if (tokenApiArgIndex !== -1 && tokenApiArgIndex + 1 < args.length) {
-            config.api_token = args[tokenApiArgIndex + 1];
-            console.log(`├─ ApiToken: ${config.api_token} from attached param`);
-        }
-        const pubkeysArgIndex = args.indexOf('--pubkeys');
-        if (pubkeysArgIndex !== -1 && pubkeysArgIndex + 1 < args.length) {
-            const pubkeysPath = args[pubkeysArgIndex + 1];
-            config.pubKeysListPath = pubkeysPath;
-            config.pubKeysList = require(config.pubKeysListPath);
-            console.log(`├─ Pubkeys file set to: ${pubkeysPath} from attached param`);
-        }
-        const beaconChainPort_param = args.indexOf('--port');
-        if (beaconChainPort_param !== -1 && beaconChainPort_param + 1 < args.length) {
-            const beaconchainPort = args[beaconChainPort_param + 1];
-            config.beaconChainPort = beaconchainPort;
-            console.log(`├─ BeaconChain port set to: ${beaconchainPort} from attached param`);
-        }
-        const epochs_param = args.indexOf('--epochsoffline_trigger');
-        if (epochs_param !== -1 && epochs_param + 1 < args.length) {
-            const epochsOfflineTrigger = args[epochs_param + 1];
-            config.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
-            console.log(`├─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
-        }
-        const pubkeys_dynamic_param = args.indexOf('--pubkeys_dynamic');
-        if (pubkeys_dynamic_param !== -1 && pubkeys_dynamic_param + 1 < args.length) {
-            const pubkeys_dynamic = args[pubkeys_dynamic_param + 1];
-            config.pubKeysList_dynamic = (pubkeys_dynamic === "true") ? true : false;
-            console.log(`└─ PubKeysList_dynamic set to: ${config.pubKeysList_dynamic.toString()} from attached param`);
-        }
-
         this.instances = new InstanceDataModel();
-        this.instances.GeneratePubkeysArr(config.pubKeysList);
+        this.instances.GeneratePubkeysArr(this.config.pubKeysList);
+    }
+
+    setupSignalHandlers() {
+        // Volání signal handlerů uvnitř metody
+        process.on('SIGTERM', this.cleanUpAndExit.bind(this));
+        process.on('SIGINT', this.cleanUpAndExit.bind(this));
     }
 
     CronWorker(){ this.cron = setInterval(app.Process, 45000); }
@@ -186,9 +194,9 @@ class MonitorValidators {
         console.log(`${this.startTime} Monitorig validators state for epoch ${epochNumber}`);
 
         // reload pubkeys file
-        if(config.pubKeysList_dynamic) {
-            config.pubKeysList = app.LoadPubKeysListSync();
-            app.instances.GeneratePubkeysArr(config.pubKeysList);
+        if(app.config.pubKeysList_dynamic) {
+            app.config.pubKeysList = app.LoadPubKeysListSync();
+            app.instances.GeneratePubkeysArr(app.config.pubKeysList);
         }
         
         // define aggregation file
@@ -225,23 +233,23 @@ class MonitorValidators {
             }
             console.log(`|  └─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
 
-            if (config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
+            if (app.config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
             
             console.log("├─", postObj);
 
             postObj = JSON.stringify(postObj);
-            if(config.postData.encryption.active) {
+            if(app.config.postData.encryption.active) {
                 postObj = app.ExtraEncryption(postObj);
                 console.log("├─ Data encrypted to", postObj);
             }
 
             app.HttpsRequest({
-                hostname: config.postData.server.hostname,
-                path: config.postData.server.path/* + "?a="+config.account_id*/,
-                port: config.postData.server.port,
+                hostname: app.config.postData.server.hostname,
+                path: app.config.postData.server.path/* + "?a="+app.config.account_id*/,
+                port: app.config.postData.server.port,
                 method: 'POST',
                 headers: {
-                    'Content-Type': (config.postData.encryption.active) ? 'text/plain' : 'application/json',
+                    'Content-Type': (app.config.postData.encryption.active) ? 'text/plain' : 'application/json',
                     'Content-Length': postObj.length
                 }
             }, postObj, function(err, res){
@@ -254,14 +262,14 @@ class MonitorValidators {
 
     ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
         const instanceIdentificator = app.instances.ids_list[instanceIndex];
-        const instanceData = config.pubKeysList[instanceIdentificator]; // from file
+        const instanceData = app.config.pubKeysList[instanceIdentificator]; // from file
         const instancePubKeys = instanceData.v;
 
-        const indexesNumToRequest = (pubKeyStartIndex + config.indexesBanch <= instanceData.c) ? ((config.indexesBanch <= instanceData.c) ? config.indexesBanch : instanceData.c) : (instanceData.c - pubKeyStartIndex);
+        const indexesNumToRequest = (pubKeyStartIndex + app.config.indexesBanch <= instanceData.c) ? ((app.config.indexesBanch <= instanceData.c) ? app.config.indexesBanch : instanceData.c) : (instanceData.c - pubKeyStartIndex);
         const endIndex = pubKeyStartIndex + indexesNumToRequest;
         const validatorIndexes = instancePubKeys.slice(pubKeyStartIndex, endIndex);
 
-        if(config.detailedLog) console.log("ProcessCheck", instanceIndex, pubKeyStartIndex, validatorIndexes);
+        if(app.config.detailedLog) console.log("ProcessCheck", instanceIndex, pubKeyStartIndex, validatorIndexes);
 
         // Get data from beacon api
         this.GetValidatorLivenessState(validatorIndexes, epochNumber, function(err,resp){
@@ -284,7 +292,7 @@ class MonitorValidators {
                                 
                 const validatorPubId = resp[i].index;
                 if(!resp[i].is_live) {
-                    if(app.offlineTracker_periodesCache.OfflineValidator(validatorPubId,epochNumber) >= config.trigger_numberOfPeriodesOffline) {
+                    if(app.offlineTracker_periodesCache.OfflineValidator(validatorPubId,epochNumber) >= app.config.trigger_numberOfPeriodesOffline) {
                         /**
                          * Increase the number of offline periodes in the row
                          * If higher than defined threshold, push val index on the list of offline validators
@@ -296,8 +304,8 @@ class MonitorValidators {
                 }
             }
 
-            pubKeyStartIndex += config.indexesBanch;
-            //if(config.detailedLog) console.log(`pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
+            pubKeyStartIndex += app.config.indexesBanch;
+            //if(app.config.detailedLog) console.log(`pubKeyStartIndex increased to ${pubKeyStartIndex} | endIndex === instanceData.c || ${endIndex} === ${instanceData.c} =>`, (endIndex === instanceData.c));
             if(endIndex === instanceData.c) {
                  instanceIndex++
                  pubKeyStartIndex = 0;
@@ -336,7 +344,7 @@ class MonitorValidators {
     GetFinalityCheckpoint(cb){
         const options = {
             hostname: 'localhost',
-            port: config.beaconChainPort,
+            port: app.config.beaconChainPort,
             path: `/eth/v1/beacon/states/head/finality_checkpoints`,
             method: 'GET',
             headers: {
@@ -350,7 +358,7 @@ class MonitorValidators {
         const body = JSON.stringify(validatorIndexes);
         const options = {
             hostname: 'localhost',
-            port: config.beaconChainPort,
+            port: app.config.beaconChainPort,
             path: `/eth/v1/validator/liveness/${epochNumber}`,
             method: 'POST',
             headers: {
@@ -362,21 +370,21 @@ class MonitorValidators {
     }
 
     ExtraEncryption(strData){
-        var cipher = crypto.createCipheriv('aes-256-cbc', config.postData.encryption.key, config.postData.encryption.iv),
+        var cipher = crypto.createCipheriv('aes-256-cbc', app.config.postData.encryption.key, app.config.postData.encryption.iv),
         crypted = cipher.update(strData, 'utf8', 'base64');
         crypted += cipher.final('base64');
         return crypted;
     }
 
     DataDecryption(encData){
-        var decipher = crypto.createDecipheriv('aes-256-cbc', config.postData.encryption.key, config.postData.encryption.iv),
+        var decipher = crypto.createDecipheriv('aes-256-cbc', app.config.postData.encryption.key, app.config.postData.encryption.iv),
         decrypted = decipher.update(encData, 'base64', 'utf8');
         decrypted += decipher.final('utf8');
         return decrypted;
     }
 
     LoadPubKeysListSync() {
-        const filePath = path.join(__dirname, config.pubKeysListPath);
+        const filePath = path.join(__dirname, app.config.pubKeysListPath);
         try {
             const data = fs.readFileSync(filePath, "utf8");
             return JSON.parse(data);
@@ -386,8 +394,14 @@ class MonitorValidators {
         }
     }
 
-    Exit(){
-        clearInterval(cronInterval);
+    cleanUpAndExit() {
+        console.log("exiting");
+        try {
+            clearInterval(app.cron);
+
+        } catch(e){ console.log(e); }
+        // exit services
+        process.exit(0);
     }
 }
 
@@ -395,12 +409,5 @@ class MonitorValidators {
 app = new MonitorValidators();
 app.CronWorker();
 app.Process();
-//console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));
 
-function cleanUpAndExit() {
-    console.log("exiting");
-    // exit services
-    process.exit(0);
-}
-process.on('SIGTERM', cleanUpAndExit);
-process.on('SIGINT', cleanUpAndExit);
+//console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));

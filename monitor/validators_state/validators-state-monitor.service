@@ -3,7 +3,7 @@ Description=Validator State Checker service
 After=network.target
 
 [Service]
-User=lodestarbeacon
+User=stakersspace
 Type=simple
 Restart=on-failure
 RestartSec=5
