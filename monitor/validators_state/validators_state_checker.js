@@ -1,4 +1,4 @@
-// Version 1.0.41
+// Version 1.0.42
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
@@ -89,6 +89,7 @@ class InstanceDataModel {
         this.aggregatedStates[instanceId].o.push(stateCacheValue);
     }
     GeneratePubkeysArr(pubKeysListContent){
+        this.ids_list = [];
         for (const instanceId of Object.keys(pubKeysListContent)) {
             this.ids_list.push(instanceId);
         }
