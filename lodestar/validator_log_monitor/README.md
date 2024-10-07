@@ -94,6 +94,9 @@ sudo systemctl start lodestarvalidator_logmonitor.service
 ```
 systemctl status lodestarvalidator_logmonitor.service
 ```
+> [!NOTE]  
+> If the service did not start properly, it mey require to set access to `journal` for the service user
+> ```sudo usermod -aG systemd-journal <serviceUser>```
 ```
 journalctl -fu lodestarvalidator_logmonitor.service
 ```

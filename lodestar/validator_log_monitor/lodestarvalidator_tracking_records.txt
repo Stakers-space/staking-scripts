@@ -1,1 +1,2 @@
-DBCORRUPTION@40@ Error: Corruption: bad entry in block
+DBCORRUPTION@80@ Error: Corruption: bad entry in block
+DBCORRUPTION@80@ Error: Corruption: corrupted compressed block contents
