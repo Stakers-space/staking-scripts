@@ -8,11 +8,11 @@ This utility script monitors SSD, RAM and SWAP usage and display the data throug
 ## Installation
 - Check the `hw_usage_monitor.js` script
 ```
-curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/hw_sources/hw_usage_monitor.js
+curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/monitor/hw_sources/hw_usage_monitor.sh
 ```
 - Download the script to `/srv` directory
 ```
-sudo curl -o /srv/hw_usage_monitor.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/hw_sources/hw_usage_monitor.js
+sudo curl -o /srv/hw_usage_monitor.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/monitor/hw_sources/hw_usage_monitor.sh
 ```
 
 ## Launch The script
