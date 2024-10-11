@@ -22,7 +22,7 @@ crontab -e
 ```
 - Add a new task into the cronetab
 ```
-* 10 * * * /cesta/k/souboru/muj_skript.sh "accountId" "stakersspace_api_token"
+* 10 * * * /srv/hw_usage_monitor.js "accountId" "stakersspace_api_token"
 ```
 > [!NOTE]  
 > Replace * * * * * for your scheduled time frequency
