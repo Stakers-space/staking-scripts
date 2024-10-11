@@ -7,6 +7,7 @@ get_version() {
 }
 account_id=$1
 account_api_token=$2
+server_id=$3
 
 # Get Disk usage
 disk_usage=$(df -h --output=pcent / | tail -n 1 | tr -d '[:space:]')
@@ -20,6 +21,7 @@ server_url="https://stakers.space/api/hw-report"
 curl -G "$server_url" \
     --data-urlencode "acc=$account_id" \
     --data-urlencode "key=$account_api_token" \
+    --data-urlencode "srv=$server_id" \
     --data-urlencode "disk_usage=$disk_usage" \
     --data-urlencode "ram_usage=$ram_usage" \
     --data-urlencode "swap_usage=$swap_usage"
