@@ -6,13 +6,21 @@
 This utility script monitors SSD, RAM and SWAP usage and display the data through [stakers.space dashboard](https://stakers.space/account)
 
 ## Installation
-- Check the `hw_usage_monitor.js` script
+- Check the `hw_usage_monitor.sh` script
 ```
 curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/monitor/hw_sources/hw_usage_monitor.sh
 ```
 - Download the script to `/srv` directory
 ```
-sudo curl -o /srv/hw_usage_monitor.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/monitor/hw_sources/hw_usage_monitor.sh
+sudo curl -o /srv/hw_usage_monitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/monitor/hw_sources/hw_usage_monitor.sh
+```
+- Enable launching the script
+```
+sudo chmod +x /srv/hw_usage_monitor.sh
+```
+- Change script ownership
+```
+sudo chown anyUser:anyUser /srv/hw_usage_monitor.sh
 ```
 
 ## Launch The script
@@ -22,7 +30,7 @@ crontab -e
 ```
 - Add a new task into the cronetab
 ```
-* 10 * * * /srv/hw_usage_monitor.js "accountId" "stakersspace_api_token"
+* 10 * * * /srv/hw_usage_monitor.sh "accountId" "stakersspace_api_token"
 ```
 > [!NOTE]  
 > Replace * * * * * for your scheduled time frequency
