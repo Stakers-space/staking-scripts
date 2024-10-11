@@ -1,8 +1,5 @@
 # Monitor Hardware resources
 
-> [!IMPORTANT]  
-> Util under construction
-
 This utility script monitors SSD, RAM and SWAP usage and display the data through [stakers.space dashboard](https://stakers.space/account)
 
 ## Installation
@@ -35,9 +32,13 @@ crontab -e
 > [!NOTE]  
 > Replace * * * * * for your scheduled time frequency
 > 1st * = minute (0 - 59) | keep * for each minute
+>
 > 2nd * = hour (0 - 23) | keep * for each hour
+>
 > 3rd * = day in a month (1 - 31) | keep * for each day
+>
 > 4th * = month (1 - 12) | keep * for each month
+>
 > 5th * = day in a week (0 - 7) - 0 as well as 7 means Sunday | keep * for each day
 
 > [!IMPORTANT]  
