@@ -27,7 +27,7 @@ crontab -e
 ```
 - Add a new task into the cronetab
 ```
-* 10 * * * /srv/hw_usage_monitor.sh "accountId" "stakersspace_api_token" "serverId"
+0 * * * * /srv/hw_usage_monitor.sh "accountId" "stakersspace_api_token" "serverId"
 ```
 > [!NOTE]  
 > Replace * * * * * for your scheduled time frequency
@@ -41,8 +41,8 @@ crontab -e
 >
 > 5th * = day in a week (0 - 7) - 0 as well as 7 means Sunday | keep * for each day
 
-> [!IMPORTANT]  
-> Replace `accountId` and `stakersspace_api_token`
+> [!IMPORTANT]
+> Replace `accountId`, `stakersspace_api_token` and `serverId`
 
 - Show all planned tasks
 ```
