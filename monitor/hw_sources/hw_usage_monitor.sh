@@ -27,7 +27,7 @@ swap_usage=$(awk "BEGIN {printf \"%.2f\", ($swap_used/$swap_total)*100}")
 #cpu_temp=$(sensors | grep 'Core 0' | awk '{print $3}' | tr -d '+°C')
 
 # NVMe temp (requires nvme-cli) || sudo apt install nvme-cli → sudo nvme smart-log /dev/nvme0 | grep 'temperature'
-nvme_temp=$(sudo nvme smart-log /dev/nvme0 | grep 'temperature' | awk '{print $3}')
+# nvme_temp=$(sudo nvme smart-log /dev/nvme0 | grep 'temperature' | awk '{print $3}')
 
 # Post data through GET request
 server_url="https://stakers.space/api/hw-report"
