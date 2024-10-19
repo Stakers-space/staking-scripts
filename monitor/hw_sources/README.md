@@ -1,7 +1,8 @@
 # Monitor Hardware resources
 
 This utility script monitors SSD, RAM and SWAP usage and display the data through [stakers.space dashboard](https://stakers.space/account)
-![alt text](https://github.com/Stakers-space/staking-scripts/refs/heads/main/monitor/hw_sources/server-resources-chart.png?raw=true)
+
+![Resources usage Chart](https://github.com/Stakers-space/staking-scripts/blob/main/monitor/hw_sources/server-resources-chart.png?raw=true)
 
 ## Installation
 - Check the `hw_usage_monitor.sh` script
