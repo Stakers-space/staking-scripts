@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.1"
+declare -r version="1.0.2" # array support for execution and beacon
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -48,25 +48,19 @@ get_version() {
 start () {
   echo "Start $@"
   case "$1" in
-    execution) start_service "$executionService" ;;
-    beacon) start_service "$beaconService" ;;
-    validators) start_validators ;;
+    execution) manage_services start "${executionServices_array[@]}" ;;
+    beacon) manage_services start "${beaconServices_array[@]}" ;;
+    validators) manage_services start "${validatorServices_array[@]}" $validatorServices_instanceStartDelay ;;
     all)
-        start_service "$executionService"
-        start_service "$beaconService"
-        start_validators
+        manage_services start "${executionServices_array[@]}"
+        manage_services start "${beaconServices_array[@]}"
+        manage_services start "${validatorServices_array[@]}" $validatorServices_instanceStartDelay
         ;;
     *)
     start_service "$1" ;;
   esac
 }
 
-start_validators () {
-  for validator in "${validatorServices_array[@]}"; do
-    start_service "$validator"
-    sleep $validatorServices_instanceStartDelay
-  done
-}
 start_service () {
   local service="$1"
   if [[ -z "$service" ]]; then
@@ -93,22 +87,17 @@ start_service () {
 stop () {
   echo "Stop $@"
   case "$1" in
-    execution) stop_service "$executionService" ;;
-    beacon) stop_service "$beaconService" ;;
-    validators) stop_validators ;;
+    execution) manage_services stop "${executionServices_array[@]}" ;;
+    beacon) manage_services stop "${beaconServices_array[@]}" ;;
+    validators) manage_services stop "${validatorServices_array[@]}" ;;
     all)
-        stop_validators
-        stop_service "$beaconService"
-        stop_service "$executionService"
+        manage_services stop "${validatorServices_array[@]}"
+        manage_services stop "${beaconServices_array[@]}"
+        manage_services stop "${executionServices_array[@]}"
         ;;
     *)
     stop_service "$1" ;;
   esac
-}
-stop_validators () {
-  for validator in "${validatorServices_array[@]}"; do
-    stop_service "$validator"
-  done
 }
 stop_service() {
     local service="$1"
@@ -136,19 +125,32 @@ stop_service() {
 restart () {
   echo "Restart $@"
   case "$1" in
-    execution|beacon)
-      local serviceName="${1}Service"
-      echo "sudo systemctl restart ${!serviceName}"
-      # sudo systemctl restart "${!serviceName}"
+    execution|beacon|validators)
+      local serviceName="${1}Services_array"
+      journalctl_args=()
+      for service in "${!serviceName}"; do
+        echo "sudo systemctl restart $service"
+        # sudo systemctl restart "$service"
+        journalctl_args+=(-u "$service")
+      done
       ;;
-    validators)
-      echo "systemctl restart ${validatorServices_array[@]}"
-      # sudo systemctl restart "${validatorServices_array[@]}"
+    all)
+      journalctl_args=()
+      for service in "${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}"; do
+        echo "sudo systemctl restart $service"
+        # sudo systemctl restart "$service"
+        journalctl_args+=(-u "$service")
+      done
       ;;
     *)
     echo "Unknown service: $1. No action taken."
     ;;
   esac
+
+  echo "journalctl -f ${journalctl_args[@]}"
+
+  journalctl -f "${journalctl_args[@]}"
+
 }
 
 ########
@@ -156,13 +158,19 @@ restart () {
 monitor () {
   echo "Monitor $@"
   case "$1" in
-    execution|beacon)
-      local serviceName="${1}Service"
-      journalctl -fu "${!serviceName}"
+    execution|beacon|validators)
+      local serviceName="${1}Services_array"
+      journalctl_args=()
+      for service in "${!serviceName}"; do
+        journalctl_args+=(-u "$service")
+      done
+      echo "journalctl -f ${journalctl_args[@]}"
+      journalctl -f "${journalctl_args[@]}"
       ;;
-    validators)
-      for validatorInstance in "${validatorServices_array[@]}"; do
-          journalctl_args+=(-u "$validatorInstance")
+    all)
+      journalctl_args=()
+      for service in "${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}"; do
+        journalctl_args+=(-u "$service")
       done
       echo "journalctl -f ${journalctl_args[@]}"
       journalctl -f "${journalctl_args[@]}"
@@ -170,9 +178,9 @@ monitor () {
     *)
 
     if [ -z "$1" ]; then
-      journalctl_args=(-u "$executionService" -u "$beaconService")
-      for validatorInstance in "${validatorServices_array[@]}"; do
-          journalctl_args+=(-u "$validatorInstance")
+      journalctl_args=()
+      for service in "${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}"; do
+          journalctl_args+=(-u "$service")
       done
       echo "journalctl -f ${journalctl_args[@]}"
       journalctl -f "${journalctl_args[@]}"
@@ -186,25 +194,23 @@ monitor () {
 ########
 # check
 status () {
+
   echo "Status $@"
-
   # Note: systemctl status seems to allow to load only 2 services at once
-
   case "$1" in
-    execution|beacon) 
-      local serviceName="${1}Service"
-      systemctl status "${!serviceName}" ;;
-    validators) 
-      echo "systemctl status ${validatorServices_array[@]}"
-      systemctl status "${validatorServices_array[@]}" 
+    execution|beacon|validators) 
+      local serviceName="${1}Services_array"
+      for service in "${!serviceName}"; do
+        systemctl status "$service"
+      done
+      ;;
+    all)
+      echo "systemctl status ${executionServices_array[@]} ${beaconServices_array[@]} ${validatorServices_array[@]}"
+      systemctl status "${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}" 
       ;;
     *)
-    
-    local -a stakingservices=($executionService $beaconService "${validatorServices_array[@]}")
-    #for localService in "${stakingservices[@]}"; do
-    #  systemctl status $localService
-    #done
 
+    local -a stakingservices=("${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}")
     for localService in "${stakingservices[@]}"; do
       if systemctl is-active --quiet "$localService"; then
         echo -e "$localService ${GREEN}is running${RESET}"
@@ -261,17 +267,20 @@ load_config () {
       exit 1
   fi
 
+  # Transform to array execution and beacon as well?
+
+
   # Transform to array, use space as a separator
+  IFS=' ' read -r -a executionServices_array <<< "$executionServices"
+  IFS=' ' read -r -a beaconServices_array <<< "$beaconServices"
   IFS=' ' read -r -a validatorServices_array <<< "$validatorServices"
-  # validatorServices_array[0] 
-  # validatorServices_array[1]
 }
 
 print_config() {
   echo -e "# Loaded configuration from $config_dir/clients.conf"
-  echo -e "# ├── execution:  $executionClient → $executionService"
-  echo -e "# ├── beacon:     $beaconClient → $beaconService"
-  echo -e "# └── validators: $validatorClient → ${validatorServices[@]}"
+  echo -e "# ├── execution services:  $executionClients → ${executionServices_array[@]}"
+  echo -e "# ├── beacon services:     $beaconClients → ${beaconServices_array[@]}"
+  echo -e "# └── validator instances: $validatorClient → ${validatorServices_array[@]}"
   echo -e "#     └── start delay: $validatorServices_instanceStartDelay"
 }
 
@@ -281,10 +290,10 @@ generate_default_clients_conf_file() {
     mkdir -p "$config_dir"
     cat > "$config_dir/clients.conf" << EOF
 # staking clients definition
-executionClient="nethermind"
-executionService="nethermind.service"
-beaconClient="lighthouse"
-beaconService="lighthousebeacon.service"
+executionClients="nethermind"
+executionServices="nethermind.service"
+beaconClients="lighthouse"
+beaconServices="lighthousebeacon.service"
 validatorClient="lighthouse"
 validatorServices="lighthouse-vi1.service lighthouse-vi2.service"
 
@@ -312,6 +321,30 @@ EOF
   else
     echo 'staking.sh is already initialized'
   fi
+}
+
+manage_services () {
+  local action="$1"
+  shift
+  local services=("$@")
+  local delay=${services[-1]}
+
+  if [[ "$delay" =~ ^[0-9]+$ ]]; then
+    unset services[-1]
+  else
+    delay=0
+  fi
+
+  for service in "${services[@]}"; do
+    if [[ "$action" == "start" ]]; then
+      start_service "$service"
+    elif [[ "$action" == "stop" ]]; then
+      stop_service "$service"
+    fi
+    if [[ $delay -gt 0 ]]; then
+      sleep $delay
+    fi
+  done
 }
 
 # load variables from config file
