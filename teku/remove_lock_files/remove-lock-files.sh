@@ -1,23 +1,28 @@
 #!/bin/bash
 
-referrentLockFile=$1
+# Get the directory path as input
+directory_path=$1
 
 ## check instance definition
-if [ -z "$referrentLockFile" ]; then
-    echo "missing referrentLockFile parameter: $0 | Sample: '/var/lib/teku-validator/validator_keys/keystore-m_12381_3600_0_0_0-1710000000000.json.lock'"
+if [ -z "$directory_path" ]; then
+    echo "missing directory_path parameter: $0 | Sample: '/var/lib/teku-validator/validator_keys'"
     exit 1
 fi
 
-## Check, whether $referrentLockFile exists
-if [ -f "$referrentLockFile" ]; then
-    echo "✔ Referrent file $referrentLockFile found."
+# Remove trailing slash if present
+directory_path=${directory_path%/}
+
+## Check, whether the directory exists
+if [ -d "$directory_path" ]; then
+    echo "✔ Directory $directory_path found."
+else
+    echo "✘ Directory $directory_path not found."
+    exit 1
 fi
 
-# Get the directory of the keystore file (e.g. /var/lib/teku-validator/validator_keys/)
-directory_path=$(dirname "$referrentLockFile")
 files=$(ls "$directory_path")
 num_files=$(echo "$files" | wc -l)
-echo "Referrent file directory is: $directory_path | Files in the folder: $num_files"
+echo "Directory is: $directory_path | Files in the folder: $num_files"
 
 # Iterate over files in the folder and delete any .json.lock files
 for f in $files; do
