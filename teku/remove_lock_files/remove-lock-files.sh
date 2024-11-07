@@ -32,3 +32,5 @@ for f in $files; do
         echo "File $f was deleted."
     fi
 done
+
+echo "✔ All .json.lock file checks/deletes in $directory_path have been processed."
