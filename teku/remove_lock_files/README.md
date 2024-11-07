@@ -2,7 +2,7 @@
 
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/remove-lock-files.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/remove_lock_files/remove-lock-files.sh
+sudo curl -o /usr/local/bin/remove-lock-files.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/teku/remove_lock_files/remove-lock-files.sh
 ```
 - Enable execution of the shell script
 ```
