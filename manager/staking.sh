@@ -255,7 +255,7 @@ load_config () {
       source "$config_dir/clients.conf"
       # echo "$config_dir/clients.conf loaded"
   else
-      echo "clients.conf not found. Either download the file from github or run './staking.sh init' to generate the file."
+      echo "clients.conf not found. Either download the file from github or run '/usr/local/bin/staking.sh init' to generate the file."
       exit 1
   fi
 
@@ -263,7 +263,7 @@ load_config () {
       source "$config_dir/styling.conf"
       # echo "$config_dir/styling.conf loaded"
   else
-      echo "styling.conf not found. Either download the file from github or run './staking.sh init' to generate the file."
+      echo "styling.conf not found. Either download the file from github or run '/usr/local/bin/staking.sh init' to generate the file."
       exit 1
   fi
 
@@ -346,7 +346,9 @@ manage_services () {
 }
 
 # load variables from config file
-load_config
+if [[ "$1" != "help" && "$1" != "version" && "$1" != "init" && "$1" != "config" ]]; then
+    load_config
+fi
 
 # Process commands
 case "$1" in
