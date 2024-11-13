@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.4"
+declare -r version="1.0.5"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -126,9 +126,8 @@ restart () {
   echo "Restart $@"
   case "$1" in
     execution|beacon|validators)
-      local serviceName="${1}Services_array"
       journalctl_args=()
-      for service in "${!serviceName}"; do
+      for service in "${1}Services_array[@]"; do
         echo "sudo systemctl restart $service"
         # sudo systemctl restart "$service"
         journalctl_args+=(-u "$service")
@@ -159,9 +158,8 @@ monitor () {
   echo "Monitor $@"
   case "$1" in
     execution|beacon|validators)
-      local serviceName="${1}Services_array"
       journalctl_args=()
-      for service in "${!serviceName}"; do
+      for service in "${1}Services_array[@]"; do
         journalctl_args+=(-u "$service")
       done
       echo "journalctl -f ${journalctl_args[@]}"
@@ -194,12 +192,11 @@ monitor () {
 ########
 # check
 status () {
-  echo "Status $@"
+  #echo "Status $@"
   # Note: systemctl status seems to allow to load only 2 services at once
   case "$1" in
     execution|beacon|validators) 
-      local serviceName="${1}Services_array"
-      for service in "${!serviceName}"; do
+      for service in "${1}Services_array[@]"; do
         #systemctl status "$service"
         echo "systemctl status $service"
       done
