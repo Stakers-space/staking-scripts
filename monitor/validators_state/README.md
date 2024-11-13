@@ -10,6 +10,10 @@ This utility script monitors each pubkey from the list under `pubKeysList` param
 ```
 curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/validators_state_checker.js
 ```
+- Create `/srv/validators-monitor` directory, if does not exist yet
+```
+sudo mkdir /srv/validators-monitor
+```
 - Download the script to `/srv/validators-monitor/` directory
 ```
 sudo curl -o /srv/validators-monitor/validators_state_checker.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/validators_state_checker.js

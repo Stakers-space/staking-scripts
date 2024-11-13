@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.2" # array support for execution and beacon
+declare -r version="1.0.3" # simplication
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -278,10 +278,10 @@ load_config () {
 
 print_config() {
   echo -e "# Loaded configuration from $config_dir/clients.conf"
-  echo -e "# ├── execution services:  $executionClients → ${executionServices_array[@]}"
-  echo -e "# ├── beacon services:     $beaconClients → ${beaconServices_array[@]}"
-  echo -e "# └── validator instances: $validatorClient → ${validatorServices_array[@]}"
-  echo -e "#     └── start delay: $validatorServices_instanceStartDelay"
+  echo -e "# ├── execution services:  ${executionServices_array[@]}"
+  echo -e "# ├── beacon services:     ${beaconServices_array[@]}"
+  echo -e "# └── validator instances: ${validatorServices_array[@]}"
+  echo -e "#     └── start delay:     $validatorServices_instanceStartDelay"
 }
 
 generate_default_clients_conf_file() {
@@ -292,9 +292,7 @@ generate_default_clients_conf_file() {
 # staking clients definition
 executionClients="nethermind"
 executionServices="nethermind.service"
-beaconClients="lighthouse"
 beaconServices="lighthousebeacon.service"
-validatorClient="lighthouse"
 validatorServices="lighthouse-vi1.service lighthouse-vi2.service"
 
 # Delay in starting validator instances.

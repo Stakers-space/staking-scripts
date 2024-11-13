@@ -21,7 +21,7 @@ class Config {
         this.indexesBanch = 200;
         this.postData = {
             server:{
-                hostname: 'stakersspace.azurewebsites.net',
+                hostname: 'stakers.space',
                 path: '/api/validator-state',
                 port: 443
             },
