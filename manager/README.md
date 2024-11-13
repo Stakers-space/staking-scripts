@@ -2,7 +2,7 @@
 `staking.sh` script allows control basic actions related to staking clients in a simple way.
 
 
-## Check version / whether the script is alredz installed on the node
+## Check version / whether the script is already installed on the node
 ```
 /usr/local/bin/staking.sh version
 ```

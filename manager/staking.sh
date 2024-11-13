@@ -194,19 +194,19 @@ monitor () {
 ########
 # check
 status () {
-
   echo "Status $@"
   # Note: systemctl status seems to allow to load only 2 services at once
   case "$1" in
     execution|beacon|validators) 
       local serviceName="${1}Services_array"
       for service in "${!serviceName}"; do
-        systemctl status "$service"
+        #systemctl status "$service"
+        echo "systemctl status $service"
       done
       ;;
     all)
       echo "systemctl status ${executionServices_array[@]} ${beaconServices_array[@]} ${validatorServices_array[@]}"
-      systemctl status "${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}" 
+      #systemctl status "${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}" 
       ;;
     *)
 
