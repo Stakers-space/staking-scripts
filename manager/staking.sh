@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.3" # simplication
+declare -r version="1.0.4"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -346,7 +346,7 @@ manage_services () {
 }
 
 # load variables from config file
-if [[ "$1" != "help" && "$1" != "version" && "$1" != "init" && "$1" != "config" ]]; then
+if [[ "$1" != "help" && "$1" != "version" && "$1" != "init" ]]; then
     load_config
 fi
 
