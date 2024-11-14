@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.7 (Demo-Echo printing)"
+declare -r version="1.0.8 (Demo-Echo printing)"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -181,8 +181,11 @@ select_services_array() {
     consensus)
         services=("${beaconServices_array[@]}" "${validatorServices_array[@]}")
         ;;
-    *)
+    "" | all)
         services=("${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}")
+        ;;
+    *)
+        services=("$1")
         ;;
   esac
 }
