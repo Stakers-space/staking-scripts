@@ -17,9 +17,9 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/ma
 sudo curl -o /usr/local/bin/staking.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/manager/staking.sh
 ```
 > [!TIP]
-> You can change ownership of the script from `root` to different user, see below
-> `sudo chown -R stakersspace:stakersspace /usr/local/bin/staking.sh`
-    > `stakersspace` user can be created with command `sudo useradd --system --no-create-home --shell /bin/false stakersspace`
+> You can change ownership of the script from `root` to different user
+> - Create `stakersspace` user (if needed): `sudo useradd --system --no-create-home --shell /bin/false stakersspace`
+> - Change ownership: `sudo chown -R stakersspace:stakersspace /usr/local/bin/staking.sh`
 
 3. Enable execution of the shell script
 ```
