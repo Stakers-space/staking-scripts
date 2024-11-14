@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.6 (Beta Demo)"
+declare -r version="1.0.7 (Demo-Echo printing)"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -37,6 +37,8 @@ help () {
   echo -e "#     ├── execution          Monitor execution service defined in clients.conf" 
   echo -e "#     ├── beacon             Monitor beacon service defined in clients.conf" 
   echo -e "#     └── validators         Monitor validator instances defined in clients.conf"
+  echo -e "################################################################################"
+  print_config
 }
 
 get_version() {
@@ -50,78 +52,16 @@ start () {
   select_services_array "$1"
   manage_services start "${services[@]}" $validatorServices_instanceStartDelay
 }
-
-start_service () {
-  local service="$1"
-  if [[ -z "$service" ]]; then
-      echo -e "Unknown service: $service"
-      exit 1
-  fi
-
-  if systemctl is-active --quiet "$service"; then
-    echo -e "$service is already running"
-  else
-    echo "Starting $service..."
-    # sudo systemctl start "$service"
-    echo "DEMO | sudo systemctl start $service"
-    if [[ $? -eq 0 ]]; then
-        echo -e "${GREEN}$service started successfully${RESET}"
-    else
-        echo -e "${RED}Failed to start $service${RESET}"
-    fi
-  fi
-}
-
-########
-# stop
 stop () {
   echo "Stopping services: $@"
   select_services_array "$1"
   manage_services stop "${services[@]}"
 }
-stop_service() {
-    local service="$1"
-    if [[ -z "$service" ]]; then
-        echo -e "${RED}Unknown service: $service${RESET}"
-        exit 1
-    fi
-
-    if systemctl is-active --quiet "$service"; then
-        echo "Stopping $service..."
-        # sudo systemctl stop "$service"
-        echo "DEMO | sudo systemctl stop $service"
-        if [[ $? -eq 0 ]]; then
-            echo -e "${GREEN}$service stopped successfully${RESET}"
-        else
-            echo -e "${RED}Failed to stop $service${RESET}"
-        fi
-    else
-        echo -e "${YELLOW}$service is not running${RESET}"
-    fi
-}
-
-########
-# restart
 restart () {
   echo "Restarting services: $@"
   select_services_array "$1"
-  manage_services restart "${services[@]}"
+  manage_services restart "${services[@]}" $validatorServices_instanceStartDelay
 }
-
-########
-# monitor
-monitor () {
-  echo "Monitoring services: $@"
-  select_services_array "$1"
-  journalctl_args=()
-  for service in "${services[@]}"; do
-    journalctl_args+=(-u "$service")
-  done
-  echo "journalctl -f ${journalctl_args[@]}"
-  journalctl -f "${journalctl_args[@]}"
-}
-
-########
 # check
 status () {
   echo "Checking status of services: $@"
@@ -135,6 +75,119 @@ status () {
   done
 }
 
+monitor () {
+  echo "Monitoring services: $@"
+  select_services_array "$1"
+  journalctl_args=()
+  for service in "${services[@]}"; do
+    journalctl_args+=(-u "$service")
+  done
+  echo "journalctl -f ${journalctl_args[@]}"
+  journalctl -f "${journalctl_args[@]}"
+}
+
+######## Utils
+
+start_service () {
+  local service="$1"
+  if [[ -z "$service" ]]; then
+      echo -e "Unknown service: $service"
+      exit 1
+  fi
+
+  if systemctl is-active --quiet "$service"; then
+    echo -e "$service is already running"
+  else
+    echo "Starting $service..."
+    echo "DEMO | sudo systemctl start $service"
+    # sudo systemctl start "$service"
+    if [[ $? -eq 0 ]]; then
+        echo -e "${GREEN}$service started successfully${RESET}"
+    else
+        echo -e "${RED}Failed to start $service${RESET}"
+    fi
+  fi
+}
+
+stop_service() {
+    local service="$1"
+    if [[ -z "$service" ]]; then
+        echo -e "${RED}Unknown service: $service${RESET}"
+        exit 1
+    fi
+
+    if systemctl is-active --quiet "$service"; then
+        echo "Stopping $service..."
+        echo "DEMO | sudo systemctl stop $service"
+        # sudo systemctl stop "$service"
+        if [[ $? -eq 0 ]]; then
+            echo -e "${GREEN}$service stopped successfully${RESET}"
+        else
+            echo -e "${RED}Failed to stop $service${RESET}"
+        fi
+    else
+        echo -e "${YELLOW}$service is not running${RESET}"
+    fi
+}
+
+manage_services () {
+  local action="$1"
+  shift
+  local services=("$@")
+  local delay=${services[-1]}
+
+  if [[ "$delay" =~ ^[0-9]+$ ]]; then
+    unset services[-1]
+  else
+    delay=0
+  fi
+
+  if [[ "$action" == "start" ]]; then
+    for service in "${services[@]}"; do
+      start_service "$service"
+      if [[ $delay -gt 0 ]]; then
+        sleep $delay
+      fi
+    done
+  elif [[ "$action" == "stop" ]]; then
+    for (( i=${#services[@]}-1; i>=0; i-- )); do
+      stop_service "${services[i]}"
+    done
+  elif [[ "$action" == "restart" ]]; then
+    for service in "${services[@]}"; do
+      stop_service "$service"
+      start_service "$service"
+      if [[ $delay -gt 0 ]]; then
+        sleep $delay
+      fi
+    done
+  else
+    echo "Unsupported action: $action"
+    exit 1
+  fi
+}
+
+select_services_array() {
+  case "$1" in
+    execution)
+        services=("${executionServices_array[@]}")
+        ;;
+    beacon)
+        services=("${beaconServices_array[@]}")
+        ;;
+    validators)
+        services=("${validatorServices_array[@]}")
+        ;;
+    consensus)
+        services=("${beaconServices_array[@]}" "${validatorServices_array[@]}")
+        ;;
+    *)
+        services=("${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}")
+        ;;
+  esac
+}
+
+### System
 init() {
   # create config files
   generate_default_clients_conf_file
@@ -180,9 +233,6 @@ load_config () {
       exit 1
   fi
 
-  # Transform to array execution and beacon as well?
-
-
   # Transform to array, use space as a separator
   IFS=' ' read -r -a executionServices_array <<< "$executionServices"
   IFS=' ' read -r -a beaconServices_array <<< "$beaconServices"
@@ -193,8 +243,9 @@ print_config() {
   echo -e "# Loaded configuration from $config_dir/clients.conf"
   echo -e "# ├── execution services:  ${executionServices_array[@]}"
   echo -e "# ├── beacon services:     ${beaconServices_array[@]}"
-  echo -e "# └── validator instances: ${validatorServices_array[@]}"
-  echo -e "#     └── start delay:     $validatorServices_instanceStartDelay"
+  echo -e "# ├── validator instances: ${validatorServices_array[@]}"
+  echo -e "# |   └── start delay:     $validatorServices_instanceStartDelay"
+  echo -e "# └── consensus services:  ${beaconServices_array[@]} ${validatorServices_array[@]}"
 }
 
 generate_default_clients_conf_file() {
@@ -232,51 +283,6 @@ EOF
   else
     echo 'staking.sh is already initialized'
   fi
-}
-
-select_services_array() {
-  case "$1" in
-    execution)
-        services=("${executionServices_array[@]}")
-        ;;
-    beacon)
-        services=("${beaconServices_array[@]}")
-        ;;
-    validators)
-        services=("${validatorServices_array[@]}")
-        ;;
-    all)
-        services=("${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}")
-        ;;
-    *)
-        echo "Invalid option: $1"
-        exit 1
-        ;;
-  esac
-}
-
-manage_services () {
-  local action="$1"
-  shift
-  local services=("$@")
-  local delay=${services[-1]}
-
-  if [[ "$delay" =~ ^[0-9]+$ ]]; then
-    unset services[-1]
-  else
-    delay=0
-  fi
-
-  for service in "${services[@]}"; do
-    if [[ "$action" == "start" ]]; then
-      start_service "$service"
-    elif [[ "$action" == "stop" ]]; then
-      stop_service "$service"
-    fi
-    if [[ $delay -gt 0 ]]; then
-      sleep $delay
-    fi
-  done
 }
 
 # load variables from config file
