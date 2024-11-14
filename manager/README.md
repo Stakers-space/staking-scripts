@@ -39,6 +39,7 @@ Modify the default content of your `clients.conf` for setting proper services na
 ```
 /usr/local/bin/staking.sh check
 ```
+- beside `check`, you can use equivalent `status` option
 >   You can also specify certain client:
 >    - through alias: 
 >        - `/usr/local/bin/staking.sh check execution`

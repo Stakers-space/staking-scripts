@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.8 (Demo-Echo printing)"
+declare -r version="1.0.9 (test release)"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -27,7 +27,7 @@ help () {
   echo -e "# │   ├── execution          Restart execution service defined in clients.conf" 
   echo -e "# │   ├── beacon             Restart beacon service defined in clients.conf" 
   echo -e "# │   └── validators         Restart validator instances defined in clients.conf" 
-  echo -e "# ├── check [option]         Check status of all staking services defined in clients.conf"
+  echo -e "# ├── check|status [option]         Check status of all staking services defined in clients.conf"
   echo -e "# │   ├── <serviceName>      Check status of  <serviceName> service" 
   echo -e "# │   ├── execution          Check status of execution service defined in clients.conf" 
   echo -e "# │   ├── beacon             Check status of beacon service defined in clients.conf" 
@@ -99,8 +99,8 @@ start_service () {
     echo -e "$service is already running"
   else
     echo "Starting $service..."
-    echo "DEMO | sudo systemctl start $service"
-    # sudo systemctl start "$service"
+    # echo "DEMO | sudo systemctl start $service"
+    sudo systemctl start "$service"
     if [[ $? -eq 0 ]]; then
         echo -e "${GREEN}$service started successfully${RESET}"
     else
@@ -118,8 +118,8 @@ stop_service() {
 
     if systemctl is-active --quiet "$service"; then
         echo "Stopping $service..."
-        echo "DEMO | sudo systemctl stop $service"
-        # sudo systemctl stop "$service"
+        # echo "DEMO | sudo systemctl stop $service"
+        sudo systemctl stop "$service"
         if [[ $? -eq 0 ]]; then
             echo -e "${GREEN}$service stopped successfully${RESET}"
         else
@@ -307,7 +307,7 @@ case "$1" in
             stop) stop "$@" ;;
             restart) restart "$@" ;;
             monitor) monitor "$@" ;;
-            check) status "$@" ;;
+            check|status) status "$@" ;;
             api) api "$@" ;;
         esac
         ;;
