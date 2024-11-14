@@ -14,7 +14,7 @@ service_data_directory=""
 
 # ToDo: Move trigger count into target file => support of a custom trigger count for each definition
 
-declare -r version="1.0.8"
+declare -r version="1.0.9" # nolog active only for active service
 
 # System variables (do not modify)
 lastLogTimeFile=""
@@ -219,18 +219,22 @@ push_lastLogTimeToFile $current_time
 
 process_last_log_time_check() {
     while true; do
-        local current_ftime=$(date +%s)
-        local last_ftime=$(cat $lastLogTimeFile)
-        local timeFromLastLog=$((current_ftime - last_ftime))
-        echo "[$service_name CLIENT] LL $last_log_time | Time since last log: $timeFromLastLog/$log_maxwaitingtime"
-        if (( $timeFromLastLog > log_maxwaitingtime && timeFromLastLog >= 0 )); then
-            echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
-            if [ "$execution_processor" -eq 1 ]; then
-                # execute action
-                "$executor_shell" "NOLOG" "$service_name" "$service_data_directory"
-                # pause after restart
-                # sleep $log_maxwaitingtime
+        if systemctl is-active --quiet "$service_name"; then
+            local current_ftime=$(date +%s)
+            local last_ftime=$(cat $lastLogTimeFile)
+            local timeFromLastLog=$((current_ftime - last_ftime))
+            echo "[$service_name CLIENT] LL $last_log_time | Time since last log: $timeFromLastLog/$log_maxwaitingtime"
+            if (( $timeFromLastLog > log_maxwaitingtime && timeFromLastLog >= 0 )); then
+                echo "!!! [$service_name CLIENT] No log occured in $timeFromLastLog seconds"
+                if [ "$execution_processor" -eq 1 ]; then
+                    # execute action
+                    "$executor_shell" "NOLOG" "$service_name" "$service_data_directory"
+                    # pause after restart
+                    # sleep $log_maxwaitingtime
+                fi
             fi
+        else
+            echo "[$service_name CLIENT] Service is not active. Skipping log check."
         fi
         sleep $log_maxwaitingtime
     done &
