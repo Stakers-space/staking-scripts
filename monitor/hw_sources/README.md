@@ -4,6 +4,10 @@ This utility script monitors SSD, RAM and SWAP usage and display the data throug
 
 ![Resources usage Chart](https://github.com/Stakers-space/staking-scripts/blob/main/monitor/hw_sources/server-resources-chart.png?raw=true)
 
+
+> [!NOTE]
+> This util will be moved to [Node state snapshots util](https://github.com/Stakers-space/staking-scripts/blob/main/monitor/node_state_snapshots)
+
 ## Installation
 - Check the `hw_usage_monitor.sh` script
 ```

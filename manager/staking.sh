@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.9 (test release)"
+declare -r version="1.0.9 (release)"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
