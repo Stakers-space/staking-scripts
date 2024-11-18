@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.1"
+declare -r version="1.0.2"
 get_version() {
     echo -e "HW usage monitor version: $version | Powered by https://stakers.space"
     exit 0
@@ -51,14 +51,23 @@ else
     vpn_status="Mullvad Not Installed"
 fi
 
-# Debug output
-echo "VPN Status: $vpn_status"
-echo "VPN Server: $vpn_server"
-
 # get consensus peers (saved by logmonitor) - read from tmp file
+beacon_peers="N/A"
+peer_file="/tmp/beacon_peers.txt"
+if [[ -f "$peer_file" ]]; then
+    beacon_peers=$(cat "$peer_file" | tr -d '[:space:]')
+fi
 
-
-
+echo -e "\nNode snapshot | Posting:"
+echo -e "├── account_id:   $account_id"
+echo -e "├── api_token:    $account_api_token"
+echo -e "├── server_id:    $server_id"
+echo -e "├── disk_usage:   $disk_usage"
+echo -e "├── ram_usage:    $ram_usage"
+echo -e "├── swap_usage:   $swap_usage"
+echo -e "├── beacon_peers: $beacon_peers"
+echo -e "├── vpn_status:   $vpn_status"
+echo -e "└── vpn_server:   $vpn_server"
 
 # Post data through GET request
 server_url="https://stakers.space/api/node-snapshot"
@@ -69,5 +78,6 @@ curl -G "$server_url" \
     --data-urlencode "disk_usage=$disk_usage" \
     --data-urlencode "ram_usage=$ram_usage" \
     --data-urlencode "swap_usage=$swap_usage" \
-    --data-urlencode "vpn=$vpn_server" \
-    --data-urlencode "vpn_s=$vpn_status"
+    --data-urlencode "peer=$beacon_peers" \
+    --data-urlencode "vpn_s=$vpn_status" \
+    --data-urlencode "vpn=$vpn_server"
