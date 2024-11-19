@@ -8,13 +8,13 @@ executor_shell="" #logmonitor_executor.sh
 executor_trigger_periode=600
 executor_trigger_pause=1200
 service_data_directory=""
+peers_tracking=0
+peers_min=0 # Minimum number of required peers
 # add log file (inside /var/lib... service data addressory)
-#peers_regex=" - peers: ([0-9]+)"
-#min_peers=20
 
 # ToDo: Move trigger count into target file => support of a custom trigger count for each definition
 
-declare -r version="1.0.9" # nolog active only for active service
+declare -r version="1.1.0" # nolog active only for active service
 
 # System variables (do not modify)
 lastLogTimeFile=""
@@ -33,7 +33,9 @@ print_variables() {
     echo -e "├── -f|--targets_file:   absolute path to the file with a list of occurrences to check in a log"
     echo -e "├── -d|--executor_trigger_periode: [seconds] | interval within which declared trigger_count must occur (e.g. 60 occurances in 60 seconds)"
     echo -e "├── -p|--executor_trigger_pause [seconds] | delay time after execution - time for service estabilishment"
-    echo -e "└── -sd|--service_data | directory path to the service data"
+    echo -e "├── -b|--service_data | directory path to the service data"
+    echo -e "├── -c|--peers_tracking | enable peers tracking [0/1]. Peers count is kept in /tmp/beacon_peers.txt"
+    echo -e "└── -m|--peers_mincount | Minimum number of peers, below the count a warning is printed"
 }
 
 get_version() {
@@ -49,7 +51,7 @@ get_help() {
 
 # Set variables from attached parameters
 use_shell_parameters() {
-    TEMP=$(getopt -o s:f:t:x:d:p:b: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_periode:,executor_trigger_pause:,service_data: -- "$@")
+    TEMP=$(getopt -o s:f:t:x:d:p:b:c:m: --long service_name:,targets_file:,log_maxwaitingtime:,executor_shell:,executor_trigger_periode:,executor_trigger_pause:,service_data:,peers_tracking:,peers_mincount: -- "$@")
     #echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
 
@@ -57,15 +59,15 @@ use_shell_parameters() {
     while true; do
         #echo "Params after eval set: $1 $2"
         case "$1" in
-            -s|--service_name) 
+            -s|--service_name)
                 service_name="$2"
-                shift 2 
+                shift 2
                 if [ -z "$service_name" ]; then
                     echo "Error: No service name specified."
                     exit 1
                 fi
                 ;;
-            -f|--targets_file) 
+            -f|--targets_file)
                 targets_file="$2"
                 shift 2
                 ;;
@@ -73,20 +75,28 @@ use_shell_parameters() {
                 log_maxwaitingtime="$2"
                 shift 2
                 ;;
-            -x|--executor_shell) 
+            -x|--executor_shell)
                 executor_shell="$2"
                 shift 2
                 ;;
-            -d|--executor_trigger_periode) 
+            -d|--executor_trigger_periode)
                 executor_trigger_periode="$2"
                 shift 2
                 ;;
-            -p|--executor_trigger_pause) 
+            -p|--executor_trigger_pause)
                 executor_trigger_pause="$2"
                 shift 2
                 ;;
             -b|--service_data)
                 service_data_directory="$2"
+                shift 2
+                ;;
+            -c|--peers_tracking)
+                peers_tracking="$2"
+                shift 2
+                ;;
+            -m|--peers_mincount)
+                peers_min="$2"
                 shift 2
                 ;;
             --) shift
@@ -244,6 +254,28 @@ if [ "$log_maxwaitingtime" -gt 0 ]; then
     process_last_log_time_check
 fi
 
+process_peers() {
+    local peersFile="/tmp/beacon_peers.txt"
+    local peers_regex="[Pp]eers:\s*([0-9]+)" # Regex for detecting peers count
+    local -i current_peers=0                 # Current peers count
+    local line="$1"
+    if [[ $line =~ $peers_regex ]]; then
+        current_peers="${BASH_REMATCH[1]}"
+
+        # write number into the file
+        if ! echo "$current_peers" > "$peersFile"; then
+            echo "!!![$service_name CLIENT] Error: Failed to write peers count to $peersFile"
+        else
+            echo "[$service_name CLIENT] Peers count ($current_peers) successfully saved to $peersFile"
+        fi
+
+        if (( current_peers < peers_min )); then
+            echo "[$service_name CLIENT] Warning: Peers count ($current_peers) is below the minimum threshold ($peers_min)"
+            # trigger action? - change mullvad vpn? (Process through VPN cliient based on peersFile)
+        fi
+    fi
+}
+
 # UTILITY: Check each new log line for defined string
 last_reset=$(date +%s)
 # On each new line
@@ -255,6 +287,11 @@ journalctl -fu $service_name | while read -r line; do
     # process once per 30 seconds to reduce disk IOs
     if (( current_time - last_log_time > $lastlogfile_updateTimer )); then
         push_lastLogTimeToFile $current_time
+
+        # if peers tracking is enabled, track peers count
+        if (( peers_tracking )); then
+            process_peers "$line"
+        fi
     fi
 
     # if there are no defined lines → return (there's no defined string(s) to search for)
@@ -279,15 +316,6 @@ journalctl -fu $service_name | while read -r line; do
     for occKey in "${tracked_occurances_keys[@]}"; do
         # tracked string found in the service log
         if [[ "$line" == *"${tracked_occurances_arr[$occKey]}"* ]]; then
-
-            #  peers check
-            #if [[ $line =~ $peers_regex ]]; then
-            #    peers=${BASH_REMATCH[1]}
-            #    echo "Active peers: $peers (minimum: $min_peers)"
-            #    if [[ $peers -gt $min_peers ]]; then
-            #       continue
-            #    fi
-            #fi
 
             # increase numer of counts for detected error
             ((occ_counts_arr["$occKey"]++))
