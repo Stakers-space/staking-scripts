@@ -14,7 +14,9 @@ ExecStart=/usr/local/bin/logmonitor.sh \
     --log_maxwaitingtime 300 \
     --targets_file "/usr/local/etc/tekubeacon_tracking_records.txt" \
     --executor_trigger_periode 360 \
-    --executor_trigger_pause 1200
+    --executor_trigger_pause 1200 \
+    --peers_tracking 1 \
+    --peers_mincount 20
 
 [Install]
 WantedBy=multi-user.target

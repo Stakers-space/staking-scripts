@@ -81,11 +81,10 @@ Where:
     PUBLISH_NoPeers@100@Error: Multiple errors on submitPoolSyncCommitteeSignatures
 ```
 Alternatively, you can find ready-to use pattern file for the specified client, see:
- - [Nethermind Log Monitor](nethermind/log_monitor)
- - [Erigon Log Monitor](erigon/log_monitor)
- - [Lighthouse Beacon Log Monitor](lighthouse/beacon_log_monitor)
- - [Lodestar Beacon Log Monitor](lodestar/beacon_log_monitor)
- - [Teku Beacon Log Monitor](teku/beacon_log_monitor)
+ - [Nethermind Log Monitor](https://github.com/Stakers-space/staking-scripts/blob/main/nethermind/log_monitor/nethermind_tracking_records.txt)
+ - [Lighthouse Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/blob/main/lighthouse/beacon_log_monitor/lighthousebeacon_tracking_records.txt)
+ - [Lodestar Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/blob/main/lodestar/validator_log_monitor/lodestarvalidator_tracking_records.txt)
+ - [Teku Beacon Log Monitor](https://github.com/Stakers-space/staking-scripts/blob/main/teku/beacon_log_monitor/tekubeacon_tracking_records.txt)
 
 - Launch the shell script
 ```
