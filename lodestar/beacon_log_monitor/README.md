@@ -74,7 +74,7 @@ Log monitor service starts the log monitor with active executor utility (optiona
 
 - Download a service file `lodestarbeacon_logmonitor.service` for running `lodestarbeacon_logmonitor.sh` on system backgorund
 ```
-sudo curl -o /etc/systemd/system/lodestarbeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lodestar/beacon_log_monitor/lodestarbeacon_logmonitor.service
+sudo curl -o /etc/systemd/system/lodestarbeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/lodestar/beacon_log_monitor/lodestarbeacon_logmonitor.service
 ```
 - Open the file and modify the configuration, if needed
 ```

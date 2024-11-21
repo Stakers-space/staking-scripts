@@ -78,7 +78,7 @@ Log monitor service starts the log monitor with active executor utility (optiona
 
 - Download a service file `lighthousebeacon_logmonitor.service` for running `tekubeacon_logmonitor.sh` on system backgorund
 ```
-sudo curl -o /etc/systemd/system/lighthousebeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/beacon_log_monitor/lighthousebeacon_logmonitor.service
+sudo curl -o /etc/systemd/system/lighthousebeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/lighthouse/beacon_log_monitor/lighthousebeacon_logmonitor.service
 ```
 - Open the file and modify the configuration, if needed
 ```
