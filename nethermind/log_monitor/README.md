@@ -41,11 +41,11 @@ Keep the required line format of `targetType@targetString`, where:
 > There may be a need to resave the downloaded file for option to read from it.
 
 ### Log monitor executor utility
-Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
+Executor utility allows to execute any action when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
 
-Executor utility allows to execute any acction when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
+Executor utility allows to execute any action when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
 
@@ -74,7 +74,7 @@ sudo chmod +x /usr/local/bin/logmonitor_executor_nethermind.sh
 
 
 ### Log monitor service
-Log monitor service starts the log monitor with active executor and sleeper utility (both optionals) automatically on OS startup.
+Log monitor service starts the log monitor with active executor utility (optional) automatically on OS startup.
 
 - Download a service file `nethermind_logmonitor.service` for running `nethermind_logmonitor.sh` on system backgorund
 ```

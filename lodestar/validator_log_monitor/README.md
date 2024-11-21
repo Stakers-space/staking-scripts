@@ -76,7 +76,7 @@ sudo chmod +x /usr/local/bin/logmonitor_executor_lodestarvalidator.sh
 > A simple prevention is not to use `enable` for launching validator services, but [Start With Delay](https://github.com/Stakers-space/staking-scripts/tree/main/utils/start_with_delay) util instead
 
 ## Log monitor service
-Log monitor service starts the log monitor with active executor and sleeper utility (both optionals) automatically on OS startup.
+Log monitor service starts the log monitor with active executor utility (optional) automatically on OS startup.
 
 - Download a service file `lodestarvalidator_logmonitor.service` for running `lodestarvalidator_logmonitor.service` on system backgorund
 ```

@@ -70,7 +70,7 @@ sudo chmod +x /usr/local/bin/logmonitor_executor_lodestarbeacon.sh
 
 
 ## Log monitor service
-Log monitor service starts the log monitor with active executor and sleeper utility (both optionals) automatically on OS startup.
+Log monitor service starts the log monitor with active executor utility (optional) automatically on OS startup.
 
 - Download a service file `lodestarbeacon_logmonitor.service` for running `lodestarbeacon_logmonitor.sh` on system backgorund
 ```

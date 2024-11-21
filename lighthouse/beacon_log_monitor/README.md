@@ -1,6 +1,6 @@
-# Beacon node log monitor for Teku client
+# Beacon node log monitor for Lighthouse client
 
-This utility script monitors teku beacon log in real time and check its lines for defined errors. The script allows to set any execution action of teku beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the teku beacon log service through the `tekubeacon_tracking_records.txt` file.
+This utility script monitors lighthouse beacon log in real time and check its lines for defined regexs. The script allows to set any execution action of lighthouse beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the lighthouse beacon log service through the `lighthousebeacon_tracking_records.txt` file.
 
 ## Installation
 This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on background and extends it with a custom tekubeacon related configuration.
@@ -26,11 +26,11 @@ sudo chmod +x /usr/local/bin/logmonitor.sh
 2. Download errors list for tekubeacon service
 [Stakers.space](https://stakers.space) updates list with tekubeacon related errors occuring in a log. Take into notice that the file is kept as small as possible, containing only serious issues. High number of lines can increase CPU usage.
 ```
-sudo curl -o /usr/local/etc/tekubeacon_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/beacon_log_monitor/tekubeacon_tracking_records.txt
+sudo curl -o /usr/local/etc/lighthousebeacon_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lighthouse/beacon_log_monitor/lighthousebeacon_tracking_records.txt
 ```
 - Add / remove lines from the file anytime, if required
 ```
-sudo nano /usr/local/etc/tekubeacon_tracking_records.txt
+sudo nano /usr/local/etc/lighthousebeacon_tracking_records.txt
 ```
 Keep the required line format of `targetType@triggerCount@targetString`, where:
 - `errorType`: custom key under which the target is being tracked
@@ -46,9 +46,9 @@ Executor utility allows to execute any action when certain pattern is reached (e
 
 `logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
 
-1. Based on zour preference usage, check `.logmonitor_executor.sh` (general) or `.logmonitor_executor_tekubeacon.sh` (service-related) availability
+1. Based on zour preference usage, check `.logmonitor_executor.sh` (general) or `.logmonitor_executor_lighthousebeacon.sh` (service-related) availability
 ```
-/usr/local/bin/logmonitor_executor_tekubeacon.sh version
+/usr/local/bin/logmonitor_executor_lighthousebeacon.sh version
 ```
 ```
 /usr/local/bin/logmonitor_executor.sh version
@@ -60,15 +60,15 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mo
 ```
 - Download the script to `/usr/local/bin` directory
 ```
-sudo curl -o /usr/local/bin/logmonitor_executor_tekubeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
+sudo curl -o /usr/local/bin/logmonitor_executor_lighthousebeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
 ```
 - Open the file and configurate execution actions
 ```
-sudo nano /usr/local/bin/logmonitor_executor_tekubeacon.sh
+sudo nano /usr/local/bin/logmonitor_executor_lighthousebeacon.sh
 ```
 - Enable execution of the shell script
 ```
-sudo chmod +x /usr/local/bin/logmonitor_executor_tekubeacon.sh
+sudo chmod +x /usr/local/bin/logmonitor_executor_lighthousebeacon.sh
 ```
 - Executor is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
 
@@ -76,33 +76,33 @@ sudo chmod +x /usr/local/bin/logmonitor_executor_tekubeacon.sh
 ### Log monitor service
 Log monitor service starts the log monitor with active executor utility (optional) automatically on OS startup.
 
-- Download a service file `tekubeacon_logmonitor.service` for running `tekubeacon_logmonitor.sh` on system backgorund
+- Download a service file `lighthousebeacon_logmonitor.service` for running `tekubeacon_logmonitor.sh` on system backgorund
 ```
-sudo curl -o /etc/systemd/system/tekubeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/beacon_log_monitor/tekubeacon_logmonitor.service
+sudo curl -o /etc/systemd/system/lighthousebeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/teku/beacon_log_monitor/lighthousebeacon_logmonitor.service
 ```
 - Open the file and modify the configuration, if needed
 ```
-sudo nano /etc/systemd/system/tekubeacon_logmonitor.service
+sudo nano /etc/systemd/system/lighthousebeacon_logmonitor.service
 ```
 - Start the service
 ```
-sudo systemctl start tekubeacon_logmonitor.service
+sudo systemctl start lighthousebeacon_logmonitor.service
 ```
 - Check the service running
 ```
-systemctl status tekubeacon_logmonitor.service
+systemctl status lighthousebeacon_logmonitor.service
 ```
 ```
-journalctl -fu tekubeacon_logmonitor.service
+journalctl -fu lighthousebeacon_logmonitor.service
 ```
 Monitor the service together with tekubeacon service
 ```
-journalctl -f -u tekubeacon.service -u tekubeacon_logmonitor.service
+journalctl -f -u tekubeacon.service -u lighthousebeacon_logmonitor.service
 ```
 
 - Enable the service
 ```
-sudo systemctl enable tekubeacon_logmonitor.service
+sudo systemctl enable lighthousebeacon_logmonitor.service
 ```
 
 ### Set proper permissions for actions executed through the executor
