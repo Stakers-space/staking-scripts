@@ -10,10 +10,10 @@ Restart=on-failure
 ExecStart=/usr/local/bin/logmonitor.sh \
     --service_name "lighthousebeacon" \
     #--executor_shell "/usr/local/bin/logmonitor_executor.sh" \
-    #--log_maxwaitingtime 300 \
+    --log_maxwaitingtime 300 \
     --targets_file "/usr/local/etc/lighthousebeacon_tracking_records.txt" \
-    #--executor_trigger_periode 360 \
-    #--executor_trigger_pause 1200 \
+    --executor_trigger_periode 360 \
+    --executor_trigger_pause 1200 \
     --peers_tracking 1 \
     --peers_mincount 20
 

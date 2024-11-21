@@ -14,7 +14,7 @@ peers_min=0 # Minimum number of required peers
 
 # ToDo: Move trigger count into target file => support of a custom trigger count for each definition
 
-declare -r version="1.1.0" # nolog active only for active service
+declare -r version="1.1.1" # removed exit 1 from missing execution_shell param
 
 # System variables (do not modify)
 lastLogTimeFile=""
@@ -161,7 +161,7 @@ load_tracking_targets (){
 load_execution_processor() {
     if [ ! -f "$executor_shell" ]; then
         echo "[Warn] load_execution_processor: $executor_shell not found / defined - running log monitor without execution processor"
-        exit 1
+        #exit 1
     else
         execution_processor=1
         local executor_log_file="/tmp/${service_name}_monitor.log"

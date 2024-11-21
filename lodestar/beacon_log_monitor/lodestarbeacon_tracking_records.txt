@@ -1,7 +1,0 @@
-NETWORK@80@Error: PublishError.NoPeersSubscribedToTopic
-NETWORK@80@info: Searching peers - peers: 0 - slot:
-NETWORK@80@info: Searching peers - peers: 1 - slot:
-NETWORK@80@info: Searching peers - peers: 2 - slot:
-NETWORK@80@info: Searching peers - peers: 3 - slot:
-NETWORK@80@info: Searching peers - peers: 4 - slot:
-NETWORK@80@info: Searching peers - peers: 5 - slot:
