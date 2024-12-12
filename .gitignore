@@ -1,3 +1,4 @@
 README_wrapper.md
-get-validator-indexes/data/*
+ethdo/get-validator-indexes/data/*
+ethdo/get-snapshot-validators-state-count/offline-preparation.json
 monitor/validators_state/public_keys_list.json

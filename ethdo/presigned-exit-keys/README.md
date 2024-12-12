@@ -51,7 +51,7 @@ curl -LO https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/et
 ```
 
 ### Move files to offline machine
-From the staking machine (or PC you have the files on), either locally through the USB stick or remotly over `scp`, copy `offline-preparation.json`, `ethdo`, `generate-exit-files.sh`, `generate-exit-files-planner.sh` on USB stick and move the files into your offline PC
+From the staking machine (or PC you have the files on), either locally through the USB stick or remotly over `scp`, copy `offline-preparation.json`, `ethdo`, `generate-exit-files.sh`, `generate-exit-files-planner.sh` on USB stick and move the files into your offline Linux PC (You can use e.g. Tails OS)
 
 ## Generating presigned keys on your offline PC
 Create following structure on your offline machine.
