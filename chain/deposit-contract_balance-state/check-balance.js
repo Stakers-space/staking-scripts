@@ -35,8 +35,7 @@ class CheckBalance {
             GNO_validatorsBalance = GNO_validatorsBalance / 32;
             console.log(`|      ├── In GNOgwei: ${GNO_validatorsBalance}`);
             // convert gwei to whole units
-            GNO_validatorsBalance = GNO_validatorsBalance / 1e9;
-            console.log(`|      └── In GNO: ${GNO_validatorsBalance}`);
+            console.log(`|      └── In GNO: ${GNO_validatorsBalance / 1e9}`);
 
             // Get GNO balance in deposit contract
             app.GetDepositContractGnoBalance(function(err,dcData){
@@ -46,10 +45,10 @@ class CheckBalance {
                 let GNOinDepositContract = JSON.parse(dcData).result; // this should be for time same as epoch snapshot
                 console.log(`├── GNO balance in deposit contract: ${GNOinDepositContract}`);
                 // convert gwei to whole units
-                GNOinDepositContract = GNOinDepositContract / 1e9;
-                console.log(`|      └── In GNO: ${GNO_validatorsBalance}`);
+                console.log(`|    └── In GNO: ${GNOinDepositContract / 1e9}`);
                 const balance = GNOinDepositContract - GNO_validatorsBalance;
                 console.log("└── Deposit contract balance:", balance);
+                console.log(`|    └── In GNO: ${balance / 1e9}`);
                 console.log(new Date(), "process completed");
             });
         });
