@@ -39,8 +39,8 @@ class CheckBalance {
                 const slotData = JSON.parse(resp);
                 if(slotData.code === 404) return console.log(slotData.message);
 
-                app._state_root = slotData.data.message.state_root;
-                console.log(`├── state root for slot ${lastSlotNumberInEpoch}: ${app._state_root}`);
+                //app._state_root = slotData.data.message.state_root;
+                //console.log(`├── state root for slot ${lastSlotNumberInEpoch}: ${app._state_root}`);
                 // check balance of all validator pubkeys from the snapshot
                 app.GetValidatorGnoBalance(0, function(err){
                     if(err) return console.error(err);
@@ -62,7 +62,7 @@ class CheckBalance {
 
                         const balance = GNOinDepositContract - app._totalValidatorBalance;
                         console.log("└── Deposit contract balance:", balance);
-                    })
+                    });
                 });
             })
         });
@@ -83,9 +83,9 @@ class CheckBalance {
         app.HttpRequest(options, null, function(err,data){
             const validatorData = JSON.parse(data);
             if(validatorData.code === 404) return console.log(validatorData.message);
-            app._totalValidatorBalance += validatorData.data[0].balance;
+            app._totalValidatorBalance += Number(validatorData.data[0].balance);
 
-            if(index % 1000 === 0) console.log(`├── progress: (${(index / app._validatorsCount) *100}%) | ${index} of ${app._validatorsCount} validators processed`)
+            if(index % 10000 === 0) console.log(`├── progress: ${Math.round((index / app._validatorsCount) *100)}% | ${index} of ${app._validatorsCount} validators processed`)
             index++;
             app.GetValidatorGnoBalance(index,cb);
         });   
@@ -112,7 +112,7 @@ class CheckBalance {
     GetDepositContractGnoBalance = function(cb){
         var options ={
             hostname: 'api.gnosisscan.io',
-            path: '/api?module=account&action=tokenbalance&contractaddress=0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb&address='+address+'&tag=latest&apikey='+app.EtherscanAuthorization,
+            path: '/api?module=account&action=tokenbalance&contractaddress=0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb&address=0x0B98057eA310F4d31F2a452B414647007d1645d9&tag=latest&apikey='+app.EtherscanAuthorization,
             method: 'GET',
             headers: {
                 'Accept': 'application/json',

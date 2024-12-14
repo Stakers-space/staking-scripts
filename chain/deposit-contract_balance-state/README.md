@@ -32,7 +32,7 @@ Run `node /opt/stakersspace/gnosis-deposit-contract-balance/check-balance.js --e
 Token is API token for [https://gnosischa.in/](https://gnosischa.in/)
 
 > [!IMPORTANT]
-> Validators balance is calculated for validators from offline-preparation.json file given to certain epoch while Deposit contract GNO balance is given to time of the check.
+> Validators balance is calculated only for validators from offline-preparation.json file while calculation runs to head root state. This must be changed to increase accuracy.
 
 > [!NOTE]
 > This Util is under construction.
