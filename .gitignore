@@ -1,4 +1,5 @@
 README_wrapper.md
 ethdo/get-validator-indexes/data/*
 ethdo/get-snapshot-validators-state-count/offline-preparation.json
+chain/deposit-contract_balance-state/offline-preparation.json
 monitor/validators_state/public_keys_list.json

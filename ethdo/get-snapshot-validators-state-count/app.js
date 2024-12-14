@@ -1,5 +1,4 @@
 /**
- * Load all files
  * Get indexes from offline-preparation for pubids in deposit files
  */
 const fs = require('fs');

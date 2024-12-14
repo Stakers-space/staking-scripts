@@ -25,7 +25,7 @@ tar xvf ethdo-1.36.1-linux-amd64.tar.gz
 ```
 4. Create the snapshot file `offline-preparation.json`
 ```
-./ethdo validator exit --prepare-offline
+./ethdo validator exit --prepare-offline --connection http://localhost:5052
 ```
 `Ethdo` will automatically connect beaconchain and create `offline-preparation.json` containing all known validator keystores in connected beaconchain / gnosischain
 
