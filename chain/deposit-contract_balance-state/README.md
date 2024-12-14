@@ -9,22 +9,22 @@ By default, validator deposit contract is being used for validators deposits as 
 ## Download util to server
 - View the script
 ```
-
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/chain/deposit-contract_balance-state/check-balance.js
 ```
 - Download the script to `/opt/stakersspace/gnosis-deposit-contract-balance` directory
 ```
-
+sudo curl -o https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/chain/deposit-contract_balance-state/check-balance.js
 ```
 
 ## data structure
 ```
-get-validator-indexes
-    ├── app.js
+/opt/stakersspace/gnosis-deposit-contract-balance
+    ├── check-balance.js
     └── offline-preparation.json
        
 ```
 ### Usage
-Run `node check-balance.js --etherscanapi-token <token>`.
+Run `node /opt/stakersspace/gnosis-deposit-contract-balance/check-balance.js --etherscanapi-token <token>`.
 Token is API token for [https://gnosischa.in/](https://gnosischa.in/)
 
 > [!IMPORTANT]
