@@ -29,7 +29,7 @@ class CheckBalance {
             app.HttpRequest({
                 hostname: 'localhost',
                 port: 9596,
-                path: `/eth/v2/beacon/beacon/blocks/${lastSlotNumberInEpoch}`,
+                path: `/eth/v2/beacon/blocks/${lastSlotNumberInEpoch}`,
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
@@ -37,6 +37,8 @@ class CheckBalance {
             }, null, (err,resp) => {
                 if(err) return console.error("└── Err: BeaconChain API is not accessible");  
                 const slotData = JSON.parse(resp);
+                if(slotData.code === 404) return console.log(slotData.message);
+
                 app._state_root = slotData.data.message.state_root;
                 console.log(`├── state root for slot ${lastSlotNumberInEpoch}: ${state_root}`);
                 // check balance of all validator pubkeys from the snapshot
