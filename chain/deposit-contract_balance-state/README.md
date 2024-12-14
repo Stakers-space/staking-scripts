@@ -1,12 +1,15 @@
 # check Inner debt of Gnosis Deposit Contract
-As validator rewards on Gnosis are paid by DAO instead of GNO inner tokenomics like on Ethereum, GnosisDAO needs to keep proper balance of the validator deposit contract.
+GNO rewards to validators are not paid through a emission of new token, instead, they are paid by GnosisDAO.
 
-By default, validator deposit contract is being used for validators deposits as well as withdrawals, including rewards. As these rewards are not produced by GNO inflation, they must be added by Gnosis DAO, otherwise an internal debt in the deposit protocol arises. In other words, there is not enough funds to pay all funds if all validators would decide to exit.
+As the [deposit contract](https://gnosisscan.io/address/0x0b98057ea310f4d31f2a452b414647007d1645d9) processing deposits as wel las withdrawals (including rewards), with each reward (claimed as well as unclaimed), an internal debt is being generated. This debt should be covered by Gnosis DAO to keep all validator funds covered.
+
+This script allows to get current state of the internal debt on the deposit contract.
 
 ## Prerequisities
 - node.js installed
+- Synchronized BeaconChain
 
-## Download util to server
+## Download script to server
 - View the script
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/chain/deposit-contract_balance-state/check-balance.js
