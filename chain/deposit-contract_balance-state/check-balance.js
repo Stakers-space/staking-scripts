@@ -20,19 +20,18 @@ class CheckBalance {
                 'Accept': 'application/json',
             }
         }
-        app.HttpRequest(options, null, function(err,data){
+        app.HttpRequest(options, function(err,data){
+            if(err) return console.error(err);
             const validatorData = JSON.parse(data);
             const registeredValidators = validatorData.data.length;
             console.log(`|  ├── snapshot completed | registered validators: ${registeredValidators}`);
 
             let GNO_validatorsBalance = 0;
-            //let GNO_unclaimedBalance = 0;
             let balanceDistributionRounding = {};
             for(var i=0;i<registeredValidators;i++){
                 const balance = Number(validatorData.data[i].balance);
                 GNO_validatorsBalance += balance;
-                //GNO_unclaimedBalance = Number(validatorData.data[i].balance) - Number(validatorData.data[i].effective_balance);
-                const roundedBalance = parseFloat((balance / 32 / 1e9).toFixed(2));
+                const roundedBalance = parseFloat((balance / 32 / 1e9).toFixed(1));
                 const key = roundedBalance.toString();
                 if(!balanceDistributionRounding[key]) balanceDistributionRounding[key] = 0;
                 balanceDistributionRounding[key]++;
@@ -56,7 +55,8 @@ class CheckBalance {
                 const balance = GNOinDepositContract - GNO_validatorsBalance;
                 console.log("└── Deposit contract balance:", balance);
                 console.log(`     └── In GNO: ${balance / 1e9}`);
-                console.log("GNO (rounded) distribution by validators:", balanceDistributionRounding);
+                console.log("GNO distribution || rounded GNO holdings:number of validators", balanceDistributionRounding);
+
                 console.log(new Date(), "process completed");
             });
         });
@@ -71,10 +71,10 @@ class CheckBalance {
                 'Accept': 'application/json',
             }
         }
-        app.HttpsRequest(options, null, cb);   
+        app.HttpsRequest(options, cb);   
     };
 
-    HttpRequest(options, body, cb){
+    HttpRequest(options, cb){
         const req = http.request(options, (res) => {
             let response = '';
             res.on('data', (chunk) => { response += chunk; });
@@ -82,18 +82,16 @@ class CheckBalance {
         }).on('error', (err) => {
             cb(err);
         });
-        if(body) req.write(body);
         req.end();
     };
 
-    HttpsRequest(options, body, cb){
+    HttpsRequest(options, cb){
         const req = https.request(options, (resp) => {
             if(resp.statusCode === 404) return cb("Err 404: not found");
             let responseData = '';
             resp.on('data', (chunk) => { responseData += chunk; });
             resp.on('end', () => { return cb(null,responseData); }); 
         }).on('error', error => { return cb(error,null); });
-        if(body) req.write(body);
         req.end();
     };
 
