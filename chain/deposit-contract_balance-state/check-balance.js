@@ -26,8 +26,16 @@ class CheckBalance {
             console.log(`|  ├── snapshot completed | registered validators: ${registeredValidators}`);
 
             let GNO_validatorsBalance = 0;
+            //let GNO_unclaimedBalance = 0;
+            let balanceDistributionRounding = {};
             for(var i=0;i<registeredValidators;i++){
-                GNO_validatorsBalance += Number(validatorData.data[i].balance);
+                const balance = Number(validatorData.data[i].balance);
+                GNO_validatorsBalance += balance;
+                //GNO_unclaimedBalance = Number(validatorData.data[i].balance) - Number(validatorData.data[i].effective_balance);
+                const roundedBalance = parseFloat((balance / 32 / 1e9).toFixed(2));
+                const key = roundedBalance.toString();
+                if(!balanceDistributionRounding[key]) balanceDistributionRounding[key] = 0;
+                balanceDistributionRounding[key]++;
             }
             console.log(`|  └── Total GNO balance holded by validators in ETHgwei: ${GNO_validatorsBalance}`);
             // convert balances to GNO
@@ -48,6 +56,7 @@ class CheckBalance {
                 const balance = GNOinDepositContract - GNO_validatorsBalance;
                 console.log("└── Deposit contract balance:", balance);
                 console.log(`     └── In GNO: ${balance / 1e9}`);
+                console.log("GNO (rounded) distribution by validators:", balanceDistributionRounding);
                 console.log(new Date(), "process completed");
             });
         });
