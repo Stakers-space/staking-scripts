@@ -13,26 +13,9 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/he
 ```
 - Download the script to `/opt/stakersspace/gnosis-deposit-contract-balance` directory
 ```
-sudo curl -o /opt/stakersspace/gnosis-deposit-contract-balance/check-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/chain/deposit-contract_balance-state/check-balance.js
-```
-- Set ownership
-```
-sudo chown -R stakersspace:stakersspace /opt/stakersspace/gnosis-deposit-contract-balance
+sudo curl -o check-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/chain/deposit-contract_balance-state/check-balance.js
 ```
 
-## data structure
-```
-/opt/stakersspace/gnosis-deposit-contract-balance
-    ├── check-balance.js
-    └── offline-preparation.json
-       
-```
 ### Usage
-Run `node /opt/stakersspace/gnosis-deposit-contract-balance/check-balance.js --etherscanapi-token <token>`.
+Run `node check-balance.js --etherscanapi-token <token>`.
 Token is API token for [https://gnosischa.in/](https://gnosischa.in/)
-
-> [!IMPORTANT]
-> Validators balance is calculated only for validators from offline-preparation.json file while calculation runs to head root state. This must be changed to increase accuracy.
-
-> [!NOTE]
-> This Util is under construction.

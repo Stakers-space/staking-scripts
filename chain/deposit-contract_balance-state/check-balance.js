@@ -1,7 +1,3 @@
-// Load snapshot
-/**
- * Get indexes from offline-preparation for pubids in deposit files
- */
 'use strict';
 const http = require('http');
 const https = require('https');
@@ -12,6 +8,8 @@ class CheckBalance {
     }
 
     Process(){
+        this.LoadConfigFromArguments();
+
         console.log(new Date(), "Starting check GNO balance in Gnosis Validators Deposit contract");
         console.log("├── Processing validators snapshot for head slot state...")
         var options = {
