@@ -25,15 +25,26 @@ Token is API token for [https://gnosischa.in/](https://gnosischa.in/)
 
 ### Output
 ```
-2024-12-14T14:55:11.283Z Starting check GNO balance in Gnosis Validators Deposit contract
+2024-12-14T15:37:28.669Z Starting check GNO balance in Gnosis Validators Deposit contract
+├── loaded EtherscanAPI authentization token: RYMYRJ6NSW6GERX458TM8RXMQNSUDCT1T6 from attached param
 ├── Processing validators snapshot for head slot state...
 |  ├── snapshot completed | registered validators: 434078
-|  └── Total GNO balance holded by validators in ETHgwei: 10288039667369380
-|      ├── In GNOgwei: 321501239605293.1
-|      └── In GNO: 321501.23960529314
-├── GNO balance in deposit contract: 302028889463846.6
-|   └── In GNO: 302028.88946384663
-└── Deposit contract balance: -19472350141446.5
-    └── In GNO: -19472.3501414465
-2024-12-14T14:55:18.874Z process completed
+|  └── Total GNO balance holded by validators in ETHgwei: 10288036619118656
+|      ├── In GNOgwei: 321501144347458
+|      └── In GNO: 321501.144347458
+├── GNO balance in deposit contract: 302129909328954.06
+|    └── In GNO: 302129.90932895406
+└── Deposit contract balance: -19371235018503.938
+     └── In GNO: -19371.235018503936
+GNO distribution || rounded GNO holdings:number of validators {
+  '0': 112495,
+  '1': 318141,
+  '0.9': 2433,
+  '1.4': 71,
+  '0.8': 333,
+  '1.3': 164,
+  '1.2': 230,
+  '1.1': 211
+}
+2024-12-14T15:37:37.278Z process completed
 ```

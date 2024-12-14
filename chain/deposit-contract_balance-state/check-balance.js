@@ -31,7 +31,7 @@ class CheckBalance {
             for(var i=0;i<registeredValidators;i++){
                 const balance = Number(validatorData.data[i].balance);
                 GNO_validatorsBalance += balance;
-                const roundedBalance = parseFloat((balance / 32 / 1e9).toFixed(1));
+                const roundedBalance = parseFloat((balance / 32 / 1e9).toFixed(2));
                 const key = roundedBalance.toString();
                 if(!balanceDistributionRounding[key]) balanceDistributionRounding[key] = 0;
                 balanceDistributionRounding[key]++;
