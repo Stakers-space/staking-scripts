@@ -8,9 +8,8 @@ class CheckBalance {
     }
 
     Process(){
-        this.LoadConfigFromArguments();
-
         console.log(new Date(), "Starting check GNO balance in Gnosis Validators Deposit contract");
+        this.LoadConfigFromArguments();
         console.log("├── Processing validators snapshot for head slot state...")
         var options = {
             hostname: 'localhost',
@@ -30,7 +29,7 @@ class CheckBalance {
             for(var i=0;i<registeredValidators;i++){
                 GNO_validatorsBalance += Number(validatorData.data[i].balance);
             }
-            console.log(`|   └── Total GNO balance holded by validators in ETHgwei: ${GNO_validatorsBalance}`);
+            console.log(`|  └── Total GNO balance holded by validators in ETHgwei: ${GNO_validatorsBalance}`);
             // convert balances to GNO
             GNO_validatorsBalance = GNO_validatorsBalance / 32;
             console.log(`|      ├── In GNOgwei: ${GNO_validatorsBalance}`);
@@ -48,7 +47,7 @@ class CheckBalance {
                 console.log(`|    └── In GNO: ${GNOinDepositContract / 1e9}`);
                 const balance = GNOinDepositContract - GNO_validatorsBalance;
                 console.log("└── Deposit contract balance:", balance);
-                console.log(`|    └── In GNO: ${balance / 1e9}`);
+                console.log(`     └── In GNO: ${balance / 1e9}`);
                 console.log(new Date(), "process completed");
             });
         });
@@ -94,7 +93,7 @@ class CheckBalance {
         const etherscanTokenIndex = args.indexOf('--etherscanapi-token');
         if (etherscanTokenIndex !== -1 && etherscanTokenIndex + 1 < args.length) {
             this.EtherscanAuthorization = args[etherscanTokenIndex + 1];
-            console.log(`| └── loaded EtherscanAPI authentization token: ${this.EtherscanAuthorization} from attached param`);
+            console.log(`├── loaded EtherscanAPI authentization token: ${this.EtherscanAuthorization} from attached param`);
         }
     }
 }

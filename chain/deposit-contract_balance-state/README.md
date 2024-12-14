@@ -28,12 +28,12 @@ Token is API token for [https://gnosischa.in/](https://gnosischa.in/)
 2024-12-14T14:55:11.283Z Starting check GNO balance in Gnosis Validators Deposit contract
 ├── Processing validators snapshot for head slot state...
 |  ├── snapshot completed | registered validators: 434078
-|   └── Total GNO balance holded by validators in ETHgwei: 10288039667369380
+|  └── Total GNO balance holded by validators in ETHgwei: 10288039667369380
 |      ├── In GNOgwei: 321501239605293.1
 |      └── In GNO: 321501.23960529314
 ├── GNO balance in deposit contract: 302028889463846.6
-|    └── In GNO: 302028.88946384663
+|   └── In GNO: 302028.88946384663
 └── Deposit contract balance: -19472350141446.5
-|    └── In GNO: -19472.3501414465
+    └── In GNO: -19472.3501414465
 2024-12-14T14:55:18.874Z process completed
 ```
