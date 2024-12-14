@@ -23,7 +23,7 @@ class CheckBalance {
         console.log("Starting the calculation...");
         this.LoadValidatorPubKeys(function(epoch){
             // calculate slot number from the snapshot epoch
-            const lastSlotNumberInEpoch = ((epoch * app._slotsPerEpoch + app._slotsPerEpoch - 1));
+            /*const lastSlotNumberInEpoch = ((epoch * app._slotsPerEpoch + app._slotsPerEpoch - 1));
             console.log("├── slot number:", lastSlotNumberInEpoch);
             // get root address of the last slot in the epoch
             app.HttpRequest({
@@ -64,7 +64,7 @@ class CheckBalance {
                         console.log("└── Deposit contract balance:", balance);
                     });
                 });
-            })
+            })*/
         });
     }
 
@@ -93,7 +93,21 @@ class CheckBalance {
 
     LoadValidatorPubKeys(cb){
         console.log("├── loading offlinePreparationFilePath:",app.offlinePreparationFilePath);
-        fs.readFile(app.offlinePreparationFilePath, 'utf8', (err, data) => {
+        var options = {
+            hostname: 'localhost',
+            port: 9596,
+            path: `/eth/v1/beacon/states/head/validators`,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        }
+        app.HttpRequest(options, null, function(err,data){
+            const validatorData = JSON.parse(data);
+            console.log("validators:", validatorData.length);
+        });
+        
+        /*fs.readFile(app.offlinePreparationFilePath, 'utf8', (err, data) => {
             if (err) {
                 console.error(err);
             }
@@ -106,7 +120,7 @@ class CheckBalance {
             }
             console.log(`|  └── ${app._validatorsList.length} pubkeys loaded`);
             return cb(opd.epoch);
-        });
+        });*/
     }
 
     GetDepositContractGnoBalance = function(cb){
