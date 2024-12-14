@@ -3,96 +3,17 @@
  * Get indexes from offline-preparation for pubids in deposit files
  */
 'use strict';
-const fs = require('fs');
-const path = require('path');
 const http = require('http');
+const https = require('https');
 
 class CheckBalance {
     constructor(){
         this.EtherscanAuthorization = "";
-        this.offlinePreparationFilePath = path.join(__dirname, '..', 'deposit-contract_balance-state/offline-preparation.json');
-        this._validatorsList = [];
-        this._validatorsCount = 0;
-        this._validatorPrIndex = 0;
-        this._slotsPerEpoch = 16; // gnosis chain
-        this._state_root = "head";
-        this._totalValidatorBalance = 0;
     }
 
     Process(){
-        console.log("Starting the calculation...");
-        this.LoadValidatorPubKeys(function(epoch){
-            // calculate slot number from the snapshot epoch
-            /*const lastSlotNumberInEpoch = ((epoch * app._slotsPerEpoch + app._slotsPerEpoch - 1));
-            console.log("├── slot number:", lastSlotNumberInEpoch);
-            // get root address of the last slot in the epoch
-            app.HttpRequest({
-                hostname: 'localhost',
-                port: 9596,
-                path: `/eth/v2/beacon/blocks/${lastSlotNumberInEpoch}`,
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                }
-            }, null, (err,resp) => {
-                if(err) return console.error("└── Err: BeaconChain API is not accessible");  
-                const slotData = JSON.parse(resp);
-                if(slotData.code === 404) return console.log(slotData.message);
-
-                //app._state_root = slotData.data.message.state_root;
-                //console.log(`├── state root for slot ${lastSlotNumberInEpoch}: ${app._state_root}`);
-                // check balance of all validator pubkeys from the snapshot
-                app.GetValidatorGnoBalance(0, function(err){
-                    if(err) return console.error(err);
-                    console.log(`├── Balance Snapshot for slot ${lastSlotNumberInEpoch} completed | Total GNO balance in ETHgwei: ${app._totalValidatorBalance}`);
-                    // convert balances to GNO
-                    app._totalValidatorBalance = app._totalValidatorBalance / 32;
-                    console.log(`|  ├── In GNOgwei: ${app._totalValidatorBalance}`);
-                    // convert gwei to whole units
-                    app._totalValidatorBalance = app._totalValidatorBalance / 1e9;
-                    console.log(`|  └── In GNO: ${app._totalValidatorBalance}`);
-
-                    // Get GNO balance in deposit contract
-                    app.GetDepositContractGnoBalance(function(err,dcData){
-                        if(err) return console.error(err);
-                        
-                        // subtract GNO in deposit contract address
-                        const GNOinDepositContract = JSON.parse(dcData).result; // this should be for time same as epoch snapshot
-                        console.log(`├── GNO balance in deposit contract: ${GNOinDepositContract}`);
-
-                        const balance = GNOinDepositContract - app._totalValidatorBalance;
-                        console.log("└── Deposit contract balance:", balance);
-                    });
-                });
-            })*/
-        });
-    }
-
-    GetValidatorGnoBalance = function(index, cb){
-        if(index >= app._validatorsCount) return cb(null);
-
-        var options = {
-            hostname: 'localhost',
-            port: 9596,
-            path: `/eth/v1/beacon/states/${app._state_root}/validator_balances?id=${app._validatorsList[index]}`,
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            }
-        }
-        app.HttpRequest(options, null, function(err,data){
-            const validatorData = JSON.parse(data);
-            if(validatorData.code === 404) return console.log(validatorData.message);
-            app._totalValidatorBalance += Number(validatorData.data[0].balance);
-
-            if(index % 10000 === 0) console.log(`├── progress: ${Math.round((index / app._validatorsCount) *100)}% | ${index} of ${app._validatorsCount} validators processed`)
-            index++;
-            app.GetValidatorGnoBalance(index,cb);
-        });   
-    };
-
-    LoadValidatorPubKeys(cb){
-        console.log("├── loading offlinePreparationFilePath:",app.offlinePreparationFilePath);
+        console.log(new Date(), "Starting check GNO balance in Gnosis Validators Deposit contract");
+        console.log("├── Processing validators snapshot for head slot state...")
         var options = {
             hostname: 'localhost',
             port: 9596,
@@ -104,24 +25,34 @@ class CheckBalance {
         }
         app.HttpRequest(options, null, function(err,data){
             const validatorData = JSON.parse(data);
-            console.log("validators:", validatorData.length);
-        });
-        
-        /*fs.readFile(app.offlinePreparationFilePath, 'utf8', (err, data) => {
-            if (err) {
-                console.error(err);
-            }
+            const registeredValidators = validatorData.data.length;
+            console.log(`|  ├── snapshot completed | registered validators: ${registeredValidators}`);
 
-            var opd = JSON.parse(data);
-            app._validatorsCount = opd.validators.length;
-            console.log(`├── Data for epoch ${opd.epoch} | registered pubkeys: ${app._validatorsCount}`);
-            for(var i=0;i<app._validatorsCount;i++){
-                app._validatorsList.push(opd.validators[i].pubkey);
+            let GNO_validatorsBalance = 0;
+            for(var i=0;i<registeredValidators;i++){
+                GNO_validatorsBalance += Number(validatorData.data[i].balance);
             }
-            console.log(`|  └── ${app._validatorsList.length} pubkeys loaded`);
-            return cb(opd.epoch);
-        });*/
-    }
+            console.log(`|   └── Total GNO balance holded by validators in ETHgwei: ${GNO_validatorsBalance}`);
+            // convert balances to GNO
+            GNO_validatorsBalance = GNO_validatorsBalance / 32;
+            console.log(`|      ├── In GNOgwei: ${GNO_validatorsBalance}`);
+            // convert gwei to whole units
+            GNO_validatorsBalance = GNO_validatorsBalance / 1e9;
+            console.log(`|      └── In GNO: ${GNO_validatorsBalance}`);
+
+            // Get GNO balance in deposit contract
+            app.GetDepositContractGnoBalance(function(err,dcData){
+                if(err) return console.error(err);
+                
+                // subtract GNO in deposit contract address
+                const GNOinDepositContract = JSON.parse(dcData).result; // this should be for time same as epoch snapshot
+                console.log(`├── GNO balance in deposit contract: ${GNOinDepositContract}`);
+
+                const balance = GNOinDepositContract - GNO_validatorsBalance;
+                console.log("└── Deposit contract balance:", balance);
+            });
+        });
+    };
 
     GetDepositContractGnoBalance = function(cb){
         var options ={
