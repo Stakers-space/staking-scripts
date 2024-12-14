@@ -42,7 +42,7 @@ class CheckBalance {
                 if(err) return console.error(err);
                 
                 // subtract GNO in deposit contract address
-                let GNOinDepositContract = JSON.parse(dcData).result; // this should be for time same as epoch snapshot
+                let GNOinDepositContract = JSON.parse(dcData).result / 1e9; // this should be for time same as epoch snapshot
                 console.log(`├── GNO balance in deposit contract: ${GNOinDepositContract}`);
                 // convert gwei to whole units
                 console.log(`|    └── In GNO: ${GNOinDepositContract / 1e9}`);
