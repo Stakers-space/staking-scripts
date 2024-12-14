@@ -12,11 +12,11 @@ This script allows to get current state of the internal debt on the deposit cont
 ## Download script to server
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/chain/deposit-contract_balance-state/check-balance.js
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/beaconchain-client-api/validators-balance/check-balance.js
 ```
 - Download the script to `/opt/stakersspace/gnosis-deposit-contract-balance` directory
 ```
-sudo curl -o check-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/chain/deposit-contract_balance-state/check-balance.js
+sudo curl -o check-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/beaconchain-client-api/validators-balance/check-balance.js
 ```
 
 ### Usage
