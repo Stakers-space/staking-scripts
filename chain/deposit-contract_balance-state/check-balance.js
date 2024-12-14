@@ -50,6 +50,7 @@ class CheckBalance {
 
                 const balance = GNOinDepositContract - GNO_validatorsBalance;
                 console.log("└── Deposit contract balance:", balance);
+                console.log(new Date(), "process completed");
             });
         });
     };
@@ -63,7 +64,7 @@ class CheckBalance {
                 'Accept': 'application/json',
             }
         }
-        app.HttpsRequest(options, cb);   
+        app.HttpsRequest(options, null, cb);   
     };
 
     HttpRequest(options, body, cb){
@@ -78,7 +79,7 @@ class CheckBalance {
         req.end();
     };
 
-    HttpsRequest(options, cb){
+    HttpsRequest(options, body, cb){
         const req = https.request(options, (resp) => {
             if(resp.statusCode === 404) return cb("Err 404: not found");
             let responseData = '';
