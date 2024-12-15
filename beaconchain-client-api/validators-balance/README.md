@@ -3,6 +3,8 @@ GNO rewards to validators are not paid through a emission of new token, instead,
 
 As the [deposit contract](https://gnosisscan.io/address/0x0b98057ea310f4d31f2a452b414647007d1645d9) processing deposits as wel las withdrawals (including rewards), with each reward (claimed as well as unclaimed), an internal debt is being generated. This debt should be covered by Gnosis DAO to keep all validator funds covered.
 
+Gnosis deposit contract balance is being tracked by Stakers.space. [Check GNO deposit balance online](https://stakers.space/gnosis-staking/deposit-contract-balance)
+
 This script allows to get current state of the internal debt on the deposit contract.
 
 ## Prerequisities
