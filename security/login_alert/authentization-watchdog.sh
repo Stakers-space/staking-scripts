@@ -2,6 +2,7 @@
 ACCOUNT_ID=0
 SERVER_ID=0
 API_TOKEN=""
+ANONYMIZE=1
 NOTIFICATOR_URL="https://stakers.space/api/alert/login"
 
 # authentization log file
@@ -42,7 +43,7 @@ use_shell_parameters() {
                     echo "Error: No API token specified."
                     exit 1
                 fi
-                ;; 
+                ;;
             -u|--notification_url) 
                 NOTIFICATOR_URL="$2"
                 shift 2
@@ -50,6 +51,10 @@ use_shell_parameters() {
                     echo "Error: No Notification URL specified."
                     exit 1
                 fi
+                ;;
+            -z|--anonymize)
+                ANONYMIZE="$2"
+                shift 2
                 ;;
              --) 
                 shift
@@ -67,7 +72,9 @@ print_hello_message() {
     echo -e "\nAuthentization Watchdog | version: $version | Created by https://stakers.space"
     echo -e "├── -a|--account_id (= $ACCOUNT_ID):  Account ID at Stakers.space"
     echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
+    echo -e "├── -z|--anonymize  (= $ANONYMIZE):   0/1 - anonymize user name and server name"
     echo -e "└── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
+
     #echo -e "└── -u|--notification_url (optional) | Server for alert procession"
 }
 
@@ -84,10 +91,22 @@ LAST_POS=$(cat "$TMP_FILE")
 
 NEW_POS=$(wc -l < "$LOG_FILE")
 if [ "$NEW_POS" -gt "$LAST_POS" ]; then
-    tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | grep -E "session opened|session closed|Failed password|Accepted password" | grep -v "pam_unix(cron:session)" | while read -r line; do
-        echo "Detected login activity: $line | Posting through $NOTIFICATOR_URL"
+    tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
+    grep -E "session opened|session closed|Failed password|Accepted password" | \
+    grep -v "pam_unix(cron:session)" | while read -r line; do
+    
+     if [ "$ANONYMIZE" = "1" ]; then
+        info_line=$(echo "$line" | \
+            sed -E 's/[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+/user@server/g' | \
+            sed -E 's/(user|for) [a-zA-Z0-9_-]+/\1 <REDACTED_USER>/g') #
+            #sed -E 's/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/<REDACTED_IP>/g')
+    else
+        info_line="$line"
+    fi
+        echo "Detected login activity: $info_line | Posting through $NOTIFICATOR_URL"
+        echo "$NOTIFICATOR_URL" --data-urlencode "log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
 
-        curl -G "$NOTIFICATOR_URL" --data-urlencode "log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
+        #curl -G "$NOTIFICATOR_URL" --data-urlencode "log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
     done
     
     # Update tmp file

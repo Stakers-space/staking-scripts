@@ -32,7 +32,7 @@ sudo chmod +x /usr/local/bin/authentization_watchdog.sh
 ```
 - Test start
 ```
-/usr/local/bin/authentization_watchdog.sh --account_id 0 --server_id 0 --api_token "test"
+/usr/local/bin/authentization_watchdog.sh --account_id 0 --server_id 0 --api_token "test" --anonymize 1
 ```
 
 - Add shell to the cron (check each minute)
