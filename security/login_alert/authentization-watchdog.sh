@@ -9,7 +9,7 @@ NOTIFICATOR_URL="https://stakers.space/api/alert/login"
 LOG_FILE="/var/log/auth.log"
 # temporary file for keeping last checked authentization state
 TMP_FILE="/tmp/login_activity_last_check"
-declare -r version="1.0.0"
+declare -r version="1.0.1"
 
 use_shell_parameters() {
     TEMP=$(getopt -o a:s:t:u: --long account_id:,server_id:,api_token:,notification_url:, -- "$@")
@@ -73,36 +73,44 @@ print_hello_message
 
 # Create TMP_FILE if it does not exist
 if [ ! -f "$TMP_FILE" ]; then
-    echo "0" > "$TMP_FILE"
+    # Check time of start of the last day
+    echo "TMP_FILE does not exist. Initializing for the last day's logs."
+    LAST_POS=$(grep -n "$(date --date='yesterday' '+%b %_d')" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
+    if [ -z "$LAST_POS" ]; then
+        LAST_POS=$(wc -l < "$LOG_FILE")
+    fi
+    echo "$LAST_POS" > "$TMP_FILE"
+else
+    LAST_POS=$(cat "$TMP_FILE")
 fi
 
 LAST_POS=$(cat "$TMP_FILE")
-
 NEW_POS=$(wc -l < "$LOG_FILE")
 
 if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
-    grep -E "pam_unix\(sshd:session\): session opened|pam_unix\(login:session\): session opened|Accepted|authentication failure|Failed password|keyboard-interactive/pam|google_authenticator" | \
+    grep -E "pam_unix\(sshd:session\): session opened|pam_unix\(login:session\): session opened|Accepted|authentication failure|Failed password" | \
     grep -v "sudo" | while read -r line; do
    
         echo "Entry line: $line"
-
-        if [[ "$line" == *"pam_unix(sshd:session): session opened"* ]]; then
-            STATUS="success-ssh"
-        elif [[ "$line" == *"pam_unix(login:session): session opened"* ]]; then
-            STATUS="success-local"
-        elif [[ "$line" == *"authentication failure"* ]]; then
-            STATUS="failure"
-        elif [[ "$line" == *"Accepted keyboard-interactive/pam"* ]]; then
-            STATUS="success-keyboard"
-        elif [[ "$line" == *"Accepted google_authenticator"* ]]; then
-            STATUS="success-google-authenticator"
-        elif [[ "$line" == *"Failed password"* ]]; then
-            STATUS="failure-password"
-        else
-            STATUS="unknown"
-            continue
-        fi
+        case "$line" in
+            *"pam_unix(sshd:session): session opened"*)
+                STATUS="success-ssh"
+                ;;
+            *"pam_unix(login:session): session opened"*)
+                STATUS="success-local"
+                ;;
+            *"authentication failure"*)
+                STATUS="failure"
+                ;;
+            *"Failed password"*)
+                STATUS="failure-password"
+                ;;
+            *)
+                STATUS="unknown"
+                continue
+                ;;
+        esac
   
         echo "POSTING $NOTIFICATOR_URL --data-urlencode login=$STATUS&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
 
