@@ -3,7 +3,6 @@
 ACCOUNT_ID=0
 SERVER_ID=0
 API_TOKEN=""
-ANONYMIZE=1
 NOTIFICATOR_URL="https://stakers.space/api/alert/login"
 
 # authentization log file
@@ -13,7 +12,7 @@ TMP_FILE="/tmp/login_activity_last_check"
 declare -r version="1.0.0"
 
 use_shell_parameters() {
-    TEMP=$(getopt -o a:s:t:u:z: --long account_id:,server_id:,api_token:,notification_url:,anonymize: -- "$@")
+    TEMP=$(getopt -o a:s:t:u: --long account_id:,server_id:,api_token:,notification_url:, -- "$@")
     eval set -- "$TEMP"
 
     while true; do
@@ -50,10 +49,6 @@ use_shell_parameters() {
                     exit 1
                 fi
                 ;;
-            -z|--anonymize)
-                ANONYMIZE="$2"
-                shift 2
-                ;;
              --) 
                 shift
                 break
@@ -70,7 +65,6 @@ print_hello_message() {
     echo -e "\nAuthentization Watchdog | version: $version | Created by https://stakers.space"
     echo -e "├── -a|--account_id (= $ACCOUNT_ID):  Account ID at Stakers.space"
     echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
-    #echo -e "├── -z|--anonymize  (= $ANONYMIZE):   0/1 - anonymize user name and server name"
     echo -e "└── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
 }
 
@@ -88,8 +82,7 @@ NEW_POS=$(wc -l < "$LOG_FILE")
 
 if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
-    grep -E "pam_unix(sshd:session): session opened|pam_unix(login:session): session opened|authentication failure|Failed password|Accepted password" | while read -r line; do
-
+    grep -E "pam_unix\(sshd:session\): session opened|pam_unix\(login:session\): session opened|Accepted|authentication failure|Failed password|keyboard-interactive/pam|google_authenticator" | while read -r line; do
         echo "Entry line: $line"
 
         if [[ "$line" == *"pam_unix(sshd:session): session opened"* ]]; then
@@ -98,6 +91,12 @@ if [ "$NEW_POS" -gt "$LAST_POS" ]; then
             STATUS="success-local"
         elif [[ "$line" == *"authentication failure"* ]]; then
             STATUS="failure"
+        elif [[ "$line" == *"Accepted keyboard-interactive/pam"* ]]; then
+            STATUS="success-keyboard"
+        elif [[ "$line" == *"Accepted google_authenticator"* ]]; then
+            STATUS="success-google-authenticator"
+        elif [[ "$line" == *"Failed password"* ]]; then
+            STATUS="failure-password"
         else
             STATUS="unknown"
             continue
