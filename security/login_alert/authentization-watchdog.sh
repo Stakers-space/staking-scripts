@@ -12,7 +12,7 @@ TMP_FILE="/tmp/login_activity_last_check"
 declare -r version="1.0.0"
 
 use_shell_parameters() {
-    TEMP=$(getopt -o a:s:t:u: --long account_id:,server_id:,api_token:,notification_url: -- "$@")
+    TEMP=$(getopt -o a:s:t:u:z: --long account_id:,server_id:,api_token:,notification_url:,anonymize: -- "$@")
     #echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
 
@@ -74,7 +74,6 @@ print_hello_message() {
     echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
     echo -e "├── -z|--anonymize  (= $ANONYMIZE):   0/1 - anonymize user name and server name"
     echo -e "└── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
-
     #echo -e "└── -u|--notification_url (optional) | Server for alert procession"
 }
 
@@ -95,18 +94,19 @@ if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     grep -E "session opened|session closed|Failed password|Accepted password" | \
     grep -v "pam_unix(cron:session)" | while read -r line; do
 
-    echo "Entry line: $line"
-    
-    if [ "$ANONYMIZE" = "1" ]; then
-        info_line=$(echo "$line" | \
-            sed -E 's/[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+/user@server/g' | \
-            sed -E 's/(user|for) [a-zA-Z0-9_-]+/\1 <REDACTED_USER>/g') #
-            #sed -E 's/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/<REDACTED_IP>/g')
-    else
-        info_line="$line"
-    fi
-        echo "Output line: $info_line | Posting through $NOTIFICATOR_URL"
-        echo "POSTING $NOTIFICATOR_URL --data-urlencode log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
+        echo "Entry line: $line"
+        
+        if [ "$ANONYMIZE" = "1" ]; then
+            info_line=$(echo "$line" | \
+                sed -E 's/[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+/user@server/g' | \
+                sed -E 's/(user|for) [a-zA-Z0-9_-]+/\1 <REDACTED_USER>/g' | \
+                sed -E 's/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/<REDACTED_IP>/g')
+        else
+            info_line="$line"
+        fi
+           
+        echo "Output line: $info_line"
+        echo "POSTING $NOTIFICATOR_URL --data-urlencode log=$info_line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
 
         #curl -G "$NOTIFICATOR_URL" --data-urlencode "log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
     done
