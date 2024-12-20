@@ -82,7 +82,9 @@ NEW_POS=$(wc -l < "$LOG_FILE")
 
 if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
-    grep -E "pam_unix\(sshd:session\): session opened|pam_unix\(login:session\): session opened|Accepted|authentication failure|Failed password|keyboard-interactive/pam|google_authenticator" | while read -r line; do
+    grep -E "pam_unix\(sshd:session\): session opened|pam_unix\(login:session\): session opened|Accepted|authentication failure|Failed password|keyboard-interactive/pam|google_authenticator" | \
+    grep -v "sudo" | while read -r line; do
+   
         echo "Entry line: $line"
 
         if [[ "$line" == *"pam_unix(sshd:session): session opened"* ]]; then
