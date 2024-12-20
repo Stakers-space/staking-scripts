@@ -1,4 +1,5 @@
 #!/bin/bash
+
 ACCOUNT_ID=0
 SERVER_ID=0
 API_TOKEN=""
@@ -7,18 +8,15 @@ NOTIFICATOR_URL="https://stakers.space/api/alert/login"
 
 # authentization log file
 LOG_FILE="/var/log/auth.log"
-# temporary filr for keepin last checked authentization state
+# temporary file for keeping last checked authentization state
 TMP_FILE="/tmp/login_activity_last_check"
 declare -r version="1.0.0"
 
 use_shell_parameters() {
     TEMP=$(getopt -o a:s:t:u:z: --long account_id:,server_id:,api_token:,notification_url:,anonymize: -- "$@")
-    #echo "TEMP before eval: $TEMP"
     eval set -- "$TEMP"
 
-    # params
     while true; do
-        #echo "Params after eval set: $1 $2"
         case "$1" in
             -a|--account_id)
                 ACCOUNT_ID="$2"
@@ -74,21 +72,20 @@ print_hello_message() {
     echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
     echo -e "├── -z|--anonymize  (= $ANONYMIZE):   0/1 - anonymize user name and server name"
     echo -e "└── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
-    #echo -e "└── -u|--notification_url (optional) | Server for alert procession"
 }
 
 use_shell_parameters "$@"
 print_hello_message
 
-# Create tmp file if it does not exist
+# Create TMP_FILE if it does not exist
 if [ ! -f "$TMP_FILE" ]; then
     echo "0" > "$TMP_FILE"
 fi
 
-# Get last position from TMP_FILE
 LAST_POS=$(cat "$TMP_FILE")
 
 NEW_POS=$(wc -l < "$LOG_FILE")
+
 if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
     grep -E "session opened|session closed|Failed password|Accepted password" | \
@@ -108,9 +105,11 @@ if [ "$NEW_POS" -gt "$LAST_POS" ]; then
         echo "Output line: $info_line"
         echo "POSTING $NOTIFICATOR_URL --data-urlencode log=$info_line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
 
-        #curl -G "$NOTIFICATOR_URL" --data-urlencode "log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
+        #curl -G "$NOTIFICATOR_URL" --data-urlencode "log=$info_line" \
+        #                            --data-urlencode "acc=$ACCOUNT_ID" \
+        #                            --data-urlencode "tkn=$API_TOKEN" \
+        #                            --data-urlencode "sid=$SERVER_ID"
     done
-    
-    # Update tmp file
+
     echo "$NEW_POS" > "$TMP_FILE"
 fi
