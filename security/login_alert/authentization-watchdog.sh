@@ -51,6 +51,10 @@ use_shell_parameters() {
                     exit 1
                 fi
                 ;;
+             --) 
+                shift
+                break
+                ;;
             *)
                 echo "Warning | Unknown parameter $2 | all parameters $@"
                 exit 1
