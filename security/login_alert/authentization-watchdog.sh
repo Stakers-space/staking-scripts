@@ -94,8 +94,10 @@ if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
     grep -E "session opened|session closed|Failed password|Accepted password" | \
     grep -v "pam_unix(cron:session)" | while read -r line; do
+
+    echo "Entry line: $line"
     
-     if [ "$ANONYMIZE" = "1" ]; then
+    if [ "$ANONYMIZE" = "1" ]; then
         info_line=$(echo "$line" | \
             sed -E 's/[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+/user@server/g' | \
             sed -E 's/(user|for) [a-zA-Z0-9_-]+/\1 <REDACTED_USER>/g') #
@@ -103,8 +105,8 @@ if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     else
         info_line="$line"
     fi
-        echo "Detected login activity: $info_line | Posting through $NOTIFICATOR_URL"
-        echo "$NOTIFICATOR_URL" --data-urlencode "log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
+        echo "Output line: $info_line | Posting through $NOTIFICATOR_URL"
+        echo "POSTING $NOTIFICATOR_URL --data-urlencode log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
 
         #curl -G "$NOTIFICATOR_URL" --data-urlencode "log=$line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
     done
