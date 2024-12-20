@@ -70,7 +70,7 @@ print_hello_message() {
     echo -e "\nAuthentization Watchdog | version: $version | Created by https://stakers.space"
     echo -e "├── -a|--account_id (= $ACCOUNT_ID):  Account ID at Stakers.space"
     echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
-    echo -e "├── -z|--anonymize  (= $ANONYMIZE):   0/1 - anonymize user name and server name"
+    #echo -e "├── -z|--anonymize  (= $ANONYMIZE):   0/1 - anonymize user name and server name"
     echo -e "└── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
 }
 
@@ -88,27 +88,27 @@ NEW_POS=$(wc -l < "$LOG_FILE")
 
 if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
-    grep -E "session opened|session closed|Failed password|Accepted password" | \
-    grep -v "pam_unix(cron:session)" | while read -r line; do
+    grep -E "pam_unix(sshd:session): session opened|pam_unix(login:session): session opened|authentication failure|Failed password|Accepted password" | while read -r line; do
 
         echo "Entry line: $line"
-        
-        if [ "$ANONYMIZE" = "1" ]; then
-            info_line=$(echo "$line" | \
-                sed -E 's/[a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+/user@server/g' | \
-                sed -E 's/(user|for) [a-zA-Z0-9_-]+/\1 <REDACTED_USER>/g' | \
-                sed -E 's/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/<REDACTED_IP>/g')
-        else
-            info_line="$line"
-        fi
-           
-        echo "Output line: $info_line"
-        echo "POSTING $NOTIFICATOR_URL --data-urlencode log=$info_line&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
 
-        #curl -G "$NOTIFICATOR_URL" --data-urlencode "log=$info_line" \
-        #                            --data-urlencode "acc=$ACCOUNT_ID" \
-        #                            --data-urlencode "tkn=$API_TOKEN" \
-        #                            --data-urlencode "sid=$SERVER_ID"
+        if [[ "$line" == *"pam_unix(sshd:session): session opened"* ]]; then
+            STATUS="success-ssh"
+        elif [[ "$line" == *"pam_unix(login:session): session opened"* ]]; then
+            STATUS="success-local"
+        elif [[ "$line" == *"authentication failure"* ]]; then
+            STATUS="failure"
+        else
+            STATUS="unknown"
+            continue
+        fi
+  
+        echo "POSTING $NOTIFICATOR_URL --data-urlencode login=$STATUS&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
+
+        #curl -G "$NOTIFICATOR_URL" --data-urlencode "l=$STATUS" \
+        #                            --data-urlencode "a=$ACCOUNT_ID" \
+        #                            --data-urlencode "t=$API_TOKEN" \
+        #                            --data-urlencode "s=$SERVER_ID"
     done
 
     echo "$NEW_POS" > "$TMP_FILE"
