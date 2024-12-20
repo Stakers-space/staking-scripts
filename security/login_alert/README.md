@@ -8,9 +8,9 @@ This script uses [Stakers.space api](https://stakers.space) for option to look a
 
 ## Installation
 - Look at the shell script
-```curl -o- ```
+```curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/security/login_alert/authentization-watchdog.sh```
 - Download shell script to your server
-```sudo curl -o /usr/local/bin/authentization_watchdog.sh ```
+```sudo curl -o /usr/local/bin/authentization_watchdog.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/security/login_alert/authentization-watchdog.sh```
 
 - Create `stakersspace` user, if does not exist yet
 ```sudo useradd --system --no-create-home --shell /bin/false stakersspace```
