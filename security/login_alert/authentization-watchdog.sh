@@ -64,11 +64,11 @@ use_shell_parameters() {
 }
 
 print_hello_message() {
-    echo -e "\nAuthentization Watchdog | v: $version | Created by https://stakers.space"
-    echo -e "├── -a|--account_id:   Account ID"
-    echo -e "├── -s|--server_id:    Server ID"
-    echo -e "├── -t|--api_token:    token for communication with server API"
-    echo -e "└── -u|--notification_url (optional) | Server for alert procession"
+    echo -e "\nAuthentization Watchdog | version: $version | Created by https://stakers.space"
+    echo -e "├── -a|--account_id (= $ACCOUNT_ID):  Account ID at Stakers.space"
+    echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
+    echo -e "└── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
+    #echo -e "└── -u|--notification_url (optional) | Server for alert procession"
 }
 
 use_shell_parameters "$@"
