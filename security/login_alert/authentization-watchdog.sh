@@ -66,6 +66,7 @@ print_hello_message() {
     echo -e "├── -a|--account_id (= $ACCOUNT_ID):  Account ID at Stakers.space"
     echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
     echo -e "└── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
+    echo -e "Status: listening"
 }
 
 use_shell_parameters "$@"
@@ -73,23 +74,20 @@ print_hello_message
 
 # Create TMP_FILE if it does not exist
 if [ ! -f "$TMP_FILE" ]; then
-    # Check time of start of the last day
-    echo "TMP_FILE does not exist. Initializing for the last day's logs."
-    LAST_POS=$(grep -n "$(date --date='yesterday' '+%b %_d')" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
-    if [ -z "$LAST_POS" ]; then
-        LAST_POS=$(wc -l < "$LOG_FILE")
-    fi
-    echo "$LAST_POS" > "$TMP_FILE"
+    echo "TMP_FILE does not exist. Initializing to current log position."
+    TOTAL_LINES=$(wc -l < "$LOG_FILE")
+    echo "$TOTAL_LINES" > "$TMP_FILE"
+    echo "Initialization complete. No checks performed this run."
+    exit 0
 else
     LAST_POS=$(cat "$TMP_FILE")
 fi
 
-LAST_POS=$(cat "$TMP_FILE")
 NEW_POS=$(wc -l < "$LOG_FILE")
 
 if [ "$NEW_POS" -gt "$LAST_POS" ]; then
     tail -n +"$((LAST_POS + 1))" "$LOG_FILE" | \
-    grep -E "pam_unix\(sshd:session\): session opened|pam_unix\(login:session\): session opened|Accepted|authentication failure|Failed password" | \
+    grep -E "pam_unix\(sshd:session\): session opened|pam_unix\(login:session\): session opened|authentication failure|Failed password" | \
     grep -v "sudo" | while read -r line; do
    
         echo "Entry line: $line"
@@ -113,11 +111,10 @@ if [ "$NEW_POS" -gt "$LAST_POS" ]; then
         esac
   
         echo "POSTING $NOTIFICATOR_URL --data-urlencode login=$STATUS&acc=$ACCOUNT_ID&tkn=$API_TOKEN&sid=$SERVER_ID"
-
-        #curl -G "$NOTIFICATOR_URL" --data-urlencode "l=$STATUS" \
-        #                            --data-urlencode "a=$ACCOUNT_ID" \
-        #                            --data-urlencode "t=$API_TOKEN" \
-        #                            --data-urlencode "s=$SERVER_ID"
+        curl -G "$NOTIFICATOR_URL" --data-urlencode "l=$STATUS" \
+                                   --data-urlencode "a=$ACCOUNT_ID" \
+                                   --data-urlencode "t=$API_TOKEN" \
+                                   --data-urlencode "s=$SERVER_ID"
     done
 
     echo "$NEW_POS" > "$TMP_FILE"
