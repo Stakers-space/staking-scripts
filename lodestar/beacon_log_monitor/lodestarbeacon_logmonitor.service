@@ -11,7 +11,7 @@ ExecStart=/usr/local/bin/logmonitor.sh \
     --service_name "lodestarbeacon" \
     #--executor_shell "/usr/local/bin/logmonitor_executor.sh" \
     #--log_maxwaitingtime 300 \
-    --targets_file "/usr/local/etc/lodestarbeacon_tracking_records.txt" \
+    #--targets_file "/usr/local/etc/lodestarbeacon_tracking_records.txt" \
     #--executor_trigger_periode 360 \
     #--executor_trigger_pause 1200 \
     --peers_tracking 1 \

@@ -2,9 +2,6 @@
 
 This utility script monitors each pubkey from the list under `pubKeysList` param. See example list file [`public_keys_testlist.json`](https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/public_keys_testlist.json)
 
-> [!NOTE]
-> The tool is under construction
-
 ## Installation
 - Check the `validators_state_checker.js` script
 ```
