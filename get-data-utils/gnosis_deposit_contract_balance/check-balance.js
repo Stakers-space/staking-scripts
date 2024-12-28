@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.4";
+// const version = "0.0.5";
 const http = require('http');
 
 class CheckBalance {
@@ -63,7 +63,7 @@ class CheckBalance {
                 console.log(`|      └── In GNO: ${GNO_validatorsBalance / 1e9}`);
 
                 // ToDo: Get Unclaimed GNOs
-                app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
+                /*app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
                     if(err) return console.error(err);
 
                     for(const wallet in app.withdrawalAddressSnapshot){
@@ -71,9 +71,8 @@ class CheckBalance {
                     }
 
                     console.log(`|  └── Total unclaimed GNO balance by validators in ETHgwei: ${GNO_unclaimed}`);
-
-                    OnAsyncTaskCompleted(err);
-                });
+                });*/
+                OnAsyncTaskCompleted(err);
             });
         });
 
@@ -147,11 +146,11 @@ class CheckBalance {
     GetUnclaimedGNOs(wallets, walletIndex, cb){
         if(walletIndex >= wallets.length) return cb(null);
         const wallet = wallets[walletIndex];
-        console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet} | ${walletIndex} / ${wallets.length}`);
-        app.GetGnoBalance(wallet, function(err, resp){
+        //console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet} | ${walletIndex} / ${wallets.length}`);
+        GetUnclaimedGnoValue(wallet, function(err, value){
             if(err) return cb(err);
             
-            const unclaimed_gno = JSON.parse(resp).result;
+            const unclaimed_gno = value;
             console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e9} GNO)`);
 
             app.withdrawalAddressSnapshot[wallet].unclaimed_gno = Number(unclaimed_gno);
@@ -159,9 +158,9 @@ class CheckBalance {
             app.GetUnclaimedGNOs(wallets, walletIndex, cb);
         });
 
-        /*function GetUnclaimedGnoValue(wallet, cb){
-            console.log(`|  |  ├── Getting unclaimed GNOs for wallet: ${wallet} | characters: ${wallet.length}`);
-            const withdrawableAmont_wlt = `0x70a08231${wallet.padStart(64, '0')}`;
+        function GetUnclaimedGnoValue(wallet, cb){
+            //console.log(`|  |  ├── Getting unclaimed GNOs for wallet: ${wallet} | characters: ${wallet.length}`);
+            const withdrawableAmont_wlt = `0x70a08231${wallet/*.padStart(64, '0')*/}`;
             const data = JSON.stringify({
                 jsonrpc: "2.0",
                 id: 1,
@@ -191,7 +190,7 @@ class CheckBalance {
                 console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${decimalValue}`);
                 return cb(null, decimalValue);
             });
-        };*/
+        };
     };
 
     GetGnoBalance = function(wallet, cb){
