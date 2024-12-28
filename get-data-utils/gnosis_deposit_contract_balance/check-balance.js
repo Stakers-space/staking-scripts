@@ -157,7 +157,7 @@ class CheckBalance {
 
         function GetUnclaimedGnoValue(wallet, cb){
             console.log(`|  |  ├── Getting unclaimed GNOs for wallet: ${wallet} | characters: ${wallet.length}`);
-            const withdrawableAmont_wlt = `0x2e1a7d4d${wallet.padStart(64, '0')}`;
+            const withdrawableAmont_wlt = `0x70a08231${wallet.padStart(64, '0')}`;
             const data = JSON.stringify({
                 jsonrpc: "2.0",
                 id: 1,
@@ -180,11 +180,7 @@ class CheckBalance {
             }, data, function(err, response){
                 if(err) return cb(err);
                 console.log(`|  |  ├── Response: ${response}`);
-                if(response.includes('error')) {
-                    // attempt
-                    console.log(`|  |  ├── Error: ${response}`);
-                    return cb(null, 0);
-                }
+                if(response.includes('error')) return cb(response);
 
                 const hexValue = JSON.parse(response).result;
                 const decimalValue = parseInt(hexValue, 16);
