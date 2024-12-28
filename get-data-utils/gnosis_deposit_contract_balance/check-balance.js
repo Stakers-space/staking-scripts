@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.3";
+// const version = "0.0.4";
 const http = require('http');
 
 class CheckBalance {
@@ -148,10 +148,10 @@ class CheckBalance {
         if(walletIndex >= wallets.length) return cb(null);
         const wallet = wallets[walletIndex];
         console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet} | ${walletIndex} / ${wallets.length}`);
-        app.GetGnoBalance(wallet, function(err, value){
+        app.GetGnoBalance(wallet, function(err, resp){
             if(err) return cb(err);
             
-            const unclaimed_gno = JSON.parse(dcData).result;
+            const unclaimed_gno = JSON.parse(resp).result;
             console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e9} GNO)`);
 
             app.withdrawalAddressSnapshot[wallet].unclaimed_gno = Number(unclaimed_gno);
@@ -202,7 +202,7 @@ class CheckBalance {
             method: "eth_call",
             params: [{
                 to: "0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb",
-                data: "0x70a082310000000000000000000000000B98057eA310F4d31F2a452B414647007d1645d9"
+                data: `0x70a08231000000000000000000000000${wallet}`
             }, "latest"]
         });
 
