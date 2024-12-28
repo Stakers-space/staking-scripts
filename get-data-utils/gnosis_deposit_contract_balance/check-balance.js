@@ -38,9 +38,9 @@ class CheckBalance {
                     
                     GNO_validatorsBalance += balance;
 
-                    console.log(`|  |  ├── Validator ${i+1} | balance: ${balance} | data: ${validatorData.data[i]} → ${validatorData.data[i].withdrawal_credentials}`);
+                    if(validatorData.data[i].balance !== validatorData.data[i].validator.effective_balance) console.error("Validator balance and effective balance mismatch :", validatorData.data[i].index, validatorData.data[i].balance, validatorData.data[i].validator.effective_balance);
 
-                    const withdrawalAddress = app.NormalizeAddress(validatorData.data[i].withdrawal_credentials);
+                    const withdrawalAddress = app.NormalizeAddress(validatorData.data[i].validator.withdrawal_credentials);
 
                     // unique withdrawal addresses for checking uncliamed GNOs and validators count distribution per withdrawal address
                     if(!app.withdrawalAddressSnapshot[withdrawalAddress]) app.withdrawalAddressSnapshot[withdrawalAddress] = { validators: 0, unclaimed_gno: 0 };
