@@ -14,16 +14,15 @@ This script allows to get current state of the internal debt on the deposit cont
 ## Download script to server
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/beaconchain-client-api/validators-balance/check-balance.js
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/get-data-utils/gnosis_deposit_contract_balance/check-balance.js
 ```
 - Download the script to `/opt/stakersspace/gnosis-deposit-contract-balance` directory
 ```
-sudo curl -o check-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/beaconchain-client-api/validators-balance/check-balance.js
+sudo curl -o check-gnosis-deposit-contract-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/get-data-utils/gnosis_deposit_contract_balance/check-balance.js
 ```
 
 ### Usage
-Run `node check-balance.js --etherscanapi-token <token>`.
-Token is API token for [https://gnosischa.in/](https://gnosischa.in/)
+Run `node check-gnosis-deposit-contract-balance.js --beaconPort 9596 --executionPort 8545`.
 
 ### Output
 ```

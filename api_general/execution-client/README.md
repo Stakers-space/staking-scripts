@@ -33,3 +33,5 @@ curl localhost:8545 \
       }, "latest"]
   }'
 ```
+- `eth_call`
+Get Withdrawable
