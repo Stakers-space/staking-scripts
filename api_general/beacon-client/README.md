@@ -16,12 +16,5 @@ Note: Change `PORT`, for the port used by the beaconchain client
 - `curl -X GET "curl -X GET "http://localhost:5052/eth/v1/beacon/rewards/blocks/16588429` > Get rewards for slot `16588429`
 
 
-
-
-## Validator Endpoints
-- `curl -X POST -H "Content-Type: application/json" "http://localhost:5052/eth/v1/validator/liveness/{epoch}`
-
-
-
 ### Services using beaconchain api
 - [Validators state monitor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/validators_state): Get information about validators state (online, offline...)

@@ -92,7 +92,6 @@ systemctl status lodestarbeacon_logmonitor.service
 > If the service did not start properly, it mey require to set access to `journal` for the service user
 >
 > ```sudo usermod -aG systemd-journal <serviceUser>```
->
 ```
 journalctl -fu lodestarbeacon_logmonitor.service
 ```

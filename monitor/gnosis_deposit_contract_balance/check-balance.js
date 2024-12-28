@@ -4,7 +4,10 @@ const https = require('https');
 
 class CheckBalance {
     constructor(){
+        this.beaconPort = 9596;
+        this.executionPort = 8545;
         this.EtherscanAuthorization = "";
+        this.withdrawalAddressSnapshot = null;
     }
 
     Process(){
@@ -13,14 +16,14 @@ class CheckBalance {
         console.log("├── Processing validators snapshot for head slot state...")
         var options = {
             hostname: 'localhost',
-            port: 9596,
+            port: app.beaconPort,
             path: `/eth/v1/beacon/states/head/validators`,
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
             }
         }
-        app.HttpRequest(options, function(err,data){
+        app.HttpRequest(options, null, function(err,data){
             if(err) return console.error(err);
             const validatorData = JSON.parse(data);
             const registeredValidators = validatorData.data.length;
@@ -28,14 +31,30 @@ class CheckBalance {
 
             let GNO_validatorsBalance = 0;
             let balanceDistributionRounding = {};
+            app.withdrawalAddressSnapshot = {};
+
             for(var i=0;i<registeredValidators;i++){
                 const balance = Number(validatorData.data[i].balance);
+                
                 GNO_validatorsBalance += balance;
+
+                const withdrawalAddress = validatorData.data[i].withdrawal_credentials;
+                // unique withdrawal addresses for checking uncliamed GNOs and validators count distribution per withdrawal address
+                if(!app.withdrawalAddressSnapshot[withdrawalAddress]) app.withdrawalAddressSnapshot[withdrawalAddress] = { validators: 0, unclaimed_gno: 0 };
+                app.withdrawalAddressSnapshot[withdrawalAddress].validators++;
+
+                // distribution of GNO balance in validators
                 const roundedBalance = parseFloat((balance / 32 / 1e9).toFixed(2));
                 const key = roundedBalance.toString();
                 if(!balanceDistributionRounding[key]) balanceDistributionRounding[key] = 0;
                 balanceDistributionRounding[key]++;
             }
+
+            // ToDo: Get Unclaimed GNOs
+            /*app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
+                // testing
+            });*/
+
             console.log(`|  └── Total GNO balance holded by validators in ETHgwei: ${GNO_validatorsBalance}`);
             // convert balances to GNO
             GNO_validatorsBalance = GNO_validatorsBalance / 32;
@@ -62,7 +81,19 @@ class CheckBalance {
         });
     };
 
+    GetUnclaimedGNOs(wallets, walletIndex, cb){
+        if(walletIndex >= /*wallets.length*/3) return cb(null);
+        const wallet = wallets[walletIndex];
+        console.log(`|  ├── Getting unclaimed GNOs for wallet: ${wallet}`);
+        walletIndex++;
+        GetUnclaimedGNOs(wallets, walletIndex, cb);
+        // get unclaimed gno for wallet        
+    };
+
     GetDepositContractGnoBalance = function(cb){
+        // from local node
+
+        // fallback - get from gnosiscan.io
         var options ={
             hostname: 'api.gnosisscan.io',
             path: '/api?module=account&action=tokenbalance&contractaddress=0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb&address=0x0B98057eA310F4d31F2a452B414647007d1645d9&tag=latest&apikey='+app.EtherscanAuthorization,
@@ -71,10 +102,10 @@ class CheckBalance {
                 'Accept': 'application/json',
             }
         }
-        app.HttpsRequest(options, cb);   
+        app.HttpsRequest(options, cb);
     };
 
-    HttpRequest(options, cb){
+    HttpRequest(options, body, cb){
         const req = http.request(options, (res) => {
             let response = '';
             res.on('data', (chunk) => { response += chunk; });
@@ -82,6 +113,7 @@ class CheckBalance {
         }).on('error', (err) => {
             cb(err);
         });
+        if(body) req.write(body);
         req.end();
     };
 
