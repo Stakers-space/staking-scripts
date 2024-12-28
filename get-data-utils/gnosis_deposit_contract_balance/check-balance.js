@@ -1,7 +1,6 @@
 'use strict';
-// const version = "0.0.1";
+// const version = "0.0.2";
 const http = require('http');
-//const https = require('https');
 
 class CheckBalance {
     constructor(){
@@ -26,7 +25,7 @@ class CheckBalance {
         app.GetCurrentEpoch(function(err,epochNumber){
             if(err) return console.error(err);
             epoch = epochNumber;
-            console.log(`| Current epoch: ${epoch}`);
+            console.log(`|  └── Current epoch: ${epoch}`);
 
             // Get validators snapshot | ToDo: Replace head for certain epoch?
             app.GetValidatorsSnapshot(function(err, validatorData){
@@ -39,7 +38,8 @@ class CheckBalance {
                     
                     GNO_validatorsBalance += balance;
 
-                    const withdrawalAddress = validatorData.data[i].withdrawal_credentials;
+                    const withdrawalAddress = NormalizeAddress(validatorData.data[i].withdrawal_credentials);
+
                     // unique withdrawal addresses for checking uncliamed GNOs and validators count distribution per withdrawal address
                     if(!app.withdrawalAddressSnapshot[withdrawalAddress]) app.withdrawalAddressSnapshot[withdrawalAddress] = { validators: 0, unclaimed_gno: 0 };
                     app.withdrawalAddressSnapshot[withdrawalAddress].validators++;
@@ -149,7 +149,7 @@ class CheckBalance {
         });
 
         function GetUnclaimedGnoValue(wallet, cb){
-            const withdrawableAmont_wlt = '0x2e1a7d4d000000000000000000000000'+wallet.substring(26);
+            const withdrawableAmont_wlt = `0x2e1a7d4d000000000000000000000000${wallet}`;
             const data = JSON.stringify({
                 jsonrpc: "2.0",
                 id: 1,
@@ -171,10 +171,10 @@ class CheckBalance {
                 }
             }, data, function(err, response){
                 if(err) return cb(err);
-    
+                console.log(`|  |  ├── Response: ${response}`);
                 const hexValue = JSON.parse(response).result;
                 const decimalValue = parseInt(hexValue, 16);
-                console.log(`|  |  └── Unclaimed GNOs at ${wallet}: ${decimalValue}`);
+                console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${decimalValue}`);
                 return cb(null, decimalValue);
             });
 
@@ -207,20 +207,15 @@ class CheckBalance {
             if(err) return cb(err);
 
             const hexValue = JSON.parse(response).result;
-            const decimalValue = BigInt(hexValue);
-            return cb(null, JSON.stringify({ result: decimalValue }));
+            const decimalValue = BigInt(hexValue).toString(10);
+            return cb(null, JSON.stringify({ result: Number(decimalValue) }));
         });
+    };
 
-        // fallback - get from gnosiscan.io
-        /*var options ={
-            hostname: 'api.gnosisscan.io',
-            path: '/api?module=account&action=tokenbalance&contractaddress=0x9C58BAcC331c9aa871AFD802DB6379a98e80CEdb&address=0x0B98057eA310F4d31F2a452B414647007d1645d9&tag=latest&apikey='+app.EtherscanAuthorization,
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            }
-        }
-        app.HttpsRequest(options, cb);*/
+    NormalizeAddress(address) {
+        let normalized = address.replace(/^0x/, '');
+        normalized = normalized.slice(-40);
+        return normalized;
     };
 
     HttpRequest(options, body, cb){
@@ -234,16 +229,6 @@ class CheckBalance {
         if(body) req.write(body);
         req.end();
     };
-
-    /*HttpsRequest(options, cb){
-        const req = https.request(options, (resp) => {
-            if(resp.statusCode === 404) return cb("Err 404: not found");
-            let responseData = '';
-            resp.on('data', (chunk) => { responseData += chunk; });
-            resp.on('end', () => { return cb(null,responseData); }); 
-        }).on('error', error => { return cb(error,null); });
-        req.end();
-    };*/
 
     LoadConfigFromArguments(){
         const args = process.argv.slice(2); // Cut first 2 arguments (node & script)

@@ -9,7 +9,7 @@ This script allows to get current state of the internal debt on the deposit cont
 
 ## Prerequisities
 - node.js installed
-- Synchronized BeaconChain
+- Synchronized Execution and Beacon client
 
 ## Download script to server
 - View the script
@@ -20,6 +20,8 @@ curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/he
 ```
 sudo curl -o check-gnosis-deposit-contract-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/get-data-utils/gnosis_deposit_contract_balance/check-balance.js
 ```
+- Set ownership
+sudo chown stakersspace:stakersspace check-gnosis-deposit-contract-balance.js
 
 ### Usage
 Run `node check-gnosis-deposit-contract-balance.js --beaconPort 9596 --executionPort 8545`.
