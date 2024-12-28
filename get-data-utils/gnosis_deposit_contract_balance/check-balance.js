@@ -38,7 +38,9 @@ class CheckBalance {
                     
                     GNO_validatorsBalance += balance;
 
-                    const withdrawalAddress = NormalizeAddress(validatorData.data[i].withdrawal_credentials);
+                    console.log(`|  |  ├── Validator ${i+1} | balance: ${balance} | data: ${validatorData.data[i]} → ${validatorData.data[i].withdrawal_credentials}`);
+
+                    const withdrawalAddress = app.NormalizeAddress(validatorData.data[i].withdrawal_credentials);
 
                     // unique withdrawal addresses for checking uncliamed GNOs and validators count distribution per withdrawal address
                     if(!app.withdrawalAddressSnapshot[withdrawalAddress]) app.withdrawalAddressSnapshot[withdrawalAddress] = { validators: 0, unclaimed_gno: 0 };
@@ -60,6 +62,7 @@ class CheckBalance {
                 console.log(`|      └── In GNO: ${GNO_validatorsBalance / 1e9}`);
 
                 // ToDo: Get Unclaimed GNOs
+                console.log("ww: ", Object.keys(app.withdrawalAddressSnapshot));
                 app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
                     // testing
 
