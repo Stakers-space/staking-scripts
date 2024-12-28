@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.2";
+// const version = "0.0.3";
 const http = require('http');
 
 class CheckBalance {
@@ -52,6 +52,8 @@ class CheckBalance {
                     balanceDistributionRounding[key]++;
                 }
 
+                console.log(`|  └── Withdrawal addresses:`, Object.keys(app.withdrawalAddressSnapshot).length);
+
                 // calculate GNO balance
                 console.log(`|  └── Total GNO balance holded by validators on beaconchain in ETHgwei: ${GNO_validatorsBalance}`);
                 // convert balances to GNO
@@ -62,7 +64,7 @@ class CheckBalance {
 
                 // ToDo: Get Unclaimed GNOs
                 app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
-                    // testing
+                    if(err) return console.error(err);
 
                     for(const wallet in app.withdrawalAddressSnapshot){
                         GNO_unclaimed += app.withdrawalAddressSnapshot[wallet].unclaimed_gno;
@@ -143,9 +145,9 @@ class CheckBalance {
     };
 
     GetUnclaimedGNOs(wallets, walletIndex, cb){
-        if(walletIndex >= /*wallets.length*/4) return cb(null);
+        if(walletIndex >= wallets.length) return cb(null);
         const wallet = wallets[walletIndex];
-        console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet}`);
+        console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet} | ${walletIndex} / ${wallets.length}`);
         GetUnclaimedGnoValue(wallet, function(err, value){
             if(err) return cb(err);
             app.withdrawalAddressSnapshot[wallet].unclaimed_gno = value;
@@ -178,7 +180,11 @@ class CheckBalance {
             }, data, function(err, response){
                 if(err) return cb(err);
                 console.log(`|  |  ├── Response: ${response}`);
-                if(response.includes('error')) return cb(response);
+                if(response.includes('error')) {
+                    // attempt
+                    console.log(`|  |  ├── Error: ${response}`);
+                    return cb(null, 0);
+                }
 
                 const hexValue = JSON.parse(response).result;
                 const decimalValue = parseInt(hexValue, 16);
