@@ -34,4 +34,7 @@ curl localhost:8545 \
   }'
 ```
 - `eth_call`
-Get Withdrawable
+Get Withdrawable GNO for withdrawal wallet
+```
+
+```

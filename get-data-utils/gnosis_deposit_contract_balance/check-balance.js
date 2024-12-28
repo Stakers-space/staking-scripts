@@ -26,7 +26,7 @@ class CheckBalance {
         app.GetCurrentEpoch(function(err,epochNumber){
             if(err) return console.error(err);
             epoch = epochNumber;
-            console.log(`|  └── Current epoch: ${epoch}`);
+            console.log(`|   └── Current epoch: ${epoch}`);
 
             // Get validators snapshot | ToDo: Replace head for certain epoch?
             app.GetValidatorsSnapshot(function(err, validatorData){
@@ -64,8 +64,8 @@ class CheckBalance {
                 app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
                     // testing
 
-                    for(const wallet of app.withdrawalAddressSnapshot){
-                        GNO_unclaimed += wallet.unclaimed_gno;
+                    for(const wallet in app.withdrawalAddressSnapshot){
+                        GNO_unclaimed += app.withdrawalAddressSnapshot[wallet].unclaimed_gno;
                     }
 
                     console.log(`|  └── Total unclaimed GNO balance by validators in ETHgwei: ${GNO_unclaimed}`);
@@ -143,7 +143,7 @@ class CheckBalance {
     };
 
     GetUnclaimedGNOs(wallets, walletIndex, cb){
-        if(walletIndex >= /*wallets.length*/5) return cb(null);
+        if(walletIndex >= /*wallets.length*/4) return cb(null);
         const wallet = wallets[walletIndex];
         console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet}`);
         GetUnclaimedGnoValue(wallet, function(err, value){
@@ -154,7 +154,8 @@ class CheckBalance {
         });
 
         function GetUnclaimedGnoValue(wallet, cb){
-            const withdrawableAmont_wlt = `0x2e1a7d4d000000000000000000000000${wallet}`;
+            console.log(`|  |  ├── Getting unclaimed GNOs for wallet: ${wallet} | characters: ${wallet.length}`);
+            const withdrawableAmont_wlt = `0x2e1a7d4d${wallet.padStart(64, '0')}`;
             const data = JSON.stringify({
                 jsonrpc: "2.0",
                 id: 1,
@@ -177,6 +178,8 @@ class CheckBalance {
             }, data, function(err, response){
                 if(err) return cb(err);
                 console.log(`|  |  ├── Response: ${response}`);
+                if(response.includes('error')) return cb(response);
+
                 const hexValue = JSON.parse(response).result;
                 const decimalValue = parseInt(hexValue, 16);
                 console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${decimalValue}`);
