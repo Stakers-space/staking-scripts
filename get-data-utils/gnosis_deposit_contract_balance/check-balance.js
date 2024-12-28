@@ -18,6 +18,7 @@ class CheckBalance {
         let epoch = null,
             GNO_validatorsBalance = 0,
             GNOinDepositContract = 0,
+            GNO_unclaimed = 0,
             balanceDistributionRounding = {};
         app.withdrawalAddressSnapshot = {};
 
@@ -37,9 +38,7 @@ class CheckBalance {
                     const balance = Number(validatorData.data[i].balance);
                     
                     GNO_validatorsBalance += balance;
-
-                    if(validatorData.data[i].balance !== validatorData.data[i].validator.effective_balance) console.error("Validator balance and effective balance mismatch :", validatorData.data[i].index, validatorData.data[i].balance, validatorData.data[i].validator.effective_balance);
-
+                    
                     const withdrawalAddress = app.NormalizeAddress(validatorData.data[i].validator.withdrawal_credentials);
 
                     // unique withdrawal addresses for checking uncliamed GNOs and validators count distribution per withdrawal address
@@ -62,11 +61,14 @@ class CheckBalance {
                 console.log(`|      └── In GNO: ${GNO_validatorsBalance / 1e9}`);
 
                 // ToDo: Get Unclaimed GNOs
-                console.log("ww: ", Object.keys(app.withdrawalAddressSnapshot));
                 app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
                     // testing
 
-                    console.log(`|  └── Total unclaimed GNO balance by validators in ETHgwei: ???`);
+                    for(const wallet of app.withdrawalAddressSnapshot){
+                        GNO_unclaimed += wallet.unclaimed_gno;
+                    }
+
+                    console.log(`|  └── Total unclaimed GNO balance by validators in ETHgwei: ${GNO_unclaimed}`);
 
                     OnAsyncTaskCompleted(err);
                 });
@@ -141,9 +143,9 @@ class CheckBalance {
     };
 
     GetUnclaimedGNOs(wallets, walletIndex, cb){
-        if(walletIndex >= /*wallets.length*/3) return cb(null);
+        if(walletIndex >= /*wallets.length*/5) return cb(null);
         const wallet = wallets[walletIndex];
-        console.log(`|  ├── Getting unclaimed GNOs for wallet: ${wallet}`);
+        console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet}`);
         GetUnclaimedGnoValue(wallet, function(err, value){
             if(err) return cb(err);
             app.withdrawalAddressSnapshot[wallet].unclaimed_gno = value;
@@ -180,8 +182,6 @@ class CheckBalance {
                 console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${decimalValue}`);
                 return cb(null, decimalValue);
             });
-
-            return cb(null, 0);
         };
     };
 
