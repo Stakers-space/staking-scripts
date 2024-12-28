@@ -33,6 +33,7 @@ curl localhost:8545 \
       }, "latest"]
   }'
 ```
+- Within the `data`, a certain action is specified through 4bytes of [Keccak-256](https://emn178.github.io/online-tools/keccak_256.html) hash, followed with a wallet
 - `eth_call`
 Get Withdrawable GNO for withdrawal wallet
 ```

@@ -78,7 +78,7 @@ class CheckBalance {
         });
 
         // Get GNO balance in deposit contract
-        app.GetDepositContractGnoBalance(function(err,dcData){
+        app.GetGnoBalance("0B98057eA310F4d31F2a452B414647007d1645d9", function(err,dcData){
             if(!err) {
                 // subtract GNO in deposit contract address
                 GNOinDepositContract = JSON.parse(dcData).result / 1e9; // this should be for time same as epoch snapshot
@@ -148,14 +148,18 @@ class CheckBalance {
         if(walletIndex >= wallets.length) return cb(null);
         const wallet = wallets[walletIndex];
         console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet} | ${walletIndex} / ${wallets.length}`);
-        GetUnclaimedGnoValue(wallet, function(err, value){
+        app.GetGnoBalance(wallet, function(err, value){
             if(err) return cb(err);
-            app.withdrawalAddressSnapshot[wallet].unclaimed_gno = value;
+            
+            const unclaimed_gno = JSON.parse(dcData).result;
+            console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e9} GNO)`);
+
+            app.withdrawalAddressSnapshot[wallet].unclaimed_gno = Number(unclaimed_gno);
             walletIndex++;
             app.GetUnclaimedGNOs(wallets, walletIndex, cb);
         });
 
-        function GetUnclaimedGnoValue(wallet, cb){
+        /*function GetUnclaimedGnoValue(wallet, cb){
             console.log(`|  |  ├── Getting unclaimed GNOs for wallet: ${wallet} | characters: ${wallet.length}`);
             const withdrawableAmont_wlt = `0x70a08231${wallet.padStart(64, '0')}`;
             const data = JSON.stringify({
@@ -187,10 +191,10 @@ class CheckBalance {
                 console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${decimalValue}`);
                 return cb(null, decimalValue);
             });
-        };
+        };*/
     };
 
-    GetDepositContractGnoBalance = function(cb){
+    GetGnoBalance = function(wallet, cb){
         // from local node
         const data = JSON.stringify({
             jsonrpc: "2.0",
