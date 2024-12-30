@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.8";
+// const version = "0.0.9";
 const http = require('http');
 
 class CheckBalance {
@@ -9,13 +9,13 @@ class CheckBalance {
         this.withdrawalAddressSnapshot = null;
     }
 
-    Process(){
+    Process(cb){
         console.log(new Date(), "Starting check GNO balance in Gnosis Validators Deposit contract");
         this.LoadConfigFromArguments();
         let asyncTasks = 2;
 
         let epoch = null,
-            GNO_validatorsBalance = 0,
+            GNO_validatorsBeaconchainBalance = 0,
             GNOinDepositContract = 0,
             GNO_unclaimed = 0,
             distributionByRoundedBeaconchainBalance = {},
@@ -38,7 +38,7 @@ class CheckBalance {
                 for(var i=0;i<registeredValidators;i++){
                     const balance = Number(validatorData.data[i].balance);
                     
-                    GNO_validatorsBalance += balance;
+                    GNO_validatorsBeaconchainBalance += balance;
                     
                     const withdrawalAddress = app.NormalizeAddress(validatorData.data[i].validator.withdrawal_credentials);
 
@@ -57,12 +57,12 @@ class CheckBalance {
                 console.log(`|  └── Withdrawal addresses: ${withdrawalAddressesCount}`);
 
                 // calculate GNO balance
-                console.log(`|  └── Total GNO balance holded by validators on beaconchain in ETHgwei: ${GNO_validatorsBalance}`);
+                console.log(`|  └── Total GNO balance holded by validators on beaconchain in ETHgwei: ${GNO_validatorsBeaconchainBalance}`);
                 // convert balances to GNO
-                GNO_validatorsBalance = GNO_validatorsBalance / 32;
-                console.log(`|      ├── In GNOgwei: ${GNO_validatorsBalance}`);
+                GNO_validatorsBeaconchainBalance = GNO_validatorsBeaconchainBalance / 32;
+                console.log(`|      ├── In GNOgwei: ${GNO_validatorsBeaconchainBalance}`);
                 // convert gwei to whole units
-                console.log(`|      └── In GNO: ${GNO_validatorsBalance / 1e9}`);
+                console.log(`|      └── In GNO: ${GNO_validatorsBeaconchainBalance / 1e9}`);
 
                 // ToDo: Get Unclaimed GNOs
                 app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
@@ -94,20 +94,36 @@ class CheckBalance {
             OnAsyncTaskCompleted(err);
         });
 
-
         function OnAsyncTaskCompleted(err){
             asyncTasks--;
-            if(err) return console.error(err);
+            if(err) {
+                if(cb) return cb(err);
+                return console.error(err); 
+            }
             if(asyncTasks !== 0) return;
 
             // convert gwei to whole units
-            const balance = GNOinDepositContract - GNO_validatorsBalance;
+            const balance = GNOinDepositContract - GNO_validatorsBeaconchainBalance;
             console.log("└── Deposit contract balance:", balance);
             console.log(`     └── In GNO: ${balance / 1e9}`);
             console.log(`GNO distribution || Validators: ${registeredValidators} rounded GNO holdings:number of validators`, distributionByRoundedBeaconchainBalance);
             console.log(`Unclaimed GNO distribution || Wallets: ${withdrawalAddressesCount}`, distributionByUnclaimedGNO);
 
             console.log(new Date(), "process completed");
+            if(cb) {
+                return cb(null, {   
+                    time: new Date().getTime(),
+                    epoch: epoch,
+                    GNO_validators: GNO_validatorsBeaconchainBalance,
+                    GNO_contract: GNOinDepositContract,
+                    GNO_unclaimed: GNO_unclaimed,
+                    bilance: balance,
+                    validators: registeredValidators,
+                    beaconchain_distribution: distributionByRoundedBeaconchainBalance,
+                    wallets: withdrawalAddressesCount,
+                    unclaimed_distribution: distributionByUnclaimedGNO
+                });  
+            };
         };
     };
 
