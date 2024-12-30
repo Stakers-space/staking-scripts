@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.1.0";
+// const version = "0.1.1";
 const http = require('http');
 
 class CheckBalance {
@@ -48,7 +48,8 @@ class CheckBalance {
                     app.withdrawalAddressSnapshot[withdrawalAddress].validators++;
 
                     // distribution of GNO balance in validators
-                    const beaconHoldingsKey = parseFloat((balance / 32 / 1e9).toFixed(2)).toString();
+                    //const beaconHoldingsKey = parseFloat((balance / 32 / 1e9).toFixed(2)).toString();
+                    const beaconHoldingsKey = (Math.round((balance / 32 / 1e9) * 100) / 100).toString();
                     if(!distributionByRoundedBeaconchainBalance[beaconHoldingsKey]) distributionByRoundedBeaconchainBalance[beaconHoldingsKey] = 0;
                     distributionByRoundedBeaconchainBalance[beaconHoldingsKey]++;
                 }
@@ -71,16 +72,21 @@ class CheckBalance {
                     if(err) return console.error(err);
 
                     for(const wallet in app.withdrawalAddressSnapshot){
-                        GNO_unclaimed += app.withdrawalAddressSnapshot[wallet].unclaimed_gno;
+                        const wallet_unclaimedGNO = app.withdrawalAddressSnapshot[wallet].unclaimed_gno;
+                        GNO_unclaimed += wallet_unclaimedGNO;
+
+                        // round by 2 decimals
+                        
+                        const unclaimedKey = (Math.round((wallet_unclaimedGNO / 1e18) * 100) / 100).toString();
+                        if(!distributionByUnclaimedGNO[unclaimedKey]) distributionByUnclaimedGNO[unclaimedKey] = 0;
+                        distributionByUnclaimedGNO[unclaimedKey]++;
                     }
                     console.log(`|  └── Total unclaimed GNO balance by validators in wei: ${GNO_unclaimed}`);
                     GNO_unclaimed = GNO_unclaimed / 1e18;
                     console.log(`|       └── Total unclaimed GNO balance by validators in GNO: ${GNO_unclaimed}`);
 
-                    // round by 2 decimals
-                    const unclaimedKey = parseFloat(GNO_unclaimed).toFixed(2).toString();
-                    if(!distributionByUnclaimedGNO[unclaimedKey]) distributionByUnclaimedGNO[unclaimedKey] = 0;
-                    distributionByUnclaimedGNO[unclaimedKey]++;
+                    
+                    
                     OnAsyncTaskCompleted(err);
                 });
             });
