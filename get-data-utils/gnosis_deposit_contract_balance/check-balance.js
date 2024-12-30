@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.7";
+// const version = "0.0.8";
 const http = require('http');
 
 class CheckBalance {
@@ -18,7 +18,9 @@ class CheckBalance {
             GNO_validatorsBalance = 0,
             GNOinDepositContract = 0,
             GNO_unclaimed = 0,
-            balanceDistributionRounding = {};
+            distributionByRoundedBeaconchainBalance = {},
+            distributionByUnclaimedGNO = {},
+            withdrawalAddressesCount = 0;
         app.withdrawalAddressSnapshot = {};
 
         // Get current epoch
@@ -45,13 +47,14 @@ class CheckBalance {
                     app.withdrawalAddressSnapshot[withdrawalAddress].validators++;
 
                     // distribution of GNO balance in validators
-                    const roundedBalance = parseFloat((balance / 32 / 1e9).toFixed(2));
-                    const key = roundedBalance.toString();
-                    if(!balanceDistributionRounding[key]) balanceDistributionRounding[key] = 0;
-                    balanceDistributionRounding[key]++;
+                    const beaconHoldingsKey = parseFloat((balance / 32 / 1e9).toFixed(2)).toString();
+                    if(!distributionByRoundedBeaconchainBalance[beaconHoldingsKey]) distributionByRoundedBeaconchainBalance[beaconHoldingsKey] = 0;
+                    distributionByRoundedBeaconchainBalance[beaconHoldingsKey]++;
                 }
 
-                console.log(`|  └── Withdrawal addresses:`, Object.keys(app.withdrawalAddressSnapshot).length);
+                withdrawalAddressesCount = Object.keys(app.withdrawalAddressSnapshot).length;
+
+                console.log(`|  └── Withdrawal addresses: ${withdrawalAddressesCount}`);
 
                 // calculate GNO balance
                 console.log(`|  └── Total GNO balance holded by validators on beaconchain in ETHgwei: ${GNO_validatorsBalance}`);
@@ -71,10 +74,13 @@ class CheckBalance {
                     console.log(`|  ├── Total unclaimed GNO balance by validators in wei: ${GNO_unclaimed}`);
                     GNO_unclaimed = GNO_unclaimed / 1e18;
                     console.log(`|  └── Total unclaimed GNO balance by validators in GNO: ${GNO_unclaimed}`);
-                    
+
+                    // round by 2 decimals
+                    const unclaimedKey = parseFloat(GNO_unclaimed).toFixed(2).toString();
+                    if(!distributionByUnclaimedGNO[unclaimedKey]) distributionByUnclaimedGNO[unclaimedKey] = 0;
+                    distributionByUnclaimedGNO[unclaimedKey]++;
                     OnAsyncTaskCompleted(err);
                 });
-                
             });
         });
 
@@ -98,7 +104,8 @@ class CheckBalance {
             const balance = GNOinDepositContract - GNO_validatorsBalance;
             console.log("└── Deposit contract balance:", balance);
             console.log(`     └── In GNO: ${balance / 1e9}`);
-            console.log("GNO distribution || rounded GNO holdings:number of validators", balanceDistributionRounding);
+            console.log(`GNO distribution || Validators: ${registeredValidators} rounded GNO holdings:number of validators`, distributionByRoundedBeaconchainBalance);
+            console.log(`Unclaimed GNO distribution || Wallets: ${withdrawalAddressesCount}`, distributionByUnclaimedGNO);
 
             console.log(new Date(), "process completed");
         };
@@ -152,7 +159,7 @@ class CheckBalance {
             if(err) return cb(err);
             
             const unclaimed_gno = value;
-            console.log(`|  |  └── Unclaimed GNOs | ${walletIndex} / ${wallets.length} | 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e18} GNO)`);
+            //console.log(`|  |  └── Unclaimed GNOs | ${walletIndex} / ${wallets.length} | 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e18} GNO)`);
 
             app.withdrawalAddressSnapshot[wallet].unclaimed_gno = Number(unclaimed_gno);
             walletIndex++;
