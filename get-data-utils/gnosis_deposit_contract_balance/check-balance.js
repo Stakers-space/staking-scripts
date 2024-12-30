@@ -109,21 +109,20 @@ class CheckBalance {
             console.log(`GNO distribution || Validators: ${registeredValidators} rounded GNO holdings:number of validators`, distributionByRoundedBeaconchainBalance);
             console.log(`Unclaimed GNO distribution || Wallets: ${withdrawalAddressesCount}`, distributionByUnclaimedGNO);
 
-            console.log(new Date(), "process completed");
-            if(cb) {
-                return cb(null, {   
-                    time: new Date().getTime(),
-                    epoch: epoch,
-                    GNO_validators: GNO_validatorsBeaconchainBalance,
-                    GNO_contract: GNOinDepositContract,
-                    GNO_unclaimed: GNO_unclaimed,
-                    bilance: balance,
-                    validators: registeredValidators,
-                    beaconchain_distribution: distributionByRoundedBeaconchainBalance,
-                    wallets: withdrawalAddressesCount,
-                    unclaimed_distribution: distributionByUnclaimedGNO
-                });  
+            const responseObj = {   
+                time: new Date().getTime(),
+                epoch: epoch,
+                GNO_validators: GNO_validatorsBeaconchainBalance,
+                GNO_contract: GNOinDepositContract,
+                GNO_unclaimed: GNO_unclaimed,
+                bilance: balance,
+                validators: registeredValidators,
+                beaconchain_distribution: distributionByRoundedBeaconchainBalance,
+                wallets: withdrawalAddressesCount,
+                unclaimed_distribution: distributionByUnclaimedGNO
             };
+            console.log(new Date(), "process completed | Response object:", responseObj);
+            if(cb) return cb(null, responseObj);
         };
     };
 
