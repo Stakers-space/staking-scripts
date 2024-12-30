@@ -62,9 +62,9 @@ class CheckBalance {
                 // convert balances to GNO
                 GNO_validatorsBeaconchainBalance = GNO_validatorsBeaconchainBalance / 32;
                 
-                console.log(`|      ├── In GNOgwei: ${GNO_validatorsBeaconchainBalance}`);
+                console.log(`|      └── In gwei: ${GNO_validatorsBeaconchainBalance}`);
                 // convert gwei to whole units
-                console.log(`|      └── In GNO: ${GNO_validatorsBeaconchainBalance / 1e9}`);
+                console.log(`|           └── In GNO: ${GNO_validatorsBeaconchainBalance / 1e9}`);
 
                 // ToDo: Get Unclaimed GNOs
                 app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
@@ -73,9 +73,9 @@ class CheckBalance {
                     for(const wallet in app.withdrawalAddressSnapshot){
                         GNO_unclaimed += app.withdrawalAddressSnapshot[wallet].unclaimed_gno;
                     }
-                    console.log(`|  ├── Total unclaimed GNO balance by validators in wei: ${GNO_unclaimed}`);
+                    console.log(`|  └── Total unclaimed GNO balance by validators in wei: ${GNO_unclaimed}`);
                     GNO_unclaimed = GNO_unclaimed / 1e18;
-                    console.log(`|  └── Total unclaimed GNO balance by validators in GNO: ${GNO_unclaimed}`);
+                    console.log(`|       └── Total unclaimed GNO balance by validators in GNO: ${GNO_unclaimed}`);
 
                     // round by 2 decimals
                     const unclaimedKey = parseFloat(GNO_unclaimed).toFixed(2).toString();
@@ -105,7 +105,7 @@ class CheckBalance {
             if(asyncTasks !== 0) return;
 
             // convert gwei to whole units
-            const balance = GNOinDepositContract - GNO_validatorsBeaconchainBalance;
+            const balance = GNOinDepositContract - GNO_validatorsBeaconchainBalance - GNO_unclaimed;
             console.log("└── Deposit contract balance:", balance);
             console.log(`     └── In GNO: ${balance / 1e9}`);
             console.log(`GNO distribution || Validators: ${registeredValidators} rounded GNO holdings:number of validators`, distributionByRoundedBeaconchainBalance);
