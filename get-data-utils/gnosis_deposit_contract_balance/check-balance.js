@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.5";
+// const version = "0.0.6";
 const http = require('http');
 
 class CheckBalance {
@@ -70,8 +70,10 @@ class CheckBalance {
                     }
 
                     console.log(`|  └── Total unclaimed GNO balance by validators in ETHgwei: ${GNO_unclaimed}`);
+                    
+                    OnAsyncTaskCompleted(err);
                 });
-                OnAsyncTaskCompleted(err);
+                
             });
         });
 
@@ -145,12 +147,11 @@ class CheckBalance {
     GetUnclaimedGNOs(wallets, walletIndex, cb){
         if(walletIndex >= wallets.length) return cb(null);
         const wallet = wallets[walletIndex];
-        //console.log(`|  ├── Getting unclaimed GNOs for wallet: 0x${wallet} | ${walletIndex} / ${wallets.length}`);
         GetUnclaimedGnoValue(wallet, function(err, value){
             if(err) return cb(err);
             
             const unclaimed_gno = value;
-            console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e9} GNO)`);
+            console.log(`|  |  └── Unclaimed GNOs | ${walletIndex} / ${wallets.length} | 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e9} GNO)`);
 
             app.withdrawalAddressSnapshot[wallet].unclaimed_gno = Number(unclaimed_gno);
             walletIndex++;
@@ -159,7 +160,7 @@ class CheckBalance {
 
         function GetUnclaimedGnoValue(wallet, cb){
             //console.log(`|  |  ├── Getting unclaimed GNOs for wallet: ${wallet} | characters: ${wallet.length}`);
-            const withdrawableAmont_wlt = `0xbe7ab51b${wallet/*.padStart(64, '0')*/}`;
+            const withdrawableAmont_wlt = `0xbe7ab51b${wallet.padStart(64, '0')}`;
             const data = JSON.stringify({
                 jsonrpc: "2.0",
                 id: 1,
@@ -181,7 +182,7 @@ class CheckBalance {
                 }
             }, data, function(err, response){
                 if(err) return cb(err);
-                console.log(`|  |  ├── Response: ${response}`);
+                console.log(`|  |  ├── Response for wlt ${wallet}: ${response}`);
                 if(response.includes('error')) return cb(response);
 
                 const hexValue = JSON.parse(response).result;
