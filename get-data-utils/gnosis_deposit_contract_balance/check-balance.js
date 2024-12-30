@@ -6,7 +6,6 @@ class CheckBalance {
     constructor(){
         this.beaconPort = 9596;
         this.executionPort = 8545;
-        //this.EtherscanAuthorization = "";
         this.withdrawalAddressSnapshot = null;
     }
 
@@ -63,7 +62,7 @@ class CheckBalance {
                 console.log(`|      └── In GNO: ${GNO_validatorsBalance / 1e9}`);
 
                 // ToDo: Get Unclaimed GNOs
-                /*app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
+                app.GetUnclaimedGNOs(Object.keys(app.withdrawalAddressSnapshot), 0, function(err){
                     if(err) return console.error(err);
 
                     for(const wallet in app.withdrawalAddressSnapshot){
@@ -71,7 +70,7 @@ class CheckBalance {
                     }
 
                     console.log(`|  └── Total unclaimed GNO balance by validators in ETHgwei: ${GNO_unclaimed}`);
-                });*/
+                });
                 OnAsyncTaskCompleted(err);
             });
         });
@@ -160,7 +159,7 @@ class CheckBalance {
 
         function GetUnclaimedGnoValue(wallet, cb){
             //console.log(`|  |  ├── Getting unclaimed GNOs for wallet: ${wallet} | characters: ${wallet.length}`);
-            const withdrawableAmont_wlt = `0x70a08231${wallet/*.padStart(64, '0')*/}`;
+            const withdrawableAmont_wlt = `0xbe7ab51b${wallet/*.padStart(64, '0')*/}`;
             const data = JSON.stringify({
                 jsonrpc: "2.0",
                 id: 1,
@@ -243,12 +242,6 @@ class CheckBalance {
 
     LoadConfigFromArguments(){
         const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
-        /*const etherscanTokenIndex = args.indexOf('--etherscanapi-token');
-        if (etherscanTokenIndex !== -1 && etherscanTokenIndex + 1 < args.length) {
-            this.EtherscanAuthorization = args[etherscanTokenIndex + 1];
-            console.log(`├── loaded EtherscanAPI authentization token: ${this.EtherscanAuthorization} from attached param`);
-        }*/
-
         const beaconPortArgIndex = args.indexOf('--beaconPort');
         if (beaconPortArgIndex !== -1 && beaconPortArgIndex + 1 < args.length) {
             this.beaconPort = args[beaconPortArgIndex + 1];
