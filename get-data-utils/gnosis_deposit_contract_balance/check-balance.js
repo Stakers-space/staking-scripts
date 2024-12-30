@@ -115,7 +115,7 @@ class CheckBalance {
             console.log("└── Deposit contract balance:", balance);
             console.log(`     └── In GNO: ${balance / 1e9}`);
             console.log(`GNO distribution || Validators: ${registeredValidators} rounded GNO holdings:number of validators`, distributionByRoundedBeaconchainBalance);
-            console.log(`Unclaimed GNO distribution || Wallets: ${withdrawalAddressesCount}`, distributionByUnclaimedGNO);
+            console.log(`Unclaimed GNO distribution || ${withdrawalAddressesCount} | output format: Unclaimed GNO : number of wallets`, distributionByUnclaimedGNO);
 
             const responseObj = {   
                 time: new Date().getTime(),

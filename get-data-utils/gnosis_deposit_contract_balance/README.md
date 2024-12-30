@@ -116,7 +116,7 @@ GNO distribution || Validators: 464775 rounded GNO holdings:number of validators
   '1.11': 12,
   '1.05': 38
 }
-Unclaimed GNO distribution || Wallets: 3502 {
+Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : number of wallets {
   '0': 2504,
   '1': 10,
   '4': 4,
