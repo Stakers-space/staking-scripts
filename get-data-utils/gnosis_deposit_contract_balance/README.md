@@ -34,18 +34,18 @@ Starting check GNO balance in Gnosis Validators Deposit contract
 ├─ beaconPort: 9596 from attached param
 ├─ executionPort: 8545 from attached param
 ├── Getting current Epoch number...
-├── GNO balance in deposit contract: 307183762426898 (307183.762426898 GNO)
-|   └── Current epoch: 1207110
+|   └── Current epoch: 1207137
 ├── Processing validators snapshot for head slot state...
+├── GNO balance in deposit contract: 307183758748738.56 (307183.75874873856 GNO)
 |  ├── snapshot completed | registered validators: 464775
 |  └── Withdrawal addresses: 3502
-|  └── Total GNO balance holded by validators on beaconchain in ETHgwei: 10527403030780972
-|      └── In gwei: 328981344711905.4
-|           └── In GNO: 328981.3447119054
-|  └── Total unclaimed GNO balance by validators in wei: 5.86507431339212e+21
-|       └── Total unclaimed GNO balance by validators in GNO: 5865.07431339212
-└── Deposit contract balance: -21797582290872.45
-     └── In GNO: -21797.582290872448
+|  └── Total GNO balance holded by validators on beaconchain in GWei: 10527400045678272
+|      └── In GWei: 328981251427446
+|           └── In GNO: 328981.251427446
+|  └── Total unclaimed GNO balance by validators in wei: 5.864975406534933e+21
+|       └── Total unclaimed GNO balance by validators in GNO: 5864.9754065349325
+└── Deposit contract balance in GWei: -27662468085242.37
+     └── In GNO: -27662.46808524237
 GNO distribution || Validators: 464775 rounded GNO holdings:number of validators {
   '0': 135701,
   '1': 323562,
@@ -67,9 +67,9 @@ GNO distribution || Validators: 464775 rounded GNO holdings:number of validators
   '0.81': 58,
   '1.3': 3,
   '0.88': 59,
-  '0.95': 146,
+  '0.95': 147,
   '1.15': 8,
-  '0.94': 114,
+  '0.94': 113,
   '1.41': 1,
   '1.21': 28,
   '0.86': 49,
@@ -116,7 +116,7 @@ GNO distribution || Validators: 464775 rounded GNO holdings:number of validators
   '1.11': 12,
   '1.05': 38
 }
-Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : number of wallets {
+Unclaimed GNO distribution || 3502 | output format: Unclaimed GNO : number of wallets {
   '0': 2504,
   '1': 10,
   '4': 4,
@@ -135,7 +135,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '0.12': 15,
   '0.13': 10,
   '0.37': 2,
-  '3.59': 1,
+  '3.67': 1,
   '2.92': 1,
   '2.91': 1,
   '30.51': 1,
@@ -162,7 +162,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '0.11': 13,
   '0.31': 13,
   '0.41': 6,
-  '0.44': 2,
+  '0.44': 3,
   '0.62': 3,
   '3.97': 1,
   '0.61': 11,
@@ -184,13 +184,13 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '0.48': 3,
   '1.53': 1,
   '1.55': 5,
-  '0.75': 5,
+  '0.75': 6,
   '1.39': 2,
   '2.09': 2,
   '0.36': 6,
   '1.69': 1,
   '38.03': 1,
-  '0.73': 4,
+  '0.73': 5,
   '1.12': 4,
   '1.5': 1,
   '0.95': 2,
@@ -210,7 +210,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '0.21': 11,
   '1.84': 1,
   '3.99': 2,
-  '0.03': 33,
+  '0.03': 34,
   '1.62': 1,
   '19.56': 1,
   '6.95': 1,
@@ -258,7 +258,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '7.46': 1,
   '5.88': 1,
   '4.22': 1,
-  '0.01': 73,
+  '0.01': 72,
   '1.03': 1,
   '1.41': 1,
   '1.09': 2,
@@ -270,7 +270,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '0.5': 4,
   '1.21': 1,
   '0.79': 1,
-  '0.72': 4,
+  '0.72': 3,
   '35.75': 1,
   '9.64': 1,
   '1.48': 1,
@@ -354,7 +354,6 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '1.34': 1,
   '10.27': 1,
   '0.77': 1,
-  '0.74': 1,
   '2.62': 1,
   '15.04': 1,
   '5.95': 1,
@@ -404,13 +403,12 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
   '18.79': 1,
   '5.2': 1,
   '42.64': 1,
-  '0.69': 1,
   '0.94': 1,
   '3.03': 1,
   '0.99': 1,
   '5.03': 1,
   '1.7': 1,
-  '1.85': 1,
+  '1.87': 1,
   '5.63': 1,
   '2.23': 1,
   '4.26': 1
@@ -418,13 +416,13 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
 ```
 - Object-based output. Attach callback listener of schema `error, response` for `Process` request from external script
 ```
-2024-12-30T12:37:45.043Z process completed | Response object: {
-  time: 1735562265043,
-  epoch: 1207110,
-  GNO_validators: 328981344711905.4,
-  GNO_contract: 307183762426898,
-  GNO_unclaimed: 5865.07431339212,
-  bilance: -21797582290872.45,
+2024-12-30T13:14:20.376Z process completed | Response object: {
+  time: 1735564460376,
+  epoch: 1207137,
+  GNO_validators: 328981251427446,
+  GNO_contract: 307183758748738.56,
+  GNO_unclaimed: 5864975406534.933,
+  bilance: -27662468085242.37,
   validators: 464775,
   beaconchain_distribution: {
     '0': 135701,
@@ -447,9 +445,9 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '0.81': 58,
     '1.3': 3,
     '0.88': 59,
-    '0.95': 146,
+    '0.95': 147,
     '1.15': 8,
-    '0.94': 114,
+    '0.94': 113,
     '1.41': 1,
     '1.21': 28,
     '0.86': 49,
@@ -516,7 +514,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '0.12': 15,
     '0.13': 10,
     '0.37': 2,
-    '3.59': 1,
+    '3.67': 1,
     '2.92': 1,
     '2.91': 1,
     '30.51': 1,
@@ -543,7 +541,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '0.11': 13,
     '0.31': 13,
     '0.41': 6,
-    '0.44': 2,
+    '0.44': 3,
     '0.62': 3,
     '3.97': 1,
     '0.61': 11,
@@ -565,13 +563,13 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '0.48': 3,
     '1.53': 1,
     '1.55': 5,
-    '0.75': 5,
+    '0.75': 6,
     '1.39': 2,
     '2.09': 2,
     '0.36': 6,
     '1.69': 1,
     '38.03': 1,
-    '0.73': 4,
+    '0.73': 5,
     '1.12': 4,
     '1.5': 1,
     '0.95': 2,
@@ -591,7 +589,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '0.21': 11,
     '1.84': 1,
     '3.99': 2,
-    '0.03': 33,
+    '0.03': 34,
     '1.62': 1,
     '19.56': 1,
     '6.95': 1,
@@ -639,7 +637,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '7.46': 1,
     '5.88': 1,
     '4.22': 1,
-    '0.01': 73,
+    '0.01': 72,
     '1.03': 1,
     '1.41': 1,
     '1.09': 2,
@@ -651,7 +649,7 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '0.5': 4,
     '1.21': 1,
     '0.79': 1,
-    '0.72': 4,
+    '0.72': 3,
     '35.75': 1,
     '9.64': 1,
     '1.48': 1,
@@ -735,7 +733,6 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '1.34': 1,
     '10.27': 1,
     '0.77': 1,
-    '0.74': 1,
     '2.62': 1,
     '15.04': 1,
     '5.95': 1,
@@ -785,13 +782,12 @@ Unclaimed GNO distribution || Wallets: 3502 | output format: Unclaimed GNO : num
     '18.79': 1,
     '5.2': 1,
     '42.64': 1,
-    '0.69': 1,
     '0.94': 1,
     '3.03': 1,
     '0.99': 1,
     '5.03': 1,
     '1.7': 1,
-    '1.85': 1,
+    '1.87': 1,
     '5.63': 1,
     '2.23': 1,
     '4.26': 1
