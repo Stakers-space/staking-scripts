@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.9";
+// const version = "0.1.0";
 const http = require('http');
 
 class CheckBalance {
@@ -20,7 +20,8 @@ class CheckBalance {
             GNO_unclaimed = 0,
             distributionByRoundedBeaconchainBalance = {},
             distributionByUnclaimedGNO = {},
-            withdrawalAddressesCount = 0;
+            withdrawalAddressesCount = 0,
+            registeredValidators = 0;
         app.withdrawalAddressSnapshot = {};
 
         // Get current epoch
@@ -32,7 +33,7 @@ class CheckBalance {
             // Get validators snapshot | ToDo: Replace head for certain epoch?
             app.GetValidatorsSnapshot(function(err, validatorData){
                 if(err) return console.error(err);
-                const registeredValidators = validatorData.data.length;
+                registeredValidators = validatorData.data.length;
                 console.log(`|  ├── snapshot completed | registered validators: ${registeredValidators}`);
 
                 for(var i=0;i<registeredValidators;i++){
@@ -60,6 +61,7 @@ class CheckBalance {
                 console.log(`|  └── Total GNO balance holded by validators on beaconchain in ETHgwei: ${GNO_validatorsBeaconchainBalance}`);
                 // convert balances to GNO
                 GNO_validatorsBeaconchainBalance = GNO_validatorsBeaconchainBalance / 32;
+                
                 console.log(`|      ├── In GNOgwei: ${GNO_validatorsBeaconchainBalance}`);
                 // convert gwei to whole units
                 console.log(`|      └── In GNO: ${GNO_validatorsBeaconchainBalance / 1e9}`);
