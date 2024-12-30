@@ -1,12 +1,14 @@
 'use strict';
 // const version = "0.1.1";
 const http = require('http');
+let app = null;
 
 class CheckBalance {
     constructor(){
         this.beaconPort = 9596;
         this.executionPort = 8545;
         this.withdrawalAddressSnapshot = null;
+        app = this;
     }
 
     Process(cb){
@@ -117,7 +119,7 @@ class CheckBalance {
             console.log(`GNO distribution || Validators: ${registeredValidators} rounded GNO holdings:number of validators`, distributionByRoundedBeaconchainBalance);
             console.log(`Unclaimed GNO distribution || ${withdrawalAddressesCount} | output format: Unclaimed GNO : number of wallets`, distributionByUnclaimedGNO);
 
-            const responseObj = {   
+            const responseObj = {
                 time: new Date().getTime(),
                 epoch: epoch,
                 GNO_validators: GNO_validatorsBeaconchainBalance,
@@ -290,5 +292,5 @@ class CheckBalance {
     }
 }
 
-const app = new CheckBalance();
-app.Process();
+new CheckBalance().Process();
+// module.exports = CheckBalance;
