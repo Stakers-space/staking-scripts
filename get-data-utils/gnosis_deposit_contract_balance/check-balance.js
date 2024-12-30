@@ -1,5 +1,5 @@
 'use strict';
-// const version = "0.0.6";
+// const version = "0.0.7";
 const http = require('http');
 
 class CheckBalance {
@@ -68,8 +68,9 @@ class CheckBalance {
                     for(const wallet in app.withdrawalAddressSnapshot){
                         GNO_unclaimed += app.withdrawalAddressSnapshot[wallet].unclaimed_gno;
                     }
-
-                    console.log(`|  └── Total unclaimed GNO balance by validators in ETHgwei: ${GNO_unclaimed}`);
+                    console.log(`|  ├── Total unclaimed GNO balance by validators in wei: ${GNO_unclaimed}`);
+                    GNO_unclaimed = GNO_unclaimed / 1e18;
+                    console.log(`|  └── Total unclaimed GNO balance by validators in GNO: ${GNO_unclaimed}`);
                     
                     OnAsyncTaskCompleted(err);
                 });
@@ -151,7 +152,7 @@ class CheckBalance {
             if(err) return cb(err);
             
             const unclaimed_gno = value;
-            console.log(`|  |  └── Unclaimed GNOs | ${walletIndex} / ${wallets.length} | 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e9} GNO)`);
+            console.log(`|  |  └── Unclaimed GNOs | ${walletIndex} / ${wallets.length} | 0x${wallet}: ${unclaimed_gno} (${unclaimed_gno / 1e18} GNO)`);
 
             app.withdrawalAddressSnapshot[wallet].unclaimed_gno = Number(unclaimed_gno);
             walletIndex++;
@@ -182,12 +183,15 @@ class CheckBalance {
                 }
             }, data, function(err, response){
                 if(err) return cb(err);
-                console.log(`|  |  ├── Response for wlt ${wallet}: ${response}`);
-                if(response.includes('error')) return cb(response);
+                
+                if(response.includes('error')) {
+                    console.log(`|  |  ├── Error Response for wlt ${wallet}: ${response}`);
+                    return cb(response);
+                }
 
                 const hexValue = JSON.parse(response).result;
                 const decimalValue = parseInt(hexValue, 16);
-                console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${decimalValue}`);
+                //console.log(`|  |  └── Unclaimed GNOs at 0x${wallet}: ${decimalValue}`);
                 return cb(null, decimalValue);
             });
         };
