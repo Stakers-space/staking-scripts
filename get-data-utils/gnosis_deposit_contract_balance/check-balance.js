@@ -1,13 +1,13 @@
 'use strict';
-// const version = "0.1.1";
+// const version = "0.1.2";
 // base unit: GWei
 const http = require('http');
 let app = null;
 
 class CheckBalance {
-    constructor(){
-        this.beaconPort = 9596;
-        this.executionPort = 8545;
+    constructor(beaconPort, executionPort) {
+        this.beaconPort = beaconPort || 9596;
+        this.executionPort = executionPort || 8545;
         this.withdrawalAddressSnapshot = null;
         app = this;
     }
