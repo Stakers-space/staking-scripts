@@ -7,6 +7,7 @@ API is standardized across most consensus clients
 ## Default Ports
 - Lighthouse beacon: `5052`
 - Lodestar beacon: `9596`
+- Nimbus beacon: `5052`
 
 ## Beacon Endpoints
 Note: Change `PORT`, for the port used by the beaconchain client
