@@ -15,8 +15,13 @@ sudo curl -o /opt/teku-create-validator-psw-files.sh https://raw.githubuserconte
 ```
 - Set permissions (executable by all users, writable by root)
 ```
+sudo chmod +x /opt/teku-create-validator-psw-files.sh
 sudo chmod 755 /opt/teku-create-validator-psw-files.sh
 ```
+> [!TIP]
+> You can change ownership of the script from `root` to different user
+> - Create `stakersspace` user (if needed): `sudo useradd --system --no-create-home --shell /bin/false stakersspace`
+> - Change ownership: `sudo chown -R stakersspace:stakersspace /opt/teku-create-validator-psw-files.sh`
 
 ## Use the util
 /opt/teku-create-validator-psw-files.sh /var/lib/teku-vi1/keystores/keystore-m_12381_3600_X_0_0-XXXXXXXXXX.txt
