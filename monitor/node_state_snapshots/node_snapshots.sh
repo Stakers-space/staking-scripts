@@ -6,7 +6,7 @@ API_TOKEN=""
 API_BEACON_PORT=0
 API_URL="https://stakers.space/api/node-snapshot"
 
-declare -r version="1.0.3"
+declare -r version="1.0.4"
 get_version() {
     echo -e "HW usage monitor version: $version | Powered by https://stakers.space"
     exit 0
@@ -76,7 +76,6 @@ print_hello_message() {
     echo -e "├── -s|--server_id  (= $SERVER_ID):   Server ID at Stakers.space"
     echo -e "├── -t|--api_token  (= $API_TOKEN):   token for communication with Stakers.space API"
     echo -e "└── -p|--beacon_port  (= $API_BEACON_PORT): Beacon Port API"
-    echo -e "Status: listening"
 }
 
 use_shell_parameters "$@"
@@ -152,8 +151,8 @@ get_beacon_peers_count() {
     fi
     
     beacon_peers=$(echo "$beacon_api_peers_count_response" | awk -F'"connected":"' '{print $2}' | awk -F'"' '{print $1}')
-    if [[ -z "$connected" ]]; then
-        echo "Error: Unable to extract 'connected' value from Beacon API response."
+    if [[ -z "$beacon_peers" ]]; then
+        echo "Error: Unable to extract 'connected' value from Beacon API response: $beacon_api_peers_count_response"
         return 1
     fi
 }
