@@ -7,7 +7,9 @@ API is standardized across most consensus clients
 ## Default Ports
 - Lighthouse beacon: `5052`
 - Lodestar beacon: `9596`
+- Teku: `5051`
 - Nimbus beacon: `5052`
+- Prysm: `?`
 
 ## Beacon Endpoints
 Note: Change `PORT`, for the port used by the beaconchain client

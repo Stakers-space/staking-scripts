@@ -32,11 +32,11 @@ crontab -e
 ```
 - Add a new task into the cronetab
 ```
-0 * * * * /srv/node_snapshots.sh "accountId" "stakersspace_api_token" "serverId"
+*/10 * * * * /srv/node_snapshots.sh --account_id 0 --server_id 0 --api_token "test" --beacon_port 5052
 ```
 > [!NOTE]  
 > Replace * * * * * for your scheduled time frequency
-> 1st * = minute (0 - 59) | keep * for each minute
+> 1st * = minute (0 - 59) | keep * for each minute, */10 = execute every 10th minute
 >
 > 2nd * = hour (0 - 23) | keep * for each hour
 >
@@ -47,7 +47,11 @@ crontab -e
 > 5th * = day in a week (0 - 7) - 0 as well as 7 means Sunday | keep * for each day
 
 > [!IMPORTANT]
-> Replace `accountId`, `stakersspace_api_token` and `serverId`
+> Replace `account_id`, `server_id` and `api_token` values
+> `beacon_port` default values for clients
+> Lighthouse, Nimbus: `5052`
+> Teku: `5051`
+> Lodestar: `9596`
 
 - Show all planned tasks
 ```
