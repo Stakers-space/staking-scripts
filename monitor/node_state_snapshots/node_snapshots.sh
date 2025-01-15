@@ -5,6 +5,7 @@ SERVER_ID=0
 API_TOKEN=""
 API_BEACON_PORT=0
 API_URL="https://stakers.space/api/node-snapshot"
+DO_NOT_SEND=0
 
 declare -r version="1.0.4"
 get_version() {
@@ -13,7 +14,7 @@ get_version() {
 }
 
 use_shell_parameters() {
-    TEMP=$(getopt -o a:s:t:p:u: --long account_id:,server_id:,api_token:,beacon_port:,api_url:, -- "$@")
+    TEMP=$(getopt -o a:s:t:p:u:d: --long account_id:,server_id:,api_token:,beacon_port:,api_url:,donotsend:, -- "$@")
     eval set -- "$TEMP"
 
     while true; do
@@ -49,6 +50,10 @@ use_shell_parameters() {
                     echo "Error: No API BEACON PORT specified. Default ports by clients | 5052: Lighthouse, Nimbus | 5051: Teku | 9596: Lodestar"
                     exit 1
                 fi
+                ;;
+            -d|--donotsend)
+                DO_NOT_SEND="$2"
+                shift 2
                 ;;
             -u|--api_url) 
                 API_URL="$2"
@@ -169,6 +174,7 @@ echo -e "├── beacon_peers: $beacon_peers"
 echo -e "├── vpn_status:   $vpn_status"
 echo -e "└── vpn_server:   $vpn_server"
 
+if [[ "$DO_NOT_SEND" -eq 0 ]]; then
 # Post data through GET request
 curl -G "$API_URL" \
     --data-urlencode "acc=$ACCOUNT_ID" \
@@ -180,3 +186,4 @@ curl -G "$API_URL" \
     --data-urlencode "peer=$beacon_peers" \
     --data-urlencode "vpn_s=$vpn_status" \
     --data-urlencode "vpn=$vpn_server"
+fi
