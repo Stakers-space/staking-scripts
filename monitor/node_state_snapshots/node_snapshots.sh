@@ -145,8 +145,17 @@ get_beacon_peers_count() {
     #fi
 
     # Native API way of getting peers coun instead of depandand log tracking trough beacon log monitor
-    beacon_api_peers_count_response=$(curl -s -X GET "http://localhost:$beacon_api_port/eth/v1/node/peer_count")
+    beacon_api_peers_count_response=$(curl -s --connect-timeout 5 --max-time 10 -X GET "http://localhost:$beacon_api_port/eth/v1/node/peer_count")
+    if [[ -z "$beacon_api_peers_count_response" ]]; then
+        echo "Error: No response from http://localhost:$beacon_api_port/eth/v1/node/peer_count API."
+        return 1
+    fi
+    
     beacon_peers=$(echo "$beacon_api_peers_count_response" | awk -F'"connected":"' '{print $2}' | awk -F'"' '{print $1}')
+    if [[ -z "$connected" ]]; then
+        echo "Error: Unable to extract 'connected' value from Beacon API response."
+        return 1
+    fi
 }
 get_beacon_peers_count
 
