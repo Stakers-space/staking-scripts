@@ -4,9 +4,6 @@ This utility script monitors SSD, RAM / SWAP usage and network data and make the
 
 ![Resources usage Chart](https://github.com/Stakers-space/staking-scripts/blob/main/monitor/node_state_snapshots/server-resources-chart.png?raw=true)
 
-> [!CAUTION]
-> Util must be updated for proper tracking of peers on Mullvad version 2024.8
-
 ## Installation
 - Check the `node_snapshots.sh` script
 ```

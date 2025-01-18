@@ -7,7 +7,7 @@ API_BEACON_PORT=0
 API_URL="https://stakers.space/api/node-snapshot"
 DO_NOT_SEND=0
 
-declare -r version="1.0.4"
+declare -r version="1.0.5"
 get_version() {
     echo -e "HW usage monitor version: $version | Powered by https://stakers.space"
     exit 0
@@ -121,18 +121,30 @@ get_vpn_status() {
     vpn_server="N/A"
     if command -v mullvad &> /dev/null; then
         vpn_output=$(mullvad status 2>/dev/null)
-        
-        if [[ $vpn_output == *"Connecting to"* ]]; then
-            vpn_status="Connecting"
-            vpn_server=$(echo "$vpn_output" | grep -oP '(?<=Connecting to )[^ ]+')
-        elif [[ $vpn_output == *"Connected to"* ]]; then
+
+        connected=$(echo "$vpn_output" | grep -m 1 -E "Connected|Disconnected" | awk '{print $1}')
+        if [ "$connected" == "Connected" ]; then
             vpn_status="Connected"
-            vpn_server=$(echo "$vpn_output" | grep -oP '(?<=Connected to )[^ ]+')
-        elif [[ $vpn_output == *"Disconnected"* ]]; then
+            vpn_server=$(echo "$vpn_output" | grep "Relay" | awk -F': ' '{print $2}' | sed 's/^ *//')
+            echo "Connected: $connected"
+            echo "Relay: $vpn_server"
+        elif [[ $connected == "Disconnected" ]]; then
             vpn_status="Disconnected"
         else
             vpn_status="Unknown"
         fi
+        
+        #if [[ $vpn_output == *"Connecting to"* ]]; then
+        #    vpn_status="Connecting"
+        #    vpn_server=$(echo "$vpn_output" | grep -oP '(?<=Connecting to )[^ ]+')
+        #elif [[ $vpn_output == *"Connected to"* ]]; then
+        #    vpn_status="Connected"
+        #    vpn_server=$(echo "$vpn_output" | grep -oP '(?<=Connected to )[^ ]+')
+        #elif [[ $vpn_output == *"Disconnected"* ]]; then
+        #    vpn_status="Disconnected"
+        #else
+        #    vpn_status="Unknown"
+        #fi
     else
         vpn_status="Mullvad Not Installed"
     fi
