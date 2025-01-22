@@ -22,7 +22,7 @@ echo "Referrent file directory is: $directory_path | Files in the folder: $num_f
 # iterate over files in the folder. If is .json, based on its name, generate a password file (if does not exist alredy)
 for f in $files; do
     if [[ $f == *.json ]]; then
-        # Get keystore name withou ending
+        # Get keystore name without ending
         keystoreName=${f%.*}
         echo "Clean keystore name: $keystoreName"
         # Check existence of txt password file for the keystore

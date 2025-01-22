@@ -32,6 +32,7 @@ sudo chown anyUser:anyUser /srv/node_snapshots.sh
 > Lighthouse, Nimbus: `5052`
 > Teku: `5051`
 > Lodestar: `9596`
+> Prysm: `3500`
 
 ## Configurate regular execution of the node snapshot processing
 - Open crontab

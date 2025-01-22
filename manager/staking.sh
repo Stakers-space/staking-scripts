@@ -257,7 +257,6 @@ generate_default_clients_conf_file() {
     mkdir -p "$config_dir"
     cat > "$config_dir/clients.conf" << EOF
 # staking clients definition
-executionClients="nethermind"
 executionServices="nethermind.service"
 beaconServices="lighthousebeacon.service"
 validatorServices="lighthouse-vi1.service lighthouse-vi2.service"
