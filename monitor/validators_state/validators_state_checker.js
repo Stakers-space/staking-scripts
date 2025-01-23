@@ -65,12 +65,15 @@ class Config {
                 }
             }
         }
-        console.log("└─ Config loaded from arguments:", this);
 
         // Helper function to set nested properties
         function setNestedProperty(obj, path, value) {
             const keys = path.split('.');
             let current = obj;
+
+            if (value === "true") value = true;
+            else if (value === "false") value = false;
+
             for (let i = 0; i < keys.length - 1; i++) {
                 if (!(keys[i] in current)) {
                     current[keys[i]] = {};
@@ -170,10 +173,13 @@ class MonitorValidators {
     }
 
     CronWorker(){ 
-        // set interval based on chain
-            // gnosis: 45 seconds
-            // ethereum: 5 minutes
-        this.cron = setInterval(app.Process, 45000); 
+        let cronInterval = 45000;
+        switch(app.config.chai){
+            case "gnosis": cronInterval = 45000; break;
+            case "ethereum": cronInterval = 300000; break;
+            default: console.log("CronWorker interval not defined for chain:", app.config.chain);
+        }
+        this.cron = setInterval(app.Process, cronInterval); 
     }
 
     Process(){
@@ -448,6 +454,7 @@ class MonitorValidators {
 app = new MonitorValidators();
 app.RecognizeChain(function(err){
     if(err) return console.error(err);
+    console.log("└─ Config loaded from arguments:", app.config);
     app.CronWorker();
     app.Process();
 });
