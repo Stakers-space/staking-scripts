@@ -44,8 +44,8 @@ node /srv/validators-monitor/validators_state_checker.js --pubkeys /srv/validato
 - `--pubkeys_dynamic` - Reload file for each epoch. Default value: `false`
 - Optional params
     - `--post` - Post state data on server. Default value: `false`
-    - `--post` - Post state data on server. Default value: `false`
     - `--encryption`: Use extra data encryption. Default value: `true`
+    - `--token_api`: Token for posting data to [Stakers.space dashboard](https://stakers.space/account)
     - `--server_id`: Server Id identificator for simple recognization of source of the data
 
 ## Configurate service

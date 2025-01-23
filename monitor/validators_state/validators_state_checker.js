@@ -47,7 +47,7 @@ class Config {
             /* account_id */
             {"--port": "beaconChainPort"},
             {"--epochsoffline_trigger": "trigger_numberOfPeriodesOffline"},
-            {"--pubkeys": "pubKeysList"},
+            {"--pubkeys": "pubKeysListPath"},
             {"--pubkeys_dynamic": "pubKeysList_dynamic"},
             {"--post": "postData.enabled"},
             {"--encryption": "postData.encryption.active"},
