@@ -183,6 +183,7 @@ class MonitorValidators {
     }
 
     Process(){
+        if(app.instances.ids_list.length === 0) return cb(app.config.chain, "| No instances to process");
         if(!app.isRunning){
             app.GetFinalityCheckpoint(function(err,resp){
                 if(err) {
@@ -220,10 +221,8 @@ class MonitorValidators {
 
         // Process Check
         app.ProcessCheck(0,0, epochNumber, function(err){
-            if(err) {
-               console.error("ProcessCheck err:",err); 
-               return;
-            }
+            if(err) return console.error("ProcessCheck err:",err); ;
+            
             const now = new Date().getTime();
             const totalProcessingTime = now - app.startTime;
 
