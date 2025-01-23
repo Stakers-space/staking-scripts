@@ -345,9 +345,9 @@ class MonitorValidators {
             try {  resp = JSON.parse(resp); } catch(e){ return cb(e); }
             
             let chainName = null;
-            switch(resp.data["DEPOSIT_CONTRACT_ADDRESS"]){
-                case "0x00000000219ab540356cBB839Cbe05303d7705Fa": chainName = "ethereum"; break;
-                case "0x0B98057eA310F4d31F2a452B414647007d1645d9": chainName = "gnosis"; break;
+            switch(resp.data["DEPOSIT_CONTRACT_ADDRESS"].toLowerCase()){
+                case "0x00000000219ab540356cbb839cbe05303d7705fa": chainName = "ethereum"; break;
+                case "0x0b98057ea310f4d31f2a452b414647007d1645d9": chainName = "gnosis"; break;
                 default: console.log("Chain not recognized | DEPOSIT_CONTRACT_ADDRESS:", resp.data["DEPOSIT_CONTRACT_ADDRESS"]);
             }
             app.config.chain = chainName;

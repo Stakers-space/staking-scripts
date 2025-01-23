@@ -35,7 +35,7 @@ sudo curl -o /srv/validators-monitor/public_keys_testlist.json https://raw.githu
 
 ## Launch The script
 ```
-node /srv/validators-monitor/validators_state_checker.js --pubkeys /srv/validators-monitor/public_keys_testlist.json
+node /srv/validators-monitor/validators_state_checker.js --port 9596 --pubkeys /srv/validators-monitor/public_keys_testlist.json
 ```
 ### Params
 - `--port` - beaconchain client API port. Check [Beacon client API page](https://github.com/Stakers-space/staking-scripts/tree/main/api_general/beacon-client) to get value for your client. Default value: `9596`
