@@ -1,4 +1,4 @@
-# Client(s) API to get data from Beaonchain
+# Client(s) API to get data from Beaconchain
 
 API is standardized across most consensus clients
 
@@ -20,6 +20,11 @@ Note: Change `PORT`, for the port used by the beaconchain client
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/validators?id=0xa1d1ad0714035353258038e964ae9675dc0252ee22cea896825c01458e1807bfad2f9969338798548d9858a571f7425c"` > Get validator info for pubid `0xa1d1ad0714035353258038e964ae9675dc0252ee22cea896825c01458e1807bfad2f9969338798548d9858a571f7425c`
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/rewards/blocks/16588429"` > Get rewards for slot `16588429`
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/finality_checkpoints"` > Get finality checkpoints
+
+### Config
+- `curl -X GET "http://localhost:5052/eth/v1/config/spec"` > Retrieve specification configuration used on the beacon node.
+   - "DEPOSIT_CONTRACT_ADDRESS": [0x00000000219ab540356cBB839Cbe05303d7705Fa](https://etherscan.io/address/0x00000000219ab540356cbb839cbe05303d7705fa) = Ethereum chain
+   - "DEPOSIT_CONTRACT_ADDRESS": [0x0B98057eA310F4d31F2a452B414647007d1645d9](https://gnosisscan.io/address/0x0b98057ea310f4d31f2a452b414647007d1645d9) = Gnosis chain
 
 ### Node
 - `curl -X GET "http://localhost:5052/eth/v1/node/identity"` > Get Node Identity

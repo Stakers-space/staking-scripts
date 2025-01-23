@@ -89,3 +89,18 @@ Modify the default content of your `clients.conf` for setting proper services na
     > - through real service name: `/usr/local/bin/staking.sh restart lighthousebeacon`
 - Get version: `/usr/local/bin/staking.sh version`
 - Print config : `/usr/local/bin/staking.sh config`
+
+
+## If you are running multiple chains simultaneously:
+- Option 1:
+    You can specify all services within the one `/usr/local/etc/staking/config/clients.conf` file, see:
+    ```
+    executionServices="gno-nethermind.service eth-nethermind.service"
+    beaconServices="gno-lighthousebeacon.service eth-lighthousebeacon.service"
+    validatorServices="gno-lighthouse-vi1.service gno-lighthouse-vi2.service eth-lighthouse-vi1.service eth-lighthouse-vi2.service"
+    ```
+- Option 2:
+    Make individual `/usr/local/bin/staking.sh` shell for each chains, e.g.
+    - `/usr/local/bin/gnosis-staking.sh`
+    - `/usr/local/bin/ethereum-staking.sh`
+    The util can be modified to support this option on demand. [Request it through Stakers.space](https://stakers.space/contact).

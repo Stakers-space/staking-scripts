@@ -1,7 +1,7 @@
-// Version 1.0.42
+// Version 1.0.43
 
 /* run on localhost through console
- * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json
+ * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
 */
 const crypto = require('crypto');
 const http = require('http');
@@ -12,7 +12,9 @@ var app = null;
 
 class Config {
     constructor(){
-        this.account_id = null;
+        this.chain = null;
+        //this.account_id = null;
+        this.server_id = null;
         this.api_token = null;
         this.pubKeysListPath = "./public_keys_testlist.json"; // service parameter, same as accout id and api_token
         this.pubKeysList_dynamic = false; // reload file data for each epoch?
@@ -20,6 +22,7 @@ class Config {
         this.trigger_numberOfPeriodesOffline = 4;
         this.indexesBanch = 200;
         this.postData = {
+            enabled: false,
             server:{
                 hostname: 'stakers.space',
                 path: '/api/validator-state',
@@ -39,40 +42,42 @@ class Config {
 
     LoadConfigFromArguments(){
         const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
-        const accountIdArgIndex = args.indexOf('--account_id');
-        if (accountIdArgIndex !== -1 && accountIdArgIndex + 1 < args.length) {
-            this.account_id = args[accountIdArgIndex + 1];
-            console.log(`├─ AccountId: ${this.account_id} from attached param`);
+        // --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 1
+        const params = [
+            /* account_id */
+            {"--port": "beaconChainPort"},
+            {"--epochsoffline_trigger": "trigger_numberOfPeriodesOffline"},
+            {"--pubkeys": "pubKeysList"},
+            {"--pubkeys_dynamic": "pubKeysList_dynamic"},
+            {"--post": "postData.enabled"},
+            {"--encryption": "postData.encryption.active"},
+            {"--token_api": "api_token"},
+            {"--server_id": "server_id"}
+        ];
+
+        for (const param of params) {
+            for (const [key, value] of Object.entries(param)) {
+                const paramIndex = args.indexOf(key);
+                if (paramIndex !== -1 && paramIndex + 1 < args.length) {
+                    const paramValue = args[paramIndex + 1];
+                    setNestedProperty(this, value, paramValue);
+                    console.log(`├─ ${value} set to: ${paramValue} from attached param`);
+                }
+            }
         }
-        const tokenApiArgIndex = args.indexOf('--token_api');
-        if (tokenApiArgIndex !== -1 && tokenApiArgIndex + 1 < args.length) {
-            this.api_token = args[tokenApiArgIndex + 1];
-            console.log(`├─ ApiToken: ${this.api_token} from attached param`);
-        }
-        const pubkeysArgIndex = args.indexOf('--pubkeys');
-        if (pubkeysArgIndex !== -1 && pubkeysArgIndex + 1 < args.length) {
-            const pubkeysPath = args[pubkeysArgIndex + 1];
-            this.pubKeysListPath = pubkeysPath;
-            this.pubKeysList = require(this.pubKeysListPath);
-            console.log(`├─ Pubkeys file set to: ${pubkeysPath} from attached param`);
-        }
-        const beaconChainPort_param = args.indexOf('--port');
-        if (beaconChainPort_param !== -1 && beaconChainPort_param + 1 < args.length) {
-            const beaconchainPort = args[beaconChainPort_param + 1];
-            this.beaconChainPort = beaconchainPort;
-            console.log(`├─ BeaconChain port set to: ${beaconchainPort} from attached param`);
-        }
-        const epochs_param = args.indexOf('--epochsoffline_trigger');
-        if (epochs_param !== -1 && epochs_param + 1 < args.length) {
-            const epochsOfflineTrigger = args[epochs_param + 1];
-            this.trigger_numberOfPeriodesOffline = epochsOfflineTrigger;
-            console.log(`├─ Trigger_numberOfPeriodesOffline set to: ${epochsOfflineTrigger} from attached param`);
-        }
-        const pubkeys_dynamic_param = args.indexOf('--pubkeys_dynamic');
-        if (pubkeys_dynamic_param !== -1 && pubkeys_dynamic_param + 1 < args.length) {
-            const pubkeys_dynamic = args[pubkeys_dynamic_param + 1];
-            this.pubKeysList_dynamic = (pubkeys_dynamic === "true") ? true : false;
-            console.log(`└─ PubKeysList_dynamic set to: ${this.pubKeysList_dynamic.toString()} from attached param`);
+        console.log("└─ Config loaded from arguments:", this);
+
+        // Helper function to set nested properties
+        function setNestedProperty(obj, path, value) {
+            const keys = path.split('.');
+            let current = obj;
+            for (let i = 0; i < keys.length - 1; i++) {
+                if (!(keys[i] in current)) {
+                    current[keys[i]] = {};
+                }
+                current = current[keys[i]];
+            }
+            current[keys[keys.length - 1]] = value;
         }
     }
 }
@@ -130,7 +135,6 @@ class StateCache {
 
 class PostObjectDataModel {
     constructor(epochNumber){
-        this.t = app.config.api_token;
         this.e = epochNumber; // epoch
         this.i = {};
     }
@@ -165,7 +169,12 @@ class MonitorValidators {
         process.on('SIGINT', this.cleanUpAndExit.bind(this));
     }
 
-    CronWorker(){ this.cron = setInterval(app.Process, 45000); }
+    CronWorker(){ 
+        // set interval based on chain
+            // gnosis: 45 seconds
+            // ethereum: 5 minutes
+        this.cron = setInterval(app.Process, 45000); 
+    }
 
     Process(){
         if(!app.isRunning){
@@ -238,7 +247,10 @@ class MonitorValidators {
             
             console.log("├─", postObj);
 
+            if(!app.config.postData.enabled) return;
+            
             postObj = JSON.stringify(postObj);
+
             if(app.config.postData.encryption.active) {
                 postObj = app.ExtraEncryption(postObj);
                 console.log("├─ Data encrypted to", postObj);
@@ -246,7 +258,7 @@ class MonitorValidators {
 
             app.HttpsRequest({
                 hostname: app.config.postData.server.hostname,
-                path: app.config.postData.server.path/* + "?a="+app.config.account_id*/,
+                path: `${app.config.postData.server.path}?n=${app.config.chain}&t=${app.config.api_token}`+(app.config.server_id ? `&s=${app.config.server_id}` : ''),
                 port: app.config.postData.server.port,
                 method: 'POST',
                 headers: {
@@ -315,6 +327,32 @@ class MonitorValidators {
 
             if(instanceIndex === app.instances.ids_list.length) return cb();
             app.ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb);
+        });
+    }
+
+    RecognizeChain(cb){
+        const options = {
+            hostname: 'localhost',
+            port: app.config.beaconChainPort,
+            path: `/eth/v1/config/spec`,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            }
+        }
+        this.HttpRequest(options, null, function(err,resp){
+            if(err) return cb(err);
+            try {  resp = JSON.parse(resp); } catch(e){ return cb(e); }
+            
+            let chainName = null;
+            switch(resp.data["DEPOSIT_CONTRACT_ADDRESS"]){
+                case "0x00000000219ab540356cBB839Cbe05303d7705Fa": chainName = "ethereum"; break;
+                case "0x0B98057eA310F4d31F2a452B414647007d1645d9": chainName = "gnosis"; break;
+                default: console.log("Chain not recognized | DEPOSIT_CONTRACT_ADDRESS:", resp.data["DEPOSIT_CONTRACT_ADDRESS"]);
+            }
+            app.config.chain = chainName;
+            console.log("├─ Recognized chain:", chainName);
+            return cb();
         });
     }
 
@@ -408,7 +446,10 @@ class MonitorValidators {
 
 // each 60 seconds = 1 epoch
 app = new MonitorValidators();
-app.CronWorker();
-app.Process();
+app.RecognizeChain(function(err){
+    if(err) return console.error(err);
+    app.CronWorker();
+    app.Process();
+});
 
 //console.log(JSON.parse(new MonitorValidators().DataDecryption(new MonitorValidators().ExtraEncryption(JSON.stringify({"i1":[1,2,3,4,5],"i6":[7,8,9,10]})))));

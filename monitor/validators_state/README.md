@@ -2,6 +2,14 @@
 
 This utility script monitors each pubkey from the list under `pubKeysList` param. See example list file [`public_keys_testlist.json`](https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_state/public_keys_testlist.json)
 
+## Supported networks:
+- Ethereum
+- Gnosis
+Network recognization is automatical, based on `deposit contract address` returned from [BeaconChain client API](https://github.com/Stakers-space/staking-scripts/tree/main/api_general/beacon-client).
+
+> [!NOTE]
+> This util allows to track status of your validators on your own. If you prefer external monitoring, you can just simply set your pubkeys at [https://stakers.space/account](https://stakers.space/account) service. All sensitive data are encrypted.
+
 ## Installation
 - Check the `validators_state_checker.js` script
 ```
@@ -30,11 +38,15 @@ sudo curl -o /srv/validators-monitor/public_keys_testlist.json https://raw.githu
 node /srv/validators-monitor/validators_state_checker.js --pubkeys /srv/validators-monitor/public_keys_testlist.json
 ```
 ### Params
-- `--port` - beaconchain port. Default value: `9596` 
+- `--port` - beaconchain client API port. Check [Beacon client API page](https://github.com/Stakers-space/staking-scripts/tree/main/api_general/beacon-client) to get value for your client. Default value: `9596`
 - `--epochsoffline_trigger` - Number of successive epochs for which the validator ID must be reported as offline to trigger notification. Default value: `4`
 - `--pubkeys` - Path to pubkeys file. Default value: `./public_keys_testlist.json`
 - `--pubkeys_dynamic` - Reload file for each epoch. Default value: `false`
-
+- Optional params
+    - `--post` - Post state data on server. Default value: `false`
+    - `--post` - Post state data on server. Default value: `false`
+    - `--encryption`: Use extra data encryption. Default value: `true`
+    - `--server_id`: Server Id identificator for simple recognization of source of the data
 
 ## Configurate service
 - Define service user `stakersspace` (if does not exists yet)
