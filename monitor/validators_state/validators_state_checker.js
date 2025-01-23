@@ -183,7 +183,7 @@ class MonitorValidators {
     }
 
     Process(){
-        if(app.instances.ids_list.length === 0) return cb(app.config.chain, "| No instances to process");
+        if(app.instances.ids_list.length === 0) return console.log(app.config.chain, "| No instances to process");
         if(!app.isRunning){
             app.GetFinalityCheckpoint(function(err,resp){
                 if(err) {
