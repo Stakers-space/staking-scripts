@@ -174,7 +174,7 @@ class MonitorValidators {
 
     CronWorker(){ 
         let cronInterval = 45000;
-        switch(app.config.chai){
+        switch(app.config.chain){
             case "gnosis": cronInterval = 45000; break;
             case "ethereum": cronInterval = 300000; break;
             default: console.log("CronWorker interval not defined for chain:", app.config.chain);
