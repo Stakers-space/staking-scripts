@@ -1,4 +1,4 @@
-// Version 1.0.43
+// Version 1.0.44
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
@@ -141,11 +141,13 @@ class PostObjectDataModel {
         this.e = epochNumber; // epoch
         this.i = {};
     }
-    AddInstance(instanceId, instanceValidators, offlineValidators){
+    AddInstance(instanceId, instanceValidators, offlineValidators, exitedValidators, pendingValidators){
         this.i[instanceId] = {
             v:instanceValidators,
             o:offlineValidators
         }
+        if(exitedValidators.length > 0) this.i[instanceId].e = exitedValidators;
+        if(pendingValidators.length > 0) this.i[instanceId].p = pendingValidators;
     }
 }
 
@@ -228,53 +230,101 @@ class MonitorValidators {
 
             // generate post object
             var postObj = new PostObjectDataModel(epochNumber);
+
+            let promises = [];
             
-            let online = 0,
-                total = 0,
-                offline = [];
+            let online = 0, total = 0,
+                offline = [], exited = [], pending = [], withdrawal = [];
             
             for (const [instanceId, report] of Object.entries(app.instances.aggregatedStates)) {
+                total += report.c; // total nuber of keys
                 
-                const offlineValidators = report.o.length,
-                      onlineValidators = report.c - offlineValidators;
-    
-                // Add instance into report
-                if(offlineValidators > 0) postObj.AddInstance(instanceId, report.c, report.o);
-                console.log(`|  ├─ ${instanceId} | online ${onlineValidators}/${report.c} | offline (${offlineValidators}): ${report.o}`);
-                // account aggregation
-                total += report.c;
-                online += onlineValidators;
-                if(report.o.length > 0) offline.push(...report.o);
+                let promise = new Promise((resolve, reject) => {
+                    // check only pubids detected as offline (report.o)
+                    app.GetValidatorsState(epochNumber, report.o, function(err, data) {
+                        if (err) return reject(err);
+
+                        // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
+                        console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", data);
+                        
+                        let i_offline = [], i_exited = [], i_pending = [], i_withdrawal = [], i_unknown = [];
+
+                        for(const valObj of data.data){
+                            switch(valObj.status){
+                                case "active_ongoing": // must be attesting
+                                case "active_exiting": // still active, but filed a voluntary request
+                                case "active_slashed": // still active, but have a slashed status
+                                    i_offline.push(valObj.index);
+                                    offline.push(valObj.index);
+                                    break;
+                                case "exited_unslashed":
+                                case "exited_slashed":
+                                    i_exited.push(valObj.index);
+                                    exited.push(valObj.index);
+                                    break;
+                                case "pending_initialized":
+                                case "pending_queued":
+                                    i_pending.push(valObj.index);
+                                    pending.push(valObj.index);
+                                    break;
+                                case "withdrawal_possible":
+                                case "withdrawal_done":
+                                    i_withdrawal.push(valObj.index);
+                                    withdrawal.push(valObj.index);
+                                    break;
+                                default:
+                                    i_unknown.push(valObj.index);
+                            }
+                        };
+                        
+                        // Add instance into report
+                        if(i_offline.length > 0) postObj.AddInstance(instanceId, report.c, i_offline, i_exited, i_pending);
+                        
+                        const onlineValidators = report.c - i_offline.length - i_exited.length - i_pending.length - i_withdrawal.length - i_unknown.length;
+                        console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || P: ${i_pending.length} | E: ${i_exited.length} | W: ${i_withdrawal.length} | U: ${i_unknown.length} || Offline (${i_offline.length})`, i_offline);               
+                        online += onlineValidators;
+                        resolve();
+                    });
+                });
+                promises.push(promise);
             }
-            console.log(`|  └─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
 
-            if (app.config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
-            
-            console.log("├─", postObj);
+            Promise.all(promises)
+            .then(() => {
+                console.log(`|  └─ Sumarization: online ${online}/${total} | offline (${offline.length}): ${offline.toString()}`);
 
-            if(!app.config.postData.enabled) return;
-            
-            postObj = JSON.stringify(postObj);
+                if (app.config.detailedLog) console.log('├─ OfflineTracker_periodesCache:', app.offlineTracker_periodesCache);
+                
+                console.log("├─", postObj);
 
-            if(app.config.postData.encryption.active) {
-                postObj = app.ExtraEncryption(postObj);
-                console.log("├─ Data encrypted to", postObj);
-            }
+                if(!app.config.postData.enabled) return;
+                
+                postObj = JSON.stringify(postObj);
 
-            app.HttpsRequest({
-                hostname: app.config.postData.server.hostname,
-                path: `${app.config.postData.server.path}?n=${app.config.chain}&t=${app.config.api_token}`+(app.config.server_id ? `&s=${app.config.server_id}` : ''),
-                port: app.config.postData.server.port,
-                method: 'POST',
-                headers: {
-                    'Content-Type': (app.config.postData.encryption.active) ? 'text/plain' : 'application/json',
-                    'Content-Length': postObj.length
+                if(app.config.postData.encryption.active) {
+                    postObj = app.ExtraEncryption(postObj);
+                    console.log("├─ Data encrypted to", postObj);
                 }
-            }, postObj, function(err, res){
-                if(err) console.log(err);
-                console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}ms`, res);
-                app.isRunning = false;
+
+                app.HttpsRequest({
+                    hostname: app.config.postData.server.hostname,
+                    path: `${app.config.postData.server.path}?n=${app.config.chain}&t=${app.config.api_token}`+(app.config.server_id ? `&s=${app.config.server_id}` : ''),
+                    port: app.config.postData.server.port,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': (app.config.postData.encryption.active) ? 'text/plain' : 'application/json',
+                        'Content-Length': postObj.length
+                    }
+                }, postObj, function(err, res){
+                    if(err) console.log(err);
+                    console.log(`└── ${now} MonitorValidators | completed in ${totalProcessingTime}ms`, res);
+                    app.isRunning = false;
+                });
+            })
+            .catch((err) => {
+                console.error("Error:", err);
             });
+            
         });
     }
 
@@ -412,6 +462,31 @@ class MonitorValidators {
         };
         this.HttpRequest(options, body, cb);
     }
+
+    GetValidatorsState(epoch, pubIdsArr, cb){
+        const body = JSON.stringify({ids: pubIdsArr, statuses:null});
+
+        const options = {
+            hostname: 'localhost',
+            port: app.config.beaconChainPort,
+            //path: `/eth/v1/beacon/states/${epoch}/validators`,
+            path: `/eth/v1/beacon/states/head/validators`,
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Length': body.length
+            }
+        };
+
+        this.HttpRequest(options, body, function(err,data){
+            if(err) return cb(err, null);
+            try {
+                return cb(null, JSON.parse(data));
+            } catch(e){
+                return cb(e, null);
+            }
+        });
+    };
 
     ExtraEncryption(strData){
         var cipher = crypto.createCipheriv('aes-256-cbc', app.config.postData.encryption.key, app.config.postData.encryption.iv),
