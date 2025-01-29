@@ -472,19 +472,20 @@ class MonitorValidators {
         if(pubIdsArr.length === 0) return cb(null, {"data":[]});
 
         const body = JSON.stringify({ids: pubIdsArr/*pubIdsArr.map(String)*/});
-        console.log("GetValidatorsState | postBody:", body);
-
+        
         const options = {
             hostname: 'localhost',
             port: app.config.beaconChainPort,
-            path: `/eth/v1/beacon/states/${epoch}/validators`,
-            //path: `/eth/v1/beacon/states/head/validators`,
+            //path: `/eth/v1/beacon/states/${epoch}/validators`,
+            path: `/eth/v1/beacon/states/head/validators`,
             method: 'POST',
             headers: {
-                'Accept': 'application/json',
-                'Content-Length': body.length
+                'Accept': 'application/json'/*,
+                'Content-Length': body.length*/
             }
         };
+
+        console.log("GetValidatorsState | postBody:", options);
 
         this.HttpRequest(options, body, function(err,data){
             console.log(err, data);
