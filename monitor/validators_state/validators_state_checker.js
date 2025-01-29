@@ -1,4 +1,4 @@
-// Version 1.0.46
+// Version 1.0.47
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
@@ -245,12 +245,15 @@ class MonitorValidators {
                     let oIds = [];
                     for(const offObj of report.o){ oIds.push(offObj.i) }
 
-                    app.GetValidatorsState(epochNumber, oIds, function(err, data) {
+                    app.GetValidatorsState(oIds, function(err, data) {
                         if (err) return reject({"iid": instanceId, "message": err});
-                        if(data.code === 500) return reject({"iid": instanceId, "message 500": data.message});
+                        if(data.code === 500) {
+                            console.error({"iid": instanceId, "message 500": data.message});
+                            return resolve();
+                        }
 
                         // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
-                        console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", report.o, "→", data);
+                        //console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", report.o, "→", data);
                         
                         let i_offline = [], i_exited = [], i_pending = [], i_withdrawal = [], i_unknown = [];
 
@@ -468,27 +471,26 @@ class MonitorValidators {
         this.HttpRequest(options, body, cb);
     }
 
-    GetValidatorsState(epoch, pubIdsArr, cb){
+    GetValidatorsState(pubIdsArr, cb){
         if(pubIdsArr.length === 0) return cb(null, {"data":[]});
 
-        const body = JSON.stringify({ids: pubIdsArr/*pubIdsArr.map(String)*/});
+        const body = JSON.stringify({ ids: pubIdsArr/*pubIdsArr.map(String)*/} );
         
         const options = {
             hostname: 'localhost',
             port: app.config.beaconChainPort,
-            //path: `/eth/v1/beacon/states/${epoch}/validators`,
             path: `/eth/v1/beacon/states/head/validators`,
             method: 'POST',
             headers: {
-                'Accept': 'application/json'/*,
-                'Content-Length': body.length*/
+                'Content-Type': 'application/json',
+                'Content-Length': body.length
             }
         };
 
-        console.log("GetValidatorsState | postBody:", options);
+        //console.log("GetValidatorsState | postBody:", options, body);
 
         this.HttpRequest(options, body, function(err,data){
-            console.log(err, data);
+            //console.log(err, data);
             if(err) return cb(err, null);
             try {
                 return cb(null, JSON.parse(data));
