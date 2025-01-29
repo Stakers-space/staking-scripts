@@ -181,7 +181,7 @@ class MonitorValidators {
             case "ethereum": cronInterval = 300000; break;
             default: console.log("CronWorker interval not defined for chain:", app.config.chain);
         }
-        this.cron = setInterval(app.Process, cronInterval); 
+        app.cron = setInterval(app.Process, cronInterval); 
     }
 
     Process(){
