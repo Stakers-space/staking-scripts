@@ -1,4 +1,4 @@
-// Version 1.0.45
+// Version 1.0.46
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
@@ -242,8 +242,8 @@ class MonitorValidators {
                 let promise = new Promise((resolve, reject) => {
                     // check only pubids detected as offline (report.o)
                     app.GetValidatorsState(epochNumber, report.o, function(err, data) {
-                        if (err) return reject({"instance": instanceId, "message": err});
-                        if(data.code === 500) return reject({"instance": instanceId, "message": data.message});
+                        if (err) return reject({"iid": instanceId, "message": err});
+                        if(data.code === 500) return reject({"iid": instanceId, "message": data.message});
 
                         // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
                         console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", report.o, "→", data);
@@ -467,13 +467,13 @@ class MonitorValidators {
     GetValidatorsState(epoch, pubIdsArr, cb){
         if(pubIdsArr.length === 0) return cb(null, {"data":[]});
 
-        const body = JSON.stringify({ids: pubIdsArr});
+        const body = JSON.stringify({ids: pubIdsArr.map(String)});
 
         const options = {
             hostname: 'localhost',
             port: app.config.beaconChainPort,
-            //path: `/eth/v1/beacon/states/${epoch}/validators`,
-            path: `/eth/v1/beacon/states/head/validators`,
+            path: `/eth/v1/beacon/states/${epoch}/validators`,
+            //path: `/eth/v1/beacon/states/head/validators`,
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
