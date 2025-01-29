@@ -247,7 +247,7 @@ class MonitorValidators {
 
                     app.GetValidatorsState(epochNumber, oIds, function(err, data) {
                         if (err) return reject({"iid": instanceId, "message": err});
-                        if(data.code === 500) return reject({"iid": instanceId, "message": data.message});
+                        if(data.code === 500) return reject({"iid": instanceId, "message 500": data.message});
 
                         // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
                         console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", report.o, "→", data);
@@ -487,6 +487,7 @@ class MonitorValidators {
         };
 
         this.HttpRequest(options, body, function(err,data){
+            console.log(err, data);
             if(err) return cb(err, null);
             try {
                 return cb(null, JSON.parse(data));
