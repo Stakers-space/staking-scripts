@@ -243,6 +243,7 @@ class MonitorValidators {
                     // check only pubids detected as offline (report.o)
                     app.GetValidatorsState(epochNumber, report.o, function(err, data) {
                         if (err) return reject(err);
+                        if(data.code === 500) return reject(data.message);
 
                         // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
                         console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", data);
@@ -464,7 +465,10 @@ class MonitorValidators {
     }
 
     GetValidatorsState(epoch, pubIdsArr, cb){
+        if(pubIdsArr.length === 0) return cb(null, {"data":[]});
+
         const body = JSON.stringify({ids: pubIdsArr, statuses:null});
+        console.log("GetValidatorsState",body);
 
         const options = {
             hostname: 'localhost',
