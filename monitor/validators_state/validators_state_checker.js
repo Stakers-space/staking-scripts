@@ -1,4 +1,4 @@
-// Version 1.0.44
+// Version 1.0.45
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
@@ -467,8 +467,7 @@ class MonitorValidators {
     GetValidatorsState(epoch, pubIdsArr, cb){
         if(pubIdsArr.length === 0) return cb(null, {"data":[]});
 
-        const body = JSON.stringify({ids: pubIdsArr, statuses:null});
-        console.log("GetValidatorsState",body);
+        const body = JSON.stringify({ids: pubIdsArr});
 
         const options = {
             hostname: 'localhost',
