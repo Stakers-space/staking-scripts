@@ -241,7 +241,11 @@ class MonitorValidators {
                 
                 let promise = new Promise((resolve, reject) => {
                     // check only pubids detected as offline (report.o)
-                    app.GetValidatorsState(epochNumber, report.o, function(err, data) {
+
+                    let oIds = [];
+                    for(const offObj of report.o){ oIds.push(offObj.i) }
+
+                    app.GetValidatorsState(epochNumber, oIds, function(err, data) {
                         if (err) return reject({"iid": instanceId, "message": err});
                         if(data.code === 500) return reject({"iid": instanceId, "message": data.message});
 
@@ -467,7 +471,7 @@ class MonitorValidators {
     GetValidatorsState(epoch, pubIdsArr, cb){
         if(pubIdsArr.length === 0) return cb(null, {"data":[]});
 
-        const body = JSON.stringify({ids: pubIdsArr.map(String)});
+        const body = JSON.stringify({ids: pubIdsArr/*pubIdsArr.map(String)*/});
         console.log("GetValidatorsState | postBody:", body);
 
         const options = {
