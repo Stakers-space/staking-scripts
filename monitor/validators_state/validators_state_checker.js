@@ -242,11 +242,11 @@ class MonitorValidators {
                 let promise = new Promise((resolve, reject) => {
                     // check only pubids detected as offline (report.o)
                     app.GetValidatorsState(epochNumber, report.o, function(err, data) {
-                        if (err) return reject(err);
-                        if(data.code === 500) return reject(data.message);
+                        if (err) return reject({"instance": instanceId, "message": err});
+                        if(data.code === 500) return reject({"instance": instanceId, "message": data.message});
 
                         // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
-                        console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", data);
+                        console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", report.o, "→", data);
                         
                         let i_offline = [], i_exited = [], i_pending = [], i_withdrawal = [], i_unknown = [];
 
