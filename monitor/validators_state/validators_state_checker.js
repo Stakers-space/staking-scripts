@@ -468,6 +468,7 @@ class MonitorValidators {
         if(pubIdsArr.length === 0) return cb(null, {"data":[]});
 
         const body = JSON.stringify({ids: pubIdsArr.map(String)});
+        console.log("GetValidatorsState | postBody:", body);
 
         const options = {
             hostname: 'localhost',
