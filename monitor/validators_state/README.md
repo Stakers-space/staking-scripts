@@ -5,6 +5,7 @@ This utility script monitors each pubkey from the list under `pubKeysList` param
 ## Supported networks:
 - Ethereum
 - Gnosis
+
 Network recognization is automatical, based on `deposit contract address` returned from [BeaconChain client API](https://github.com/Stakers-space/staking-scripts/tree/main/api_general/beacon-client).
 
 > [!NOTE]

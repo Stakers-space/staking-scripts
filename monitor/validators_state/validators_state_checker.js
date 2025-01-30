@@ -1,4 +1,4 @@
-// Version 1.0.48
+// Version 1.0.49
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
@@ -242,16 +242,15 @@ class MonitorValidators {
                     // check only pubids detected as offline (report.o)
                     app.SegmentValidatorsByState(report.o, function(err, validator_states) { // validator_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] };
                         if (err) return reject({"iid": instanceId, "message": err});
+                        //console.log("SegmentValidatorsByState | validator_states:", validator_states)
 
-                        console.log("SegmentValidatorsByState | validator_states:", validator_states)
-
-                        // Add instance into report
                         const instanceOfflineCount = validator_states.offline.length,
                               instancePendingCount = validator_states.pending.length,
                               instanceExitedCount = validator_states.exited.length,
                               instanceWithdrawalCount = validator_states.withdrawal.length,
                               instanceUnknownCount = validator_states.unknown.length;
 
+                        // Add instance into report
                         if(instanceOfflineCount > 0) postObj.AddInstance(instanceId, report.c, validator_states.offline, instanceExitedCount, instancePendingCount);
                         
                         const onlineValidators = report.c - validator_states.offline.length - instanceExitedCount - instancePendingCount - instanceWithdrawalCount - instanceUnknownCount;
@@ -299,7 +298,6 @@ class MonitorValidators {
             .catch((err) => {
                 console.error("Error:", err);
             });
-            
         });
     }
 
@@ -467,7 +465,7 @@ class MonitorValidators {
             if(parsedResp.code === 500) return cb(data.message, output_states);
 
             if(parsedResp.data){
-                for(const valObj of data.data){
+                for(const valObj of parsedResp.data){
                     // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
                     switch(valObj.status){
                         case "active_ongoing": // must be attesting
