@@ -4,7 +4,16 @@ This utility script monitors SSD, RAM / SWAP usage and network data and make the
 
 ![Resources usage Chart](https://github.com/Stakers-space/staking-scripts/blob/main/monitor/node_state_snapshots/server-resources-chart.png?raw=true)
 
-## Installation
+## Features
+- Tracking data on server and automatic sending of them to the [StakersSpace cloud](https://stakers.space/). Data is sent at a custom interval defined in `crontab`, and displazed in a time chart on [StakersSpace dashboard](https://stakers.space/dashboard). The dashboard displays the last 100 timeframes.
+    - Disk usage is percentages
+    - Ram usage in percentages
+    - SWAP memmory usage in percentages
+    - Number of connected peers in the beacon client (supports all clients, including Lighthouse, Lodestar, Teku, Prysm, Nimbus, etc.)
+    - VPN status – connection state to the VPN + VPN server identification (supports general WireGuard configuration and the Mullvad VPN client)
+    - Option to send data to an alternative server (see `api_url` flag)
+
+## Util Installation
 - Check the `node_snapshots.sh` script
 ```
 curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/monitor/node_state_snapshots/node_snapshots.sh

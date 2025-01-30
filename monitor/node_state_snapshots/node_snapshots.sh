@@ -119,7 +119,28 @@ get_vpn_status() {
     # Check VPN status
     vpn_status="Unavailable"
     vpn_server="N/A"
-    if command -v mullvad &> /dev/null; then
+
+    if command -v wg &> /dev/null; then
+        # WireGuard VPN
+        interfaces=$(sudo wg show interfaces 2>/dev/null)
+        if [ -n "$interfaces" ]; then
+            for iface in $interfaces; do
+                peers=$(sudo wg show "$iface" peers 2>/dev/null)
+                if [ -n "$peers" ]; then
+                    vpn_status="Connected"
+                    vpn_server="$iface"
+                    break
+                fi
+            done
+
+            if [ "$vpn_status" != "Connected" ]; then
+                vpn_status="Disconnected"
+            fi
+        else
+            vpn_status="Disconnected"
+        fi
+    elif command -v mullvad &> /dev/null; then
+        # Mullvad client VPN
         vpn_output=$(mullvad status 2>/dev/null)
 
         connected=$(echo "$vpn_output" | grep -m 1 -E "Connected|Disconnected" | awk '{print $1}')
@@ -133,24 +154,12 @@ get_vpn_status() {
         else
             vpn_status="Unknown"
         fi
-        
-        #if [[ $vpn_output == *"Connecting to"* ]]; then
-        #    vpn_status="Connecting"
-        #    vpn_server=$(echo "$vpn_output" | grep -oP '(?<=Connecting to )[^ ]+')
-        #elif [[ $vpn_output == *"Connected to"* ]]; then
-        #    vpn_status="Connected"
-        #    vpn_server=$(echo "$vpn_output" | grep -oP '(?<=Connected to )[^ ]+')
-        #elif [[ $vpn_output == *"Disconnected"* ]]; then
-        #    vpn_status="Disconnected"
-        #else
-        #    vpn_status="Unknown"
-        #fi
     else
-        vpn_status="Mullvad Not Installed"
+        # No or other VPN client / configuration
+        echo "Neither WireGuard nor Mullvad VPN Installed"
     fi
 }
 get_vpn_status
-
 
 get_beacon_peers_count() {
     # get consensus peers (saved by logmonitor) - read from tmp file

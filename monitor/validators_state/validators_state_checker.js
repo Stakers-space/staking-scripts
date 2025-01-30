@@ -146,8 +146,8 @@ class PostObjectDataModel {
             v:instanceValidators,
             o:offlineValidators
         }
-        if(exitedValidators.length > 0) this.i[instanceId].e = exitedValidators;
-        if(pendingValidators.length > 0) this.i[instanceId].p = pendingValidators;
+        if(exitedValidators > 0) this.i[instanceId].e = exitedValidators;
+        if(pendingValidators > 0) this.i[instanceId].p = pendingValidators;
     }
 }
 
@@ -286,10 +286,12 @@ class MonitorValidators {
                         };
                         
                         // Add instance into report
-                        if(i_offline.length > 0) postObj.AddInstance(instanceId, report.c, i_offline, i_exited, i_pending);
+                        const instancePendingCount = i_pending.length,
+                              instanceExitedCount = i_exited.length;
+                        if(i_offline.length > 0) postObj.AddInstance(instanceId, report.c, i_offline, instanceExitedCount, instancePendingCount);
                         
-                        const onlineValidators = report.c - i_offline.length - i_exited.length - i_pending.length - i_withdrawal.length - i_unknown.length;
-                        console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || P: ${i_pending.length} | E: ${i_exited.length} | W: ${i_withdrawal.length} | U: ${i_unknown.length} || Offline (${i_offline.length})`, i_offline);               
+                        const onlineValidators = report.c - i_offline.length - instanceExitedCount - instancePendingCount - i_withdrawal.length - i_unknown.length;
+                        console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || P: ${instancePendingCount} | E: ${instanceExitedCount} | W: ${i_withdrawal.length} | U: ${i_unknown.length} || Offline (${i_offline.length})`, i_offline);               
                         online += onlineValidators;
                         resolve();
                     });
