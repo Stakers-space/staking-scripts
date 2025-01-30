@@ -1,4 +1,4 @@
-// Version 1.0.47
+// Version 1.0.48
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
@@ -233,66 +233,29 @@ class MonitorValidators {
 
             let promises = [];
             
-            let online = 0, total = 0,
-                offline = [], exited = [], pending = [], withdrawal = [];
+            let total = 0, online = 0, offline = [];
             
             for (const [instanceId, report] of Object.entries(app.instances.aggregatedStates)) {
                 total += report.c; // total nuber of keys
                 
                 let promise = new Promise((resolve, reject) => {
                     // check only pubids detected as offline (report.o)
-
-                    let oIds = [];
-                    for(const offObj of report.o){ oIds.push(offObj.i) }
-
-                    app.GetValidatorsState(oIds, function(err, data) {
+                    app.SegmentValidatorsByState(report.o, function(err, validator_states) { // validator_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] };
                         if (err) return reject({"iid": instanceId, "message": err});
-                        if(data.code === 500) {
-                            console.error({"iid": instanceId, "message 500": data.message});
-                            return resolve();
-                        }
 
-                        // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
-                        //console.log("|  ├─ Instance", instanceId, "| offline ids snapshot:", report.o, "→", data);
-                        
-                        let i_offline = [], i_exited = [], i_pending = [], i_withdrawal = [], i_unknown = [];
-
-                        for(const valObj of data.data){
-                            switch(valObj.status){
-                                case "active_ongoing": // must be attesting
-                                case "active_exiting": // still active, but filed a voluntary request
-                                case "active_slashed": // still active, but have a slashed status
-                                    i_offline.push(valObj.index);
-                                    offline.push(valObj.index);
-                                    break;
-                                case "exited_unslashed":
-                                case "exited_slashed":
-                                    i_exited.push(valObj.index);
-                                    exited.push(valObj.index);
-                                    break;
-                                case "pending_initialized":
-                                case "pending_queued":
-                                    i_pending.push(valObj.index);
-                                    pending.push(valObj.index);
-                                    break;
-                                case "withdrawal_possible":
-                                case "withdrawal_done":
-                                    i_withdrawal.push(valObj.index);
-                                    withdrawal.push(valObj.index);
-                                    break;
-                                default:
-                                    i_unknown.push(valObj.index);
-                            }
-                        };
-                        
                         // Add instance into report
-                        const instancePendingCount = i_pending.length,
-                              instanceExitedCount = i_exited.length;
-                        if(i_offline.length > 0) postObj.AddInstance(instanceId, report.c, i_offline, instanceExitedCount, instancePendingCount);
+                        const instanceOfflineCount = validator_states.offline.length,
+                              instancePendingCount = validator_states.pending.length,
+                              instanceExitedCount = validator_states.exited.length,
+                              instanceWithdrawalCount = validator_states.withdrawal.length,
+                              instanceUnknownCount = validator_states.unknown.length;
+
+                        if(instanceOfflineCount > 0) postObj.AddInstance(instanceId, report.c, validator_states.offline, instanceExitedCount, instancePendingCount);
                         
-                        const onlineValidators = report.c - i_offline.length - instanceExitedCount - instancePendingCount - i_withdrawal.length - i_unknown.length;
-                        console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || P: ${instancePendingCount} | E: ${instanceExitedCount} | W: ${i_withdrawal.length} | U: ${i_unknown.length} || Offline (${i_offline.length})`, i_offline);               
+                        const onlineValidators = report.c - validator_states.offline.length - instanceExitedCount - instancePendingCount - instanceWithdrawalCount - instanceUnknownCount;
+                        console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || P: ${instancePendingCount} | E: ${instanceExitedCount} | W: ${instanceWithdrawalCount} | U: ${instanceUnknownCount} || Offline (${instanceOfflineCount})`, validator_states.offline);               
                         online += onlineValidators;
+                        offline.push(...validator_states.offline);
                         resolve();
                     });
                 });
@@ -473,32 +436,62 @@ class MonitorValidators {
         this.HttpRequest(options, body, cb);
     }
 
-    GetValidatorsState(pubIdsArr, cb){
-        if(pubIdsArr.length === 0) return cb(null, {"data":[]});
+    SegmentValidatorsByState(offlineDetected, cb){
+        if(offlineDetected.length === 0) return cb(null, {"data":[]});
 
-        const body = JSON.stringify({ ids: pubIdsArr/*pubIdsArr.map(String)*/} );
-        
+        let output_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] }; // = output
+
+        let pubIdsArr = [], pubId_data = {}; // working
+        for(const offObj of offlineDetected){ pubIdsArr.push(offObj.i); pubId_data[offObj.i] = offObj; }
+
+        const body = JSON.stringify({ ids: pubIdsArr} );
         const options = {
             hostname: 'localhost',
             port: app.config.beaconChainPort,
             path: `/eth/v1/beacon/states/head/validators`,
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': body.length
-            }
+            headers: { 'Content-Type': 'application/json', 'Content-Length': body.length }
         };
-
-        //console.log("GetValidatorsState | postBody:", options, body);
 
         this.HttpRequest(options, body, function(err,data){
             //console.log(err, data);
-            if(err) return cb(err, null);
+            if(err) return cb(err, output_states);
+            let parsedResp = {};
             try {
-                return cb(null, JSON.parse(data));
+                parsedResp = JSON.parse(data);
             } catch(e){
-                return cb(e, null);
+                return cb(e, output_states);
             }
+
+            if(parsedResp.code === 500) return cb(data.message, output_states);
+
+            if(parsedResp.data){
+                for(const valObj of data.data){
+                    // validator status list: https://hackmd.io/ofFJ5gOmQpu1jjHilHbdQQ
+                    switch(valObj.status){
+                        case "active_ongoing": // must be attesting
+                        case "active_exiting": // still active, but filed a voluntary request
+                        case "active_slashed": // still active, but have a slashed status
+                            output_states.offline.push(pubId_data[valObj.index]);
+                            break;
+                        case "exited_unslashed":
+                        case "exited_slashed":
+                            output_states.exited.push(pubId_data[valObj.index]);
+                            break;
+                        case "pending_initialized":
+                        case "pending_queued":
+                            output_states.pending.push(pubId_data[valObj.index]);
+                            break;
+                        case "withdrawal_possible":
+                        case "withdrawal_done":
+                            output_states.withdrawal.push(pubId_data[valObj.index]);
+                            break;
+                        default:
+                            output_states.unknown.push(pubId_data[valObj.index]);
+                    }
+                };
+            }
+            return cb(null, output_states);
         });
     };
 
