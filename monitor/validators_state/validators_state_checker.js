@@ -439,10 +439,8 @@ class MonitorValidators {
     }
 
     SegmentValidatorsByState(offlineDetected, cb){
-        console.log("SegmentValidatorsByState input:", offlineDetected);
-        if(offlineDetected.length === 0) return cb(null, {"data":[]});
-
         let output_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] }; // = output
+        if(offlineDetected.length === 0) return cb(null, output_states);
 
         let pubIdsArr = [], pubId_data = {}; // working
         for(const offObj of offlineDetected){ pubIdsArr.push(offObj.i); pubId_data[offObj.i] = offObj; }
