@@ -1,4 +1,4 @@
-// Version 1.0.49
+// Version 1.1.0
 
 /* run on localhost through console
  * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
@@ -251,7 +251,7 @@ class MonitorValidators {
                               instanceUnknownCount = validator_states.unknown.length;
 
                         // Add instance into report
-                        if(instanceOfflineCount > 0) postObj.AddInstance(instanceId, report.c, validator_states.offline, instanceExitedCount, instancePendingCount);
+                        if(instanceOfflineCount > 0 || instancePendingCount > 0 || instanceExitedCount > 0) postObj.AddInstance(instanceId, report.c, validator_states.offline, instanceExitedCount, instancePendingCount);
                         
                         const onlineValidators = report.c - validator_states.offline.length - instanceExitedCount - instancePendingCount - instanceWithdrawalCount - instanceUnknownCount;
                         console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || P: ${instancePendingCount} | E: ${instanceExitedCount} | W: ${instanceWithdrawalCount} | U: ${instanceUnknownCount} || Offline (${instanceOfflineCount})`, validator_states.offline);               
