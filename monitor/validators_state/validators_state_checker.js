@@ -243,6 +243,8 @@ class MonitorValidators {
                     app.SegmentValidatorsByState(report.o, function(err, validator_states) { // validator_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] };
                         if (err) return reject({"iid": instanceId, "message": err});
 
+                        console.log("SegmentValidatorsByState | validator_states:", validator_states)
+
                         // Add instance into report
                         const instanceOfflineCount = validator_states.offline.length,
                               instancePendingCount = validator_states.pending.length,
@@ -437,6 +439,7 @@ class MonitorValidators {
     }
 
     SegmentValidatorsByState(offlineDetected, cb){
+        console.log("SegmentValidatorsByState input:", offlineDetected);
         if(offlineDetected.length === 0) return cb(null, {"data":[]});
 
         let output_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] }; // = output
