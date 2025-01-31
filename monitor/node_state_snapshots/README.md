@@ -26,10 +26,11 @@ sudo curl -o /srv/node_snapshots.sh https://raw.githubusercontent.com/Stakers-sp
 ```
 sudo chmod +x /srv/node_snapshots.sh
 ```
-- Change script ownership
-```
-sudo chown anyUser:anyUser /srv/node_snapshots.sh
-```
+> [!TIP]
+> You can change ownership of the script from `root` to different user
+> - Create `stakersspace` user (if needed): `sudo useradd --system --no-create-home --shell /bin/false stakersspace`
+> - Change ownership: `sudo chown stakersspace:stakersspace /srv/node_snapshots.sh`
+
 
 ## Test The Util
 ```
@@ -44,6 +45,10 @@ sudo chown anyUser:anyUser /srv/node_snapshots.sh
 > Prysm: `3500`
 
 ## Configurate regular execution of the node snapshot processing
+- Set permission to check `sudo wg` (wireguard connection) from `crontab` running under your user
+    - Open suborders: `sudo visudo`
+    - Replace `serverUser` for your user Add following mark at the end of the file: `serverUser ALL=(ALL) NOPASSWD: /usr/bin/wg`.
+    - Escape the file by pressing `CTRL+X`, then `Y`, and confirm it with `Enter`
 - Open crontab
 ```
 crontab -e
