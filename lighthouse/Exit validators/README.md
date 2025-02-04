@@ -4,6 +4,8 @@ Lighthouse client allows voluntary exits on a single validator only, see [lighth
 
 As the script is installed in `/usr/local/bin`, the exit is executable for all server users.
 
+Interactive guide to use the util at [Exiting Lighththouse validators](https://stakers.space/lighthouse/exit-validator)
+
 ## Installation
 - View the script
 ```
@@ -53,3 +55,18 @@ _Note: Edit the `<vi1>` to specify the proper instance you wish to exit_
 _Note: Edit the `<vi1>` to specify the proper instance you wish to exit_
 
 At first step, the `/usr/local/bin/lighthouse_exit_validators.sh` lists a list of validators in specified `<validatorsDirectory>`. After confirming the exit by pressing `y`, all validators are exited without a need of any other confirmation.
+
+Sample output:
+```
+Running account manager for gnosis network
+validator-dir path: "/home/serverUser/.lighthouse/gnosis/validators"
+Publishing a voluntary exit for validator: 0x8...e31d
+
+Successfully validated and published voluntary exit for validator 0x8...e31d
+Voluntary exit has been accepted into the beacon chain, but not yet finalized. Finalization may take several minutes or longer. Before finalization there is a low probability that the exit may be reverted.
+Current epoch: 1245094, Exit epoch: 1245099, Withdrawable epoch: 1245755
+Please keep your validator running till exit epoch
+Exit epoch in approximately 400 secs
+
+...
+```
