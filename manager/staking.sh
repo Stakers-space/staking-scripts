@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.0.9 (release)"
+declare -r version="1.1.0 (Test release - StakeWise support)"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {
@@ -15,28 +15,33 @@ help () {
   echo -e "# │   ├── execution          Start execution service defined in clients.conf" 
   echo -e "# │   ├── beacon             Start beacon service defined in clients.conf" 
   echo -e "# │   ├── validators         Start validator instances defined in clients.conf" 
+  echo -e "# │   ├── stakewise          Start Stakewise Operators defined in clients.conf" 
   echo -e "# │   └── all                Start all staking services defined in clients.conf"
   echo -e "# ├── stop [option]          Stop services"
   echo -e "# │   ├── <serviceName>      Stop <serviceName> service" 
   echo -e "# │   ├── execution          Stop execution service defined in clients.conf" 
   echo -e "# │   ├── beacon             Stop beacon service defined in clients.conf" 
   echo -e "# │   ├── validators         Stop validator instances defined in clients.conf" 
+  echo -e "# │   ├── stakewise          Stop Stakewise Operators defined in clients.conf" 
   echo -e "# │   └── all                Stop all staking services defined in clients.conf"
   echo -e "# ├── restart [option]       Restart services"
   echo -e "# │   ├── <serviceName>      Restart <serviceName> service" 
   echo -e "# │   ├── execution          Restart execution service defined in clients.conf" 
   echo -e "# │   ├── beacon             Restart beacon service defined in clients.conf" 
-  echo -e "# │   └── validators         Restart validator instances defined in clients.conf" 
+  echo -e "# │   ├── validators         Restart validator instances defined in clients.conf"
+  echo -e "# │   └── stakewise          Restart Stakewise Operators defined in clients.conf" 
   echo -e "# ├── check|status [option]         Check status of all staking services defined in clients.conf"
   echo -e "# │   ├── <serviceName>      Check status of  <serviceName> service" 
   echo -e "# │   ├── execution          Check status of execution service defined in clients.conf" 
   echo -e "# │   ├── beacon             Check status of beacon service defined in clients.conf" 
-  echo -e "# │   └── validators         Check status of validator instances defined in clients.conf" 
+  echo -e "# │   ├── validators         Check status of validator instances defined in clients.conf" 
+  echo -e "# │   └── stakewise          Check Stakewise Operators defined in clients.conf" 
   echo -e "# └── monitor [option]       Monitor all staking services defined in clients.conf"
   echo -e "#     ├── <serviceName>      Monitor <serviceName> service" 
   echo -e "#     ├── execution          Monitor execution service defined in clients.conf" 
   echo -e "#     ├── beacon             Monitor beacon service defined in clients.conf" 
-  echo -e "#     └── validators         Monitor validator instances defined in clients.conf"
+  echo -e "#     ├── validators         Monitor validator instances defined in clients.conf"
+  echo -e "#     └── stakewise          Check Stakewise Operators defined in clients.conf" 
   echo -e "################################################################################"
   print_config
 }
@@ -181,8 +186,11 @@ select_services_array() {
     consensus)
         services=("${beaconServices_array[@]}" "${validatorServices_array[@]}")
         ;;
+    stakewise)
+        services=("${stakewiseOperators_array[@]}")
+        ;;
     "" | all)
-        services=("${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}")
+        services=("${executionServices_array[@]}" "${beaconServices_array[@]}" "${validatorServices_array[@]}" "${stakewiseOperators_array[@]}")
         ;;
     *)
         services=("$1")
@@ -240,6 +248,7 @@ load_config () {
   IFS=' ' read -r -a executionServices_array <<< "$executionServices"
   IFS=' ' read -r -a beaconServices_array <<< "$beaconServices"
   IFS=' ' read -r -a validatorServices_array <<< "$validatorServices"
+  IFS=' ' read -r -a stakewiseOperators_array <<< "$stakewiseOperators"
 }
 
 print_config() {
@@ -248,7 +257,9 @@ print_config() {
   echo -e "# ├── beacon services:     ${beaconServices_array[@]}"
   echo -e "# ├── validator instances: ${validatorServices_array[@]}"
   echo -e "# |   └── start delay:     $validatorServices_instanceStartDelay"
-  echo -e "# └── consensus services:  ${beaconServices_array[@]} ${validatorServices_array[@]}"
+  echo -e "# ├── consensus services:  ${beaconServices_array[@]} ${validatorServices_array[@]}"
+  echo -e "# └── Other services"
+  echo -e "#     └── StakeWise Operators: ${stakewiseOperators_array[@]}"
 }
 
 generate_default_clients_conf_file() {
@@ -260,6 +271,7 @@ generate_default_clients_conf_file() {
 executionServices="nethermind.service"
 beaconServices="lighthousebeacon.service"
 validatorServices="lighthouse-vi1.service lighthouse-vi2.service"
+stakewiseOperators=""
 
 # Delay in starting validator instances.
 # Spreading keystores loading over longer time.

@@ -1,6 +1,7 @@
 # Staking.sh shell script for clients management
 `staking.sh` script allows control basic actions related to staking clients in a simple way.
 
+This util is used within `StakersSpace configuration` option at [Stakers.space interactive guides](https://stakers.space/guides).
 
 ### Check version of the script installed on the node
 ```
@@ -104,3 +105,7 @@ Modify the default content of your `clients.conf` for setting proper services na
     - `/usr/local/bin/gnosis-staking.sh`
     - `/usr/local/bin/ethereum-staking.sh`
     The util can be modified to support this option on demand. [Request it through Stakers.space](https://stakers.space/contact).
+
+
+### Changelog - ToDo versions upgrading guide
+- version `1.1.0`: Required flag `stakewiseOperators` at `/usr/local/etc/staking/config/clients.conf`
