@@ -1,6 +1,6 @@
 #!/bin/bash
 
-declare -r version="1.1.0 (Test release - StakeWise support)"
+declare -r version="1.1.0 (StakeWise support)"
 declare -r config_dir="/usr/local/etc/staking/config"
 
 help () {

@@ -10,6 +10,7 @@ API is standardized across most consensus clients
 - Teku: `5051`
 - Nimbus beacon: `5052`
 - Prysm: `3500`
+- Caplin: `5555`
 
 ## Beacon Endpoints
 Note: Change `PORT`, for the port used by the beaconchain client

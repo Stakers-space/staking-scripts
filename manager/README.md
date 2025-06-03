@@ -52,6 +52,7 @@ Modify the default content of your `clients.conf` for setting proper services na
 >        - `/usr/local/bin/staking.sh check beacon`
 >        - `/usr/local/bin/staking.sh check validators`
 >        - `/usr/local/bin/staking.sh check consensus` (= beacon + validators)
+>        - `/usr/local/bin/staking.sh check stakewise` (= stakewise operators)
 >    - through real service name: 
 >        - `/usr/local/bin/staking.sh check lighthousebeacon`
 - Monitor all clients log: `/usr/local/bin/staking.sh monitor`
@@ -61,6 +62,7 @@ Modify the default content of your `clients.conf` for setting proper services na
     >    - `/usr/local/bin/staking.sh monitor beacon`
     >    - `/usr/local/bin/staking.sh monitor validators`
     >    - `/usr/local/bin/staking.sh monitor consensus` (= beacon + validators)
+    >    - `/usr/local/bin/staking.sh monitor stakewise` (= stakewise operators)
     > - through real service name:
     >     `/usr/local/bin/staking.sh monitor lighthousebeacon`
 - Start all clients: `/usr/local/bin/staking.sh start all`
@@ -70,6 +72,7 @@ Modify the default content of your `clients.conf` for setting proper services na
     >   - `/usr/local/bin/staking.sh start beacon`
     >   - `/usr/local/bin/staking.sh start validators`
     >   - `/usr/local/bin/staking.sh start consensus` (= beacon + validators)
+    >   - `/usr/local/bin/staking.sh start stakewise` (= stakewise operators)
     > - through real service name:
     >    `/usr/local/bin/staking.sh start lighthousebeacon`
 - Stop all clients: `/usr/local/bin/staking.sh stop all`
@@ -79,6 +82,7 @@ Modify the default content of your `clients.conf` for setting proper services na
     >   - `/usr/local/bin/staking.sh stop beacon`
     >   - `/usr/local/bin/staking.sh stop validators`
     >   - `/usr/local/bin/staking.sh stop consensus` (= beacon + validators)
+    >   - `/usr/local/bin/staking.sh stop stakewise` (= stakewise operators)
     > - through real service name: `/usr/local/bin/staking.sh stop lighthousebeacon`
 - Restart all clients: `/usr/local/bin/staking.sh restart all`
     > You can also specify certain client:
@@ -87,10 +91,10 @@ Modify the default content of your `clients.conf` for setting proper services na
     >   - `/usr/local/bin/staking.sh restart beacon`
     >   - `/usr/local/bin/staking.sh restart validators`
     >   - `/usr/local/bin/staking.sh restart consensus` (= beacon + validators)
+    >   - `/usr/local/bin/staking.sh restart stakewise` (= stakewise operators)
     > - through real service name: `/usr/local/bin/staking.sh restart lighthousebeacon`
 - Get version: `/usr/local/bin/staking.sh version`
 - Print config : `/usr/local/bin/staking.sh config`
-
 
 ## If you are running multiple chains simultaneously:
 - Option 1:

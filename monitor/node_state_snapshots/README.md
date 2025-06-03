@@ -47,8 +47,10 @@ sudo chmod +x /srv/node_snapshots.sh
 ## Configurate regular execution of the node snapshot processing
 - Set permission to check `sudo wg` (wireguard connection) from `crontab` running under your user
     - Open suborders: `sudo visudo`
-    - Replace `serverUser` for your user Add following mark at the end of the file: `serverUser ALL=(ALL) NOPASSWD: /usr/bin/wg`.
+    - Add following mark at the end of the file: `serverUser ALL=(ALL) NOPASSWD: /usr/bin/wg`.
+        - (do not forget to replace `serverUser` for your user)
     - Escape the file by pressing `CTRL+X`, then `Y`, and confirm it with `Enter`
+
 - Open crontab
 ```
 crontab -e

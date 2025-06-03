@@ -1,7 +1,9 @@
-# Shell script utilities for stakers
+# Shell script utilities for Ethereum and Gnosis Stakers
 
 ## Intro
-A collection of utility scripts that may be handy to have on a staking machine. Written right in the shell, no external library required.
+A collection of utility scripts that may be handy to have on a staking machine. Most are written directly in the shell (no external library required), others in JavaScript (NodeJS).
+
+Powered by [Stakers.space](https://stakers.space)
 
 Click at selected client / tool for related options
 
@@ -14,16 +16,13 @@ Click at selected client / tool for related options
 - [Lighthouse](./lighthouse) - Utilities for Lighthouse client
 - [Lodestar](./lodestar) - Utilities for Lodestar client
 - [Teku](./geth) - Utilities for Teku client
+- [Prysm](./prysm) - Utilities for Teku client
 
 ## Related utils
+- [Staking Services Management](./manager) - Staking manager
+- [Monitoring](./monitor) - Staking manager
 - [Mullvad VPN](./mullvad/README.md) - Utilities for Mullvad VPN client
 - [EthDo](./ethdo) - Utilities for EthDo client
-- [Staking Manager](./manager) - Staking manager
 
-
-### Development roadmap
-- Move logmonitor.sh into separated github section ¨log_monitor¨
-  - Define fixed tracking keys [network, client, cpu, ...]
-  - Link at it from client pages (contains usage of the script, tracked string files, service files)
-- manager/staking.sh
-  - testing - switching from debug to first production release
+### Contact / Feedback / Improvements
+Feel free to post requests and feedback at stakersspace@proton.me
