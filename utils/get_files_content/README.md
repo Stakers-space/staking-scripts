@@ -1,1 +1,1 @@
-# Utility JavaScript to get content of all files in specified directory
+# JavaScript Utility to get content of all files in specified directory
