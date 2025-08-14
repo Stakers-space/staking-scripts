@@ -1,4 +1,8 @@
-// Version 1.0.0
+// Version 1.0.1
+/**
+ * Added segmentation support
+ */
+
 const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot.js');
 //const getValidatorsSnapshotUtil = require('../../utils/get-validators-snapshot/get-validators-snapshot.js');
 /* run on localhost through console
@@ -17,7 +21,8 @@ class Config {
         this.frequencySeconds = 3000;
         this.lastState = {
             keepInFile: true,
-            filePath: "/tmp/validators_state_balances.json"
+            storageDirectory: "/tmp",
+            fileSegmentation: true
         }
     }
 
@@ -88,8 +93,17 @@ class BalanceCache {
     SetEpoch(epoch){
         this.epoch = epoch;
     }
-    ValidatorState(pubId, status, balance){
-        this.data[pubId] = [status, balance];
+    ValidatorState(segment, pubId, status, balance){
+        if(segment){
+            if(!this.data[status]) this.data[status] = {};
+            this.data[status][pubId] = balance;
+        } else {
+            this.data[pubId] = [status, balance];
+        }
+    }
+    Clear(){
+        this.epoch = null;
+        this.data = {};
     }
 }
 
@@ -131,9 +145,12 @@ class MonitorValidators {
             const snapshotData = snapshotRes.value;
             if (!epochData) throw new Error('No epoch data');
 
+            this.balanceCache.Clear();
             this.balanceCache.SetEpoch(epochData.epoch);
+            
             for (const obj of snapshotData.data) {
                 this.balanceCache.ValidatorState(
+                    this.config.lastState.fileSegmentation,
                     Number(obj.index),
                     obj.status,
                     Number(obj.validator.effective_balance)
@@ -141,11 +158,22 @@ class MonitorValidators {
             }
 
             if(this.config.lastState.keepInFile){
-                await fs.promises.writeFile(
-                    this.config.lastState.filePath,
-                    JSON.stringify(this.balanceCache, null, 0)
-                );
-                console.log(`${this.config.lastState.filePath} file has been updated`);
+                if(this.config.lastState.fileSegmentation){
+                     // save separated files
+                    for (const [state, validators] of Object.entries(this.balanceCache.data)) {
+                        await fs.promises.writeFile(
+                            `${this.config.lastState.storageDirectory}/validator_${state}_balances.json`,
+                            JSON.stringify({epoch:this.balanceCache.epoch,data:validators}, null, 0)
+                        );
+                        console.log(`${this.config.lastState.storageDirectory}/validator_${state}_balances.json file has been updated`);
+                    }
+                } else {
+                    await fs.promises.writeFile(
+                        `${this.config.lastState.storageDirectory}/validator_state_balances.json`,
+                        JSON.stringify(this.balanceCache, null, 0)
+                    );
+                    console.log(`${this.config.lastState.storageDirectory}/validator_state_balances.json file has been updated`);
+                }
             } else {
                 console.log(this.balanceCache);
             }
@@ -245,12 +273,9 @@ class MonitorValidators {
 
 /** Run Util */
 app = new MonitorValidators();
-/*app.RecognizeChain(function(err){
+app.RecognizeChain(function(err){
     if(err) return console.error(err);
     console.log("├─ Config loaded from arguments:", app.config);
     app.ConfigurateCronWorker();
     app.Process();
-});*/
-
-app.ConfigurateCronWorker();
-app.Process();
+});
