@@ -1,6 +1,6 @@
 // Version 1.0.0
 const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot.js');
-
+//const getValidatorsSnapshotUtil = require('../../utils/get-validators-snapshot/get-validators-snapshot.js');
 /* run on localhost through console
  * node validators_balance_collector.js --beaconChain.port 9596
 */
@@ -110,8 +110,8 @@ class MonitorValidators {
         process.on('SIGINT', this.cleanUpAndExit.bind(this));
     }
 
-    ConfigurateCronWorker(interval){ 
-        this.cron = setInterval(this.Process.bind(this), this.frequencySeconds * 1000); // update each 50 minutes
+    ConfigurateCronWorker(){ 
+        this.cron = setInterval(this.Process.bind(this), this.config.frequencySeconds * 1000); // update each 50 minutes
     }
 
     async Process(){
@@ -245,9 +245,12 @@ class MonitorValidators {
 
 /** Run Util */
 app = new MonitorValidators();
-app.RecognizeChain(function(err){
+/*app.RecognizeChain(function(err){
     if(err) return console.error(err);
-    console.log("└─ Config loaded from arguments:", app.config);
+    console.log("├─ Config loaded from arguments:", app.config);
     app.ConfigurateCronWorker();
     app.Process();
-});
+});*/
+
+app.ConfigurateCronWorker();
+app.Process();
