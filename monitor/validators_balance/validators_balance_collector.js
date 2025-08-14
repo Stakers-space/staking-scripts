@@ -159,6 +159,8 @@ class MonitorValidators {
             }
 
             if(this.config.lastState.keepInFile){
+                await fs.promises.mkdir(path.dirname(this.config.lastState.storageDirectory), { recursive: true });
+                
                 if(this.config.lastState.fileSegmentation){
                      // save separated files
                     for (const [state, validators] of Object.entries(this.balanceCache.data)) {
