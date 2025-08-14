@@ -21,7 +21,7 @@ class Config {
         this.frequencySeconds = 3000;
         this.lastState = {
             keepInFile: true,
-            storageDirectory: "/tmp",
+            storageDirectory: "/tmp/validator_state_balances",
             fileSegmentation: true
         }
     }
@@ -163,17 +163,17 @@ class MonitorValidators {
                      // save separated files
                     for (const [state, validators] of Object.entries(this.balanceCache.data)) {
                         await fs.promises.writeFile(
-                            `${this.config.lastState.storageDirectory}/validator_${state}_balances.json`,
+                            `${this.config.lastState.storageDirectory}/${this.config.chain}_${state}.json`,
                             JSON.stringify({epoch:this.balanceCache.epoch,data:validators}, null, 0)
                         );
-                        console.log(`${this.config.lastState.storageDirectory}/validator_${state}_balances.json file has been updated`);
+                        console.log(`${this.config.lastState.storageDirectory}/${this.config.chain}_${state}.json file has been updated`);
                     }
                 } else {
                     await fs.promises.writeFile(
-                        `${this.config.lastState.storageDirectory}/validator_state_balances.json`,
+                        `${this.config.lastState.storageDirectory}/${this.config.chain}_states.json`,
                         JSON.stringify(this.balanceCache, null, 0)
                     );
-                    console.log(`${this.config.lastState.storageDirectory}/validator_state_balances.json file has been updated`);
+                    console.log(`${this.config.lastState.storageDirectory}/${this.config.chain}_states.json file has been updated`);
                 }
             } else {
                 console.log(this.balanceCache);

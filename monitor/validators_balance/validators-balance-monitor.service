@@ -10,7 +10,7 @@ RestartSec=5
 ExecStart=/usr/local/bin/node /srv/validators-monitor/validators_balance_collector.js \
     --beaconChain.port 9596 \
     --frequencySeconds 3000 \
-    --lastState.storageDirectory "/tmp" \
+    --lastState.storageDirectory "/tmp/validator_state_balances" \
     --lastState.fileSegmentation "true"
 
 [Install]
