@@ -149,11 +149,12 @@ class MonitorValidators {
             this.balanceCache.SetEpoch(epochData.epoch);
             
             for (const obj of snapshotData.data) {
+                const balance = (this.config.chain === "gnosis") ? (Number(obj.validator.effective_balance) / 32000000000) : (Number(obj.validator.effective_balance) / 1000000000);
                 this.balanceCache.ValidatorState(
                     this.config.lastState.fileSegmentation,
                     Number(obj.index),
                     obj.status,
-                    Number(obj.validator.effective_balance)
+                    balance
                 );
             }
 
