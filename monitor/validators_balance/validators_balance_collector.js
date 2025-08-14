@@ -1,5 +1,5 @@
 // Version 1.0.0
-const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot/get-validators-snapshot.js');
+const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot.js');
 
 /* run on localhost through console
  * node validators_balance_collector.js --beaconChain.port 9596

@@ -9,7 +9,7 @@ This utility script monitors each active pubkey for its current balance.
 - Install Prerequisities (if they are not on the sever, yet)
     - [Get Validators Snapshot](https://github.com/Stakers-space/staking-scripts/tree/main/utils/get-validators-snapshot)
 
-- Check the `validators_balance_checker.js` script
+- Check the `validators_balance_collector.js` script
 ```
 curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_balance/validators_balance_collector.js
 ```
@@ -19,7 +19,7 @@ sudo mkdir /srv/validators-monitor
 ```
 - Download the script to `/srv/validators-monitor/` directory
 ```
-sudo curl -o /srv/validators-monitor/validators_balance_checker.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_balance/validators_balance_collector.js
+sudo curl -o /srv/validators-monitor/validators_balance_collector.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/validators_balance/validators_balance_collector.js
 ```
 
 ## Launch The script in Terminal
