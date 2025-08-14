@@ -159,7 +159,11 @@ class MonitorValidators {
             }
 
             if(this.config.lastState.keepInFile){
-                await fs.promises.mkdir(path.dirname(this.config.lastState.storageDirectory), { recursive: true });
+                try {
+                    await fs.promises.mkdir(this.config.lastState.storageDirectory, { recursive: true });
+                } catch (err) {
+                    console.error('Error on creating directory:', err);
+                }
                 
                 if(this.config.lastState.fileSegmentation){
                      // save separated files
