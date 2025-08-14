@@ -1,7 +1,10 @@
-// Version 1.1.0
+// Version 1.1.1
+/*
+    - Minor refactoring
+*/
 
 /* run on localhost through console
- * node validators_state_checker.js --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 0
+ * node validators_state_checker.js --beaconChain.port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --postData.enabled true --postData.encryption.active true --postData.header.token_api 1234567890 --postData.header.server_id 0
 */
 const crypto = require('crypto');
 const http = require('http');
@@ -14,11 +17,11 @@ class Config {
     constructor(){
         this.chain = null;
         //this.account_id = null;
-        this.server_id = null;
-        this.api_token = null;
         this.pubKeysListPath = "./public_keys_testlist.json"; // service parameter, same as accout id and api_token
         this.pubKeysList_dynamic = false; // reload file data for each epoch?
-        this.beaconChainPort = 9596;
+        this.beaconChain = {
+            port: 9596
+        },
         this.trigger_numberOfPeriodesOffline = 4;
         this.indexesBanch = 200;
         this.postData = {
@@ -32,6 +35,10 @@ class Config {
                 active: true,
                 key: "(Bh6HN.Oj{r?OO~pE;ot1rKjcS_Ic9yp", // 32-long string
                 iv: "ZQMiwj5c9qc<er,l" // 16-long string
+            },
+            header: {
+                api_token: null,
+                server_id: null
             }
         };
         this.detailedLog = false;
@@ -41,47 +48,73 @@ class Config {
     }
 
     LoadConfigFromArguments(){
-        const args = process.argv.slice(2); // Cut first 2 arguments (node & script)
-        // --port 9596 --epochsoffline_trigger 4 --pubkeys ./public_keys_testlist.json --pubkeys_dynamic false --post true --encryption true --token_api 1234567890 --server_id 1
-        const params = [
-            /* account_id */
-            {"--port": "beaconChainPort"},
-            {"--epochsoffline_trigger": "trigger_numberOfPeriodesOffline"},
-            {"--pubkeys": "pubKeysListPath"},
-            {"--pubkeys_dynamic": "pubKeysList_dynamic"},
-            {"--post": "postData.enabled"},
-            {"--encryption": "postData.encryption.active"},
-            {"--token_api": "api_token"},
-            {"--server_id": "server_id"}
-        ];
-
-        for (const param of params) {
-            for (const [key, value] of Object.entries(param)) {
-                const paramIndex = args.indexOf(key);
-                if (paramIndex !== -1 && paramIndex + 1 < args.length) {
-                    const paramValue = args[paramIndex + 1];
-                    setNestedProperty(this, value, paramValue);
-                    console.log(`├─ ${value} set to: ${paramValue} from attached param`);
-                }
-            }
-        }
-
-        // Helper function to set nested properties
+        const args = process.argv.slice(2); // Cut first 2 arguments (node & script)        
+        const aliases = {
+            port: "beaconChain.port",
+            epochsoffline_trigger: "trigger_numberOfPeriodesOffline",
+            pubkeys: "pubKeysListPath",
+            pubkeys_dynamic: "pubKeysList_dynamic",
+            post: "postData.enabled",
+            encryption: "postData.encryption.active",
+            token_api: "postData.header.api_token",
+            server_id: "postData.header.server_id",
+        };
+        
+        // Helper function to set any nested properties
         function setNestedProperty(obj, path, value) {
             const keys = path.split('.');
-            let current = obj;
+            let cur = obj;
 
+            // auto type
             if (value === "true") value = true;
             else if (value === "false") value = false;
+            else if (value === "null") value = null;
+            else if (!Number.isNaN(Number(value)) && value.trim() !== "") value = Number(value);
 
             for (let i = 0; i < keys.length - 1; i++) {
-                if (!(keys[i] in current)) {
-                    current[keys[i]] = {};
+                const k = keys[i];
+                if (!(k in cur)) {
+                    console.warn(`⚠️  Warning: '${k}' in path '${path}' does not exist in config – skipping.`);
+                    return;
                 }
-                current = current[keys[i]];
+                if (typeof cur[k] !== "object" || cur[k] === null) {
+                    console.warn(`⚠️  Warning: '${k}' in path '${path}' is not an object – skipping.`);
+                    return;
+                }
+                cur = cur[k];
             }
-            current[keys[keys.length - 1]] = value;
+            const last = keys[keys.length - 1];
+            if (!(last in cur)) {
+                console.warn(`⚠️  Warning: '${last}' in path '${path}' does not exist in config – skipping.`);
+                return;
+            }
+            cur[last] = value;
         }
+
+        for (let i = 0; i < args.length; i++) {
+            const token = args[i];
+            if (!token.startsWith("--")) continue;
+
+            let key, rawValue;
+
+            if (token.includes("=")) { // `--key=value` format
+                const [k, ...rest] = token.slice(2).split("=");
+                key = k;
+                rawValue = rest.join("=");
+            } else { // `--key value` format
+                key = token.slice(2);
+                rawValue = args[i + 1];
+                if (rawValue === undefined || rawValue.startsWith("--")) continue;
+                i++; // value consumed, move next
+            }
+
+            const path = aliases[key] ?? key; // if no key, use „as-is“, including dots, see --lastState.keepInFile
+
+            setNestedProperty(this, path, rawValue);
+            console.log(`├─ ${path} set to: ${rawValue} (from --${key})`);
+        }
+
+        console.log("└─ Validators state checker | Configuration loaded"/*, this*/);
     }
 }
 
@@ -151,6 +184,7 @@ class PostObjectDataModel {
     }
 }
 
+/** Util Processor */
 class MonitorValidators {
     constructor(){
         this.setupSignalHandlers();
@@ -174,7 +208,7 @@ class MonitorValidators {
         process.on('SIGINT', this.cleanUpAndExit.bind(this));
     }
 
-    CronWorker(){ 
+    ConfigurateCronWorker(){ 
         let cronInterval = 45000;
         switch(app.config.chain){
             case "gnosis": cronInterval = 45000; break;
@@ -186,25 +220,25 @@ class MonitorValidators {
 
     Process(){
         if(app.instances.ids_list.length === 0) return console.log(app.config.chain, "| No instances to process");
-        if(!app.isRunning){
-            app.GetFinalityCheckpoint(function(err,resp){
-                if(err) {
-                    console.log("GetFinalityCheckpoint err:", err);
-                    return null;
-                }
-                try { 
-                    resp = JSON.parse(resp); 
-                } catch(e){ 
-                    console.log("GetFinalityCheckpoint parsing err:", e);
-                    return null;
-                }
-                const epoch = Number(resp["data"]["current_justified"].epoch);
-                if(epoch && epoch !== app._lastEpochChecked) {
-                    app.PromptManagerScript(epoch);
-                    app._lastEpochChecked = epoch;
-                }
-            }); 
-        }
+        if(app.isRunning) return console.log(app.config.chain, "Skipping (Previous instance is still active)");
+        
+        app.GetFinalityCheckpoint(function(err,resp){
+            if(err) {
+                console.log("GetFinalityCheckpoint err:", err);
+                return null;
+            }
+            try { 
+                resp = JSON.parse(resp); 
+            } catch(e){ 
+                console.log("GetFinalityCheckpoint parsing err:", e);
+                return null;
+            }
+            const epoch = Number(resp["data"]["current_justified"].epoch);
+            if(epoch && epoch !== app._lastEpochChecked) {
+                app.PromptManagerScript(epoch);
+                app._lastEpochChecked = epoch;
+            }
+        }); 
     }
 
     PromptManagerScript(epochNumber){
@@ -212,7 +246,7 @@ class MonitorValidators {
         app.startTime = new Date().getTime();
         console.log(`${this.startTime} Monitorig validators state for epoch ${epochNumber}`);
 
-        // reload pubkeys file
+        // dynamic option - use still up to date pubkeys file data - reload pubkeys file
         if(app.config.pubKeysList_dynamic) {
             app.config.pubKeysList = app.LoadPubKeysListSync();
             app.instances.GeneratePubkeysArr(app.config.pubKeysList);
@@ -222,8 +256,8 @@ class MonitorValidators {
         app.instances.ResetStates();
 
         // Process Check
-        app.ProcessCheck(0,0, epochNumber, function(err){
-            if(err) return console.error("ProcessCheck err:",err); ;
+        app.ProcessLivenessCheck(0,0, epochNumber, function(err){
+            if(err) return console.error("ProcessLivenessCheck err:",err); ;
             
             const now = new Date().getTime();
             const totalProcessingTime = now - app.startTime;
@@ -282,7 +316,7 @@ class MonitorValidators {
 
                 app.HttpsRequest({
                     hostname: app.config.postData.server.hostname,
-                    path: `${app.config.postData.server.path}?n=${app.config.chain}&t=${app.config.api_token}`+(app.config.server_id ? `&s=${app.config.server_id}` : ''),
+                    path: `${app.config.postData.server.path}?n=${app.config.chain}&t=${app.config.postData.header.api_token}`+(app.config.postData.header.server_id ? `&s=${app.config.postData.header.server_id}` : ''),
                     port: app.config.postData.server.port,
                     method: 'POST',
                     headers: {
@@ -301,7 +335,7 @@ class MonitorValidators {
         });
     }
 
-    ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
+    ProcessLivenessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb){
         const instanceIdentificator = app.instances.ids_list[instanceIndex];
         const instanceData = app.config.pubKeysList[instanceIdentificator]; // from file
         const instancePubKeys = instanceData.v;
@@ -310,7 +344,7 @@ class MonitorValidators {
         const endIndex = pubKeyStartIndex + indexesNumToRequest;
         const validatorIndexes = instancePubKeys.slice(pubKeyStartIndex, endIndex);
 
-        if(app.config.detailedLog) console.log("ProcessCheck", instanceIndex, pubKeyStartIndex, validatorIndexes);
+        if(app.config.detailedLog) console.log("ProcessLivenessCheck", instanceIndex, pubKeyStartIndex, validatorIndexes);
 
         // Get data from beacon api
         this.GetValidatorLivenessState(validatorIndexes, epochNumber, function(err,resp){
@@ -354,14 +388,14 @@ class MonitorValidators {
             }
 
             if(instanceIndex === app.instances.ids_list.length) return cb();
-            app.ProcessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb);
+            app.ProcessLivenessCheck(instanceIndex, pubKeyStartIndex, epochNumber, cb);
         });
     }
 
     RecognizeChain(cb){
         const options = {
             hostname: 'localhost',
-            port: app.config.beaconChainPort,
+            port: app.config.beaconChain.port,
             path: `/eth/v1/config/spec`,
             method: 'GET',
             headers: {
@@ -411,7 +445,7 @@ class MonitorValidators {
     GetFinalityCheckpoint(cb){
         const options = {
             hostname: 'localhost',
-            port: app.config.beaconChainPort,
+            port: app.config.beaconChain.port,
             path: `/eth/v1/beacon/states/head/finality_checkpoints`,
             method: 'GET',
             headers: {
@@ -425,7 +459,7 @@ class MonitorValidators {
         const body = JSON.stringify(validatorIndexes);
         const options = {
             hostname: 'localhost',
-            port: app.config.beaconChainPort,
+            port: app.config.beaconChain.port,
             path: `/eth/v1/validator/liveness/${epochNumber}`,
             method: 'POST',
             headers: {
@@ -446,7 +480,7 @@ class MonitorValidators {
         const body = JSON.stringify({ ids: pubIdsArr} );
         const options = {
             hostname: 'localhost',
-            port: app.config.beaconChainPort,
+            port: app.config.beaconChain.port,
             path: `/eth/v1/beacon/states/head/validators`,
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Content-Length': body.length }
@@ -530,12 +564,13 @@ class MonitorValidators {
     }
 }
 
-// each 60 seconds = 1 epoch
+
+/** Run Util */
 app = new MonitorValidators();
 app.RecognizeChain(function(err){
     if(err) return console.error(err);
     console.log("└─ Config loaded from arguments:", app.config);
-    app.CronWorker();
+    app.ConfigurateCronWorker();
     app.Process();
 });
 

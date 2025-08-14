@@ -18,7 +18,35 @@ Note: Change `PORT`, for the port used by the beaconchain client
 ### Beacon
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/headers"` > Get headers
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/blocks/16588429/attestations"` > Get attestations for slot `16588429`
+- `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/validators` Get all validators
+   - Reponse:
+      ```
+      {"execution_optimistic":false,
+         "finalized":false,
+         "data":[
+            {
+                  "index":"0",
+                  "balance":"0",
+                  "status":"withdrawal_done",
+                  "validator": {
+                     "pubkey":"...",
+                     "withdrawal_credentials":"...",
+                     "effective_balance":"0",
+                     "slashed":false,
+                     "activation_eligibility_epoch":"0",
+                     "activation_epoch":"0",
+                     "exit_epoch":"1156542",
+                     "withdrawable_epoch":"1156798"
+                  }
+            },
+            {
+                  "index":"1",
+                  ...
+            },
+            ...
+      ```
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/validators?id=0xa1d1ad0714035353258038e964ae9675dc0252ee22cea896825c01458e1807bfad2f9969338798548d9858a571f7425c"` > Get validator info for pubid `0xa1d1ad0714035353258038e964ae9675dc0252ee22cea896825c01458e1807bfad2f9969338798548d9858a571f7425c`
+   - using pubis is functional workaround as well, see `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/validators?id=1,2,3`
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/rewards/blocks/16588429"` > Get rewards for slot `16588429`
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/finality_checkpoints"` > Get finality checkpoints
 

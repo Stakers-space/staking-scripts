@@ -1,5 +1,5 @@
 // Version 1.0.0
-const getValidatorsSnapshotUtil = require('../../utils/get-validators-snapshot/get-validators-snapshot.js');
+const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot/get-validators-snapshot.js');
 
 /* run on localhost through console
  * node validators_balance_collector.js --beaconChain.port 9596
@@ -143,7 +143,7 @@ class MonitorValidators {
             if(this.config.lastState.keepInFile){
                 await fs.promises.writeFile(
                     this.config.lastState.filePath,
-                    JSON.stringify(this.balanceCache, null, 2)
+                    JSON.stringify(this.balanceCache, null, 0)
                 );
                 console.log(`${this.config.lastState.filePath} file has been updated`);
             } else {

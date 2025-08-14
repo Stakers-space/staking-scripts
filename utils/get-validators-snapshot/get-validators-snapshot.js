@@ -23,16 +23,19 @@ function httpRequest(options, body) {
   });
 }
 
-async function getSnapshot(beaconPort = 9596) {
-  console.log(' Processing validators snapshot for head slot state...');
+async function getSnapshot(beaconPort = 9596, pubIdsList = null) {
+   console.log(' Processing validators snapshot for head slot state...');
 
-  const data = await httpRequest({
-    hostname: 'localhost',
-    port: beaconPort,
-    path: '/eth/v1/beacon/states/head/validators',
-    method: 'GET',
-    headers: { 'Accept': 'application/json' }
-  }, null);
+	let apiPath = '/eth/v1/beacon/states/head/validators';
+	if(pubIdsList) apiPath+='?id='+pubIdsList.toString();
+
+   const data = await httpRequest({
+      hostname: 'localhost',
+      port: beaconPort,
+      path: apiPath,
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+   }, null);
 
   return JSON.parse(data);
 }
