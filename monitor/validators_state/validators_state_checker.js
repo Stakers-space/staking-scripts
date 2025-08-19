@@ -1,4 +1,4 @@
-// Version 1.1.1
+// Version 1.1.2
 /*
     - Minor refactoring
 */
@@ -174,13 +174,14 @@ class PostObjectDataModel {
         this.e = epochNumber; // epoch
         this.i = {};
     }
-    AddInstance(instanceId, instanceValidators, offlineValidators, exitedValidators, pendingValidators){
+    AddInstance(instanceId, instanceValidators, offlineValidators, exitedValidators, pendingValidators, withdrawalValidators){
         this.i[instanceId] = {
             v:instanceValidators,
             o:offlineValidators
         }
         if(exitedValidators > 0) this.i[instanceId].e = exitedValidators;
         if(pendingValidators > 0) this.i[instanceId].p = pendingValidators;
+        if(withdrawalValidators > 0) this.i[instanceId].w = withdrawalValidators;
     }
 }
 
@@ -274,7 +275,8 @@ class MonitorValidators {
                 
                 let promise = new Promise((resolve, reject) => {
                     // check only pubids detected as offline (report.o)
-                    app.SegmentValidatorsByState(report.o, function(err, validator_states) { // validator_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] };
+                    app.SegmentValidatorsByState(report.o, function(err, validator_states) { 
+                        // validator_states = { offline: [], exited: [], pending: [], withdrawal: [], unknown: [] };
                         if (err) return reject({"iid": instanceId, "message": err});
                         //console.log("SegmentValidatorsByState | validator_states:", validator_states)
 
@@ -285,10 +287,10 @@ class MonitorValidators {
                               instanceUnknownCount = validator_states.unknown.length;
 
                         // Add instance into report
-                        if(instanceOfflineCount > 0 || instancePendingCount > 0 || instanceExitedCount > 0) postObj.AddInstance(instanceId, report.c, validator_states.offline, instanceExitedCount, instancePendingCount);
+                        if(instanceOfflineCount > 0 || instancePendingCount > 0 || instanceExitedCount > 0 || instanceWithdrawalCount > 0) postObj.AddInstance(instanceId, report.c, validator_states.offline, instanceExitedCount, instancePendingCount, instanceWithdrawalCount);
                         
                         const onlineValidators = report.c - validator_states.offline.length - instanceExitedCount - instancePendingCount - instanceWithdrawalCount - instanceUnknownCount;
-                        console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || P: ${instancePendingCount} | E: ${instanceExitedCount} | W: ${instanceWithdrawalCount} | U: ${instanceUnknownCount} || Offline (${instanceOfflineCount})`, validator_states.offline);               
+                        console.log(`|  ├─ ${instanceId} | Online ${onlineValidators}/${report.c} || Pending: ${instancePendingCount} | Exited: ${instanceExitedCount} | Withdrawal: ${instanceWithdrawalCount} | Unknown: ${instanceUnknownCount} || Offline (${instanceOfflineCount})`, validator_states.offline);               
                         online += onlineValidators;
                         offline.push(...validator_states.offline);
                         resolve();
