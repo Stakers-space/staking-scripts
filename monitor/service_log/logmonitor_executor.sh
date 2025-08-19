@@ -51,7 +51,7 @@ case "$occurancyKey" in
         ;;
     EXECUTION)
         log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
-        # sudo systemctl restart $executionClientName
+        # sudo systemctl restart $executionServiceName
         ;;
     BEACON)
         log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
@@ -59,8 +59,8 @@ case "$occurancyKey" in
         ;;
     EXECUTION_CONSENSUS)
          log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
-        # sudo systemctl restart $executionClientName
-        # sudo systemctl restart $consensusClientName
+        # sudo systemctl restart $executionServiceName
+        # sudo systemctl restart $consensusServiceName
         ;;
     NOLOG)
         log "logmonitor_executor | Executing $occurancyKey | Service: $serviceName"
