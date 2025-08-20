@@ -1,12 +1,14 @@
-// Version 1.0.1
+// Version 1.0.2
 /**
- * Added segmentation support
+ * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
-
 const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot.js');
 //const getValidatorsSnapshotUtil = require('../../utils/get-validators-snapshot/get-validators-snapshot.js');
+const loadFromArgumentsUtil = require('/srv/stakersspace_utils/load-from-process-arguments.js');
+//const getValidatorsSnapshotUtil = require('../../utils/load-from-process-arguments/load-from-process-arguments.js');
+
 /* run on localhost through console
- * node validators_balance_collector.js --beaconChain.port 9596
+ * node validators_balance_collector.js --beaconChain.port 9596 --output.keepInFile false
 */
 const http = require('http');
 const fs = require("fs");
@@ -18,70 +20,14 @@ class Config {
         this.beaconChain = {
             port: 9596
         },
+        this.states_track = ['active_exiting', 'active_ongoing', 'exited_unslashed', 'pending_initialized', 'pending_queued', 'withdrawal_done', 'withdrawal_possible'];
         this.frequencySeconds = 3000;
-        this.lastState = {
+        this.requestDelayMs = 5000;
+        this.output = {
             keepInFile: true,
-            storageDirectory: "/tmp/validator_state_balances",
-            fileSegmentation: true
+            filesSegmentation: true,
+            storageDirectory: "/tmp/validator_state_balances"
         }
-    }
-
-    LoadConfigFromArguments(){
-        const args = process.argv.slice(2); // Cut first 2 arguments (node & script)        
-
-        // Helper function to set any nested properties
-        function setNestedProperty(obj, path, value) {
-            const keys = path.split('.');
-            let cur = obj;
-
-            // auto type
-            if (value === "true") value = true;
-            else if (value === "false") value = false;
-            else if (value === "null") value = null;
-            else if (!Number.isNaN(Number(value)) && value.trim() !== "") value = Number(value);
-
-            for (let i = 0; i < keys.length - 1; i++) {
-                const k = keys[i];
-                if (!(k in cur)) {
-                    console.warn(`⚠️  Warning: '${k}' in path '${path}' does not exist in config – skipping.`);
-                    return;
-                }
-                if (typeof cur[k] !== "object" || cur[k] === null) {
-                    console.warn(`⚠️  Warning: '${k}' in path '${path}' is not an object – skipping.`);
-                    return;
-                }
-                cur = cur[k];
-            }
-            const last = keys[keys.length - 1];
-            if (!(last in cur)) {
-                console.warn(`⚠️  Warning: '${last}' in path '${path}' does not exist in config – skipping.`);
-                return;
-            }
-            cur[last] = value;
-        }
-
-        for (let i = 0; i < args.length; i++) {
-            const token = args[i];
-            if (!token.startsWith("--")) continue;
-
-            let key, rawValue;
-
-            if (token.includes("=")) { // `--key=value` format
-                const [k, ...rest] = token.slice(2).split("=");
-                key = k;
-                rawValue = rest.join("=");
-            } else { // `--key value` format
-                key = token.slice(2);
-                rawValue = args[i + 1];
-                if (rawValue === undefined || rawValue.startsWith("--")) continue;
-                i++; // value consumed, move next
-            }
-
-            setNestedProperty(this, key, rawValue);
-            console.log(`├─ ${key} set to: ${rawValue} (from --${key})`);
-        }
-
-        console.log("└─ Validators state checker | Configuration loaded"/*, this*/);
     }
 }
 
@@ -90,19 +36,16 @@ class BalanceCache {
         this.epoch = null,
         this.data = {}
     }
-    SetEpoch(epoch){
-        this.epoch = epoch;
-    }
-    ValidatorState(segment, pubId, status, balance){
-        if(segment){
+    SetEpoch(epoch){ this.epoch = epoch; }
+    ValidatorState(outputFilesSegmentation, pubId, status, balance){
+        if(outputFilesSegmentation){
+            this.data[pubId] = balance;
+        } else {
             if(!this.data[status]) this.data[status] = {};
             this.data[status][pubId] = balance;
-        } else {
-            this.data[pubId] = [status, balance];
         }
     }
-    Clear(){
-        this.epoch = null;
+    ClearData(){
         this.data = {};
     }
 }
@@ -113,13 +56,75 @@ class MonitorValidators {
         this.setupSignalHandlers();
 
         this.config = new Config();
-        this.config.LoadConfigFromArguments();
+        loadFromArgumentsUtil(this.config);
+        
+        (function normalizeStates(cfg) {
+            const VALID = new Set([
+                'active_exiting','active_ongoing','exited_unslashed',
+                'pending_initialized','pending_queued','withdrawal_done','withdrawal_possible'
+            ]);
+
+            let states = cfg.states_track;
+
+            if (states === null) {
+                states = [null];
+            } else if (typeof states === 'string') {
+                const s = states.trim();
+                if (s.toLowerCase() === 'null' || s === '') {
+                    states = [null];
+                } else if (s.startsWith('[') && s.endsWith(']')) {
+                    try {
+                        const parsed = JSON.parse(s);
+                        states = Array.isArray(parsed) ? parsed : [null];
+                    } catch {
+                        console.warn("⚠️  Failed to parse --states_track JSON; falling back to aggregated.");
+                        states = [null];
+                    }
+                } else {
+                    states = s.split(',').map(x => x.trim()).filter(Boolean);
+                }
+            } else if (!Array.isArray(states) || states.length === 0) {
+                states = [null];
+            }
+
+            const out = [];
+            const seen = new Set();
+            for (let st of states) {
+                if (st === null || String(st).toLowerCase() === 'null') {
+                    if (!seen.has('aggregated')) { seen.add('aggregated'); out.push(null); }
+                    continue;
+                }
+                st = String(st).toLowerCase();
+                if (!VALID.has(st)) {
+                    console.warn(`⚠️  Unknown state ignored: '${st}'`);
+                    continue;
+                }
+                if (!seen.has(st)) { seen.add(st); out.push(st); }
+            }
+
+            if (out.length === 0) {
+                console.warn('⚠️  No valid states provided; falling back to aggregated snapshot.');
+                out.push(null);
+            }
+
+            cfg.states_track = out;
+            console.log('├─ States to fetch:', out.map(s => s ?? 'aggregated').join(', '));
+        })(this.config);
+
+        if (!Array.isArray(this.config.states_track) || this.config.states_track.length === 0) {
+            if (this.config.output.filesSegmentation) {
+                this.config.output.filesSegmentation = false;
+                console.warn("Files segmentation deactivated: no states to track defined – tracking all states with output in a single file");
+            }
+            // aggregated fetch
+            this.config.states_track = [null];
+        }
+
         this.isRunning = false;
         this.balanceCache = new BalanceCache();
     }
 
     setupSignalHandlers() {
-        // Volání signal handlerů uvnitř metody
         process.on('SIGTERM', this.cleanUpAndExit.bind(this));
         process.on('SIGINT', this.cleanUpAndExit.bind(this));
     }
@@ -128,59 +133,58 @@ class MonitorValidators {
         this.cron = setInterval(this.Process.bind(this), this.config.frequencySeconds * 1000); // update each 50 minutes
     }
 
+    async PrepareOutputDirectory(){
+        if (!this.config.output.keepInFile) return;
+        await fs.promises.mkdir(this.config.output.storageDirectory, { recursive: true });
+    }
+
     async Process(){
         if(this.isRunning) return console.log("Skipping (Previous instance is still active)");
-
         this.isRunning = true;
+
+        this.balanceCache.ClearData(); // Clear
+
         try {
-            const [epochRes, snapshotRes] = await Promise.allSettled([
-                this.ProcessFinalityCheckpoint(),
-                getValidatorsSnapshotUtil(this.config.beaconChain.port)
-            ]);
+            const { epoch } = await this.ProcessFinalityCheckpoint(); // epoch tracking start
+            if (epoch == null) throw new Error('No epoch data');
+            this.balanceCache.SetEpoch(epoch);
 
-            if (epochRes.status === 'rejected') throw epochRes.reason;
-            if (snapshotRes.status === 'rejected') throw snapshotRes.reason;
+            for (const state of this.config.states_track) {
+                if(this.config.output.filesSegmentation) this.balanceCache.ClearData();
+                
+                try {
+                    // process snapshot
+                    const snapshotData = await getValidatorsSnapshotUtil( this.config.beaconChain.port, null, state );
+                    for (const obj of snapshotData.data) {
+                        const balance = (this.config.chain === "gnosis") ? (Number(obj.validator.effective_balance) / 32000000000) : (Number(obj.validator.effective_balance) / 1000000000);
+                        this.balanceCache.ValidatorState(
+                            this.config.output.filesSegmentation,
+                            Number(obj.index),
+                            obj.status,
+                            balance
+                        );
+                    }
 
-            const epochData = epochRes.value;
-            const snapshotData = snapshotRes.value;
-            if (!epochData) throw new Error('No epoch data');
+                    if(this.config.output.keepInFile && this.config.output.filesSegmentation){
+                        await fs.promises.writeFile( `${this.config.output.storageDirectory}/${this.config.chain}_${state}.json`, JSON.stringify(this.balanceCache, null, 0) );
+                        console.log(`${this.config.output.storageDirectory}/${this.config.chain}_${state}.json file has been updated`);
+                    }
+                    
+                } catch (err) {
+                    console.error(`Failed to fetch state '${state}':`, err);
+                }
 
-            this.balanceCache.Clear();
-            this.balanceCache.SetEpoch(epochData.epoch);
-            
-            for (const obj of snapshotData.data) {
-                const balance = (this.config.chain === "gnosis") ? (Number(obj.validator.effective_balance) / 32000000000) : (Number(obj.validator.effective_balance) / 1000000000);
-                this.balanceCache.ValidatorState(
-                    this.config.lastState.fileSegmentation,
-                    Number(obj.index),
-                    obj.status,
-                    balance
-                );
+                // Rate-limit (delay between 2 requests)
+                const delay = Number(this.config.requestDelayMs) || 0;
+                if (delay > 0) await new Promise(r => setTimeout(r, delay));
+                
             }
 
-            if(this.config.lastState.keepInFile){
-                try {
-                    await fs.promises.mkdir(this.config.lastState.storageDirectory, { recursive: true });
-                } catch (err) {
-                    console.error('Error on creating directory:', err);
-                }
-                
-                if(this.config.lastState.fileSegmentation){
-                     // save separated files
-                    for (const [state, validators] of Object.entries(this.balanceCache.data)) {
-                        await fs.promises.writeFile(
-                            `${this.config.lastState.storageDirectory}/${this.config.chain}_${state}.json`,
-                            JSON.stringify({epoch:this.balanceCache.epoch,data:validators}, null, 0)
-                        );
-                        console.log(`${this.config.lastState.storageDirectory}/${this.config.chain}_${state}.json file has been updated`);
+            if(this.config.output.keepInFile){
+                if (!this.config.output.filesSegmentation) {
+                    await fs.promises.writeFile( `${this.config.output.storageDirectory}/${this.config.chain}_states.json`,JSON.stringify(this.balanceCache, null, 0));
+                    console.log(`${this.config.output.storageDirectory}/${this.config.chain}_states.json file has been updated`);
                     }
-                } else {
-                    await fs.promises.writeFile(
-                        `${this.config.lastState.storageDirectory}/${this.config.chain}_states.json`,
-                        JSON.stringify(this.balanceCache, null, 0)
-                    );
-                    console.log(`${this.config.lastState.storageDirectory}/${this.config.chain}_states.json file has been updated`);
-                }
             } else {
                 console.log(this.balanceCache);
             }
@@ -226,7 +230,9 @@ class MonitorValidators {
             switch(resp.data["DEPOSIT_CONTRACT_ADDRESS"].toLowerCase()){
                 case "0x00000000219ab540356cbb839cbe05303d7705fa": chainName = "ethereum"; break;
                 case "0x0b98057ea310f4d31f2a452b414647007d1645d9": chainName = "gnosis"; break;
-                default: console.log("Chain not recognized | DEPOSIT_CONTRACT_ADDRESS:", resp.data["DEPOSIT_CONTRACT_ADDRESS"]);
+                default: 
+                    console.log("Chain not recognized | DEPOSIT_CONTRACT_ADDRESS:", resp.data["DEPOSIT_CONTRACT_ADDRESS"]);
+                    chainName = "unknown";
             }
             app.config.chain = chainName;
             console.log("├─ Recognized chain:", chainName);
@@ -252,7 +258,6 @@ class MonitorValidators {
         if(body) req.write(body);
         req.end();
     }
-
 
     GetFinalityCheckpoint(cb){
         const options = {
@@ -280,9 +285,14 @@ class MonitorValidators {
 
 /** Run Util */
 app = new MonitorValidators();
-app.RecognizeChain(function(err){
+app.RecognizeChain(async(err) => {
     if(err) return console.error(err);
     console.log("├─ Config loaded from arguments:", app.config);
-    app.ConfigurateCronWorker();
-    app.Process();
+    try {
+        await app.PrepareOutputDirectory();
+        app.ConfigurateCronWorker();
+        await app.Process();
+    } catch (e) {
+        console.error("Startup failed:", e);
+    }
 });

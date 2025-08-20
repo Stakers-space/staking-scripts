@@ -1,6 +1,5 @@
 'use strict';
 const http = require('http');
-
 function httpRequest(options, body) {
   return new Promise((resolve, reject) => {
     const req = http.request(options, (res) => {
@@ -16,19 +15,20 @@ function httpRequest(options, body) {
     });
 
     req.on('error', reject);
-    req.setTimeout(10000, () => { req.destroy(new Error('Request timeout')); });
+    req.setTimeout(60000, () => { req.destroy(new Error('Request timeout')); });
 
     if (body) req.write(body);
     req.end();
   });
 }
 
-async function getSnapshot(beaconPort = 9596, pubIdsList = null) {
+async function getSnapshot(beaconPort = 9596, pubIdsList = null, statuses = null) {
    console.log(' Processing validators snapshot for head slot state...');
 
 	let apiPath = '/eth/v1/beacon/states/head/validators';
 	if(pubIdsList) apiPath+='?id='+pubIdsList.toString();
-
+  if(statuses) apiPath+= (pubIdsList) ? '&' : '?' + 'status='+statuses.toString();
+  
    const data = await httpRequest({
       hostname: 'localhost',
       port: beaconPort,

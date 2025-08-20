@@ -98,7 +98,7 @@ systemctl status lodestarvalidator_logmonitor.service
 journalctl -fu lodestarvalidator_logmonitor.service
 ```
 > [!NOTE]  
-> If the service did not start properly, it mey require to set access to `journal` for the service user
+> If the service did not start properly, it may require to set access to `journal` for the service user
 >
 > ```sudo usermod -aG systemd-journal <serviceUser>```
 >
