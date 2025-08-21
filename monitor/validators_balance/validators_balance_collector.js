@@ -5,7 +5,7 @@
 const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot.js');
 //const getValidatorsSnapshotUtil = require('../../utils/get-validators-snapshot/get-validators-snapshot.js');
 const loadFromArgumentsUtil = require('/srv/stakersspace_utils/load-from-process-arguments.js');
-//const getValidatorsSnapshotUtil = require('../../utils/load-from-process-arguments/load-from-process-arguments.js');
+//const loadFromArgumentsUtil = require('../../utils/load-from-process-arguments/load-from-process-arguments.js');
 
 /* run on localhost through console
  * node validators_balance_collector.js --beaconChain.port 9596 --output.keepInFile false

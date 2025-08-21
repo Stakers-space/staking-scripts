@@ -18,7 +18,7 @@ Note: Change `PORT`, for the port used by the beaconchain client
 ### Beacon
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/headers"` > Get headers
 - `curl -X GET "http://localhost:5052/eth/v1/beacon/blocks/16588429/attestations"` > Get attestations for slot `16588429`
-- `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/validators` Get all validators
+- `curl -X GET "http://localhost:5052/eth/v1/beacon/states/head/validators"` Get all validators
    - Reponse:
       ```
       {"execution_optimistic":false,
