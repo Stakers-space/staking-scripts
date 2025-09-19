@@ -28,10 +28,10 @@ async function GetFilesContent(directoryPath, startsPrefix, endsPrefix, cb) {
                 console.log(`skipping "${file}" (It does not meet prefix conditions)`);
             }
         }
-        cb(null, filesContent);  // Volání callbacku s výsledky
+        cb(null, filesContent);
     } catch (err) {
         console.log('Unable to scan directory:', err);
-        cb(err, null);  // Volání callbacku s chybou
+        cb(err, null);
     }
 }
 

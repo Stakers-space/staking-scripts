@@ -46,3 +46,4 @@ const getSnapshot = require('/srv/stakersspace_utils/get-validators-snapshot.js'
 
 ### This util is required by following tools
 - [Validators balance monitor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/validators_balance)
+- [Remove keystores tool](https://github.com/Stakers-space/staking-scripts/tree/main/tools/remove-keystores)

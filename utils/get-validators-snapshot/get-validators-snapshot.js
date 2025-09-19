@@ -23,7 +23,7 @@ function httpRequest(options, body) {
 }
 
 async function getSnapshot(beaconPort = 9596, pubIdsList = null, statuses = null) {
-  console.log(`Processing validators snapshot for head slot state on beacon Port: ${beaconPort} | statuses filter: ${statuses}`);
+  console.log(`Processing validators snapshot for head slot state on beacon port: ${beaconPort} | statuses filter: ${statuses}`);
 
 	let apiPath = '/eth/v1/beacon/states/head/validators';
 	if(pubIdsList) apiPath+='?id='+pubIdsList.toString();
