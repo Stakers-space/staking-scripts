@@ -1,8 +1,8 @@
-# remove-keystores
+# Remove Keystores
 
 Utility scripts for managing validator keystores after withdrawal credential consolidation.
 
-With the introduction of validator **consolidations** (see [EIP-7002](https://eips.ethereum.org/EIPS/eip-7002)), operators no longer need to keep old keystores once a validator has finalized its exit or completed withdrawal consolidation.  
+With the introduction of validator **consolidations** ( see [EIP-7002](https://eips.ethereum.org/EIPS/eip-7002) ), operators no longer need to keep old keystores once a validator has finalized its exit or completed withdrawal consolidation.  
 This repository provides tools to **generate validator snapshots** and **safely remove obsolete keystores**.
 
 Supported networks:
@@ -25,8 +25,41 @@ Supported networks:
 - Configurable via CLI arguments (`--beaconChain.port`, `--states_track.0`, `--keystores_dir`, `--snapshot_path`, …).
 
 ---
-
 ## Usage
+### Prerequisites
+- Installed utils below (Installation guide on each util page)
+  - [Get Validators snapshot](https://github.com/Stakers-space/staking-scripts/tree/main/utils/get-validators-snapshot)
+  - [Get Files data in Directory](https://github.com/Stakers-space/staking-scripts/tree/main/utils/get_files_content)
+  - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/utils/load-from-process-arguments)
+
+
+### Tool Installation
+- Check the `remove-keystores.js` util
+```
+curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/tools/remove-keystores/remove-keystores.js
+```
+- Create `/srv/stakersspace_utils` directory, if does not exist yet
+```
+sudo mkdir /srv/stakersspace_utils
+```
+- Download the script to `/srv/stakersspace_utils/` directory
+```
+sudo curl -o /srv/stakersspace_utils/remove-keystores.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/tools/remove-keystores/remove-keystores.js
+```
+- Define service user `stakersspace` (if does not exists yet)
+```
+sudo useradd --system --no-create-home --shell /bin/false stakersspace
+```
+- Add `stakersspace` user into the group with NodeJs user (if not added yet)
+```
+sudo usermod -aG myserveruser stakersspace
+```
+- Set file ownership dfirectory
+```
+sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/remove-keystores.js
+```
+
+
 ### Generate snapshots
 Fetch validator pubkeys for the configured states and save them into `/tmp/rk_validators-snapshot/<state>.json`:
 ```
