@@ -9,9 +9,6 @@ Supported networks:
 - Ethereum mainnet
 - Gnosis Chain
 
-> [!CAUTION]
-> v 0.0.1 - Tool under development. Not tested yet.
-
 ---
 
 ## Features
@@ -73,9 +70,9 @@ node ./remove-keystores.js generate-snapshot \
 Read snapshots and remove matching keystore files:
 ```
 node ./remove-keystores.js \
-  --keystores_dir=$HOME/keystores \
   --states_track.0=withdrawal_done \
-  --snapshot_path=/tmp/rk_validators-snapshot
+  --snapshot_path=/tmp/rk_validators-snapshot \
+  --keystores_dir=$HOME/keystores
 ```
 ### Configuration
 - `beaconChain.port`: port of your local beacon API (default: `9596`).

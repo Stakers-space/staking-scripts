@@ -1,5 +1,5 @@
 /**
- * v 0.0.1
+ * v 0.0.2
  * remove-keystores.js options
  *      generate snapshot: node ./remove-keystores.js generate-snapshot --beaconChain.port=9596 --states_track.0=withdrawal_done --snapshot_path=/tmp/rk_validators-snapshot
  *      remove keystores:  node ./remove-keystores.js --keystores_dir=$HOME/keystores --snapshot_path=/tmp/rk_validators-snapshot
@@ -8,9 +8,9 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot.js');
-const GetFilesContentUtil = require('/srv/stakersspace_utils/get-files-data-in-directory');
-const loadFromArgumentsUtil = require('/srv/stakersspace_utils/load-from-process-arguments.js');
+const getValidatorsSnapshotUtil = require('./get-validators-snapshot.js');
+const GetFilesContentUtil = require('./get-files-data-in-directory');
+const loadFromArgumentsUtil = require('./load-from-process-arguments.js');
 
 class Config {
     constructor(){
@@ -105,12 +105,12 @@ class KeystoresTool {
         let removed = 0;
         for (const [fileName, json] of Object.entries(files)) {
             try {
-                const keystorePubkey = json?.pubkey || null; // all pubkeys with the tracked state
+                const keystorePubkey = json?.pubkey ? (json.pubkey.startsWith('0x') ? json.pubkey : '0x' + json.pubkey) : null; // all pubkeys with the tracked state
                 if (keystorePubkey && tracked_states_pubkeys.has(keystorePubkey)) {
                     const filePath = path.join(keystoresDir, fileName);
                     await fs.unlink(filePath); // ekvivalent `rm`, smaže soubor
                     removed++;
-                    console.log(`Removed keystore: ${filePath}`);
+                    console.log(`Removed keystore: ${filePath} (pubkey ${keystorePubkey})`);
                 }
             } catch (err) {
                 console.error(`Failed to process file ${fileName}:`, err?.message || err);
@@ -122,7 +122,7 @@ class KeystoresTool {
 
     async getFilesFromDir(dir) {
         return new Promise((resolve, reject) => {
-            GetFilesContentUtil(dir, 'keystore-m-12381_3600_', ".json", (err, files) => {
+            GetFilesContentUtil(dir, 'keystore-m_12381_3600_', ".json", (err, files) => {
                 if (err) return reject(err);
                 resolve(files);
             });
