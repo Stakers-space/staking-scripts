@@ -139,12 +139,11 @@ class RewardsCalculator {
         return parseInt(j.data.genesis_time, 10);
     }
 
+    // https://ethereum.github.io/beacon-APIs/#/Rewards/getAttestationsRewards
     async getAttestationRewards(epoch, indices) {
-        console.log(`Fetching attestation rewards for epoch ${epoch} / indices ${indices} ...`);
-        const j = await this.beaconPost(
-            `/eth/v1/beacon/rewards/attestations/${epoch}`,
-            { indices: indices.map((i) => i.toString()) }
-        );
+        const arr = indices.map(i => i.toString());
+        const j = await this.beaconPost( `/eth/v1/beacon/rewards/attestations/${epoch}`, arr );
+        console.log(`Fetching attestation rewards for epoch ${epoch} / indices ${indices} |`, j);
         const out = {};
         for (const item of j.data || []) {
             const idx = parseInt(item.validator_index ?? item.index, 10);
@@ -158,8 +157,8 @@ class RewardsCalculator {
     }
 
     async getProposerDutySlot(epoch, validatorIndex) {
-        console.log(`Fetching proposer duty for epoch ${epoch} / validatorIndex ${validatorIndex} ...`);
         const j = await this.beaconGet(`/eth/v1/validator/duties/proposer/${epoch}`);
+        console.log(`Fetching proposer duty for epoch ${epoch} / validatorIndex ${validatorIndex} |`, j);
         for (const duty of j.data || []) {
             if (parseInt(duty.validator_index, 10) === validatorIndex) {
                 return parseInt(duty.slot, 10);
@@ -171,11 +170,28 @@ class RewardsCalculator {
     async getBlockRewards(blockId) {
         const j = await this.beaconGet(`/eth/v1/beacon/rewards/blocks/${blockId}`);
         console.log(`Fetching block rewards for slot ${blockId} |`, j);
-        const val = (j.data || []).find(
-            x => parseInt(x.validator_index ?? x.index, 10) === this.config.validatorIndex
-        );
-        return val ? parseInt(val.reward || 0, 10) : 0; // gwei
+        const row = (j.data || [])[0]; // { proposer_index, total, ... }
+        if (!row) return 0;
+       
+        const proposer = parseInt(row.proposer_index, 10);
+        if (proposer !== this.config.validatorIndex) {
+            return 0;
+        }
+        return parseInt(row.total, 10); // Gwei
     }
+
+    async getSyncCommitteeRewardsForSlot(blockId, indices) {
+        const body = indices.map(i => i.toString());   // ["1000", ...]
+        const j = await this.beaconPost( `/eth/v1/beacon/rewards/sync_committee/${blockId}`, body );
+        console.log(`Fetching sync committee rewards for slot ${blockId} / indices ${indices} |`, j);
+        let sumGwei = 0;
+        for (const item of j.data || []) {
+            if (indices.includes(parseInt(item.validator_index, 10))) {
+            sumGwei += parseInt(item.reward || 0, 10);
+            }
+        }
+        return sumGwei; // Gwei
+        }
 
     // ----------- Time helpers -----------
     epochForTimestamp(genesisTimeSec, tsSec) {
@@ -203,10 +219,11 @@ class RewardsCalculator {
             const eStart = this.epochForTimestamp(genesis, start);
             const eEnd = this.epochForTimestamp(genesis, end);
 
-            console.log(`\nCalculating rewards for ${day.toISOString().slice(0, 10)} (${start} - ${end - 1}) | epochs ${eStart}–${eEnd - 1}) ...`);
+            console.log(`\nCalculating rewards for ${day.toISOString().slice(0, 10)} (${new Date(start*1000)} - ${new Date(end * 1000 - 1)}) | epochs ${eStart}–${eEnd - 1})`);
 
             let clAttGwei = 0;
             let clPropGwei = 0;
+            let scGwei = 0;
 
             // 1) Attestations
             for (let e = eStart; e < eEnd; e++) {
@@ -236,7 +253,20 @@ class RewardsCalculator {
                 }
             }
 
-            const clTotalGwei = clAttGwei + clPropGwei;
+            // 3) Sync committee reward
+            const { SLOTS_PER_EPOCH } = this.config.slotSetup;
+            const firstSlot = eStart * SLOTS_PER_EPOCH;
+            const lastSlot  = eEnd   * SLOTS_PER_EPOCH - 1;
+
+            for (let slot = firstSlot; slot <= lastSlot; slot++) {
+                try {
+                    scGwei += await this.getSyncCommitteeRewardsForSlot(slot, [validatorIndex]);
+                } catch (err) {
+                    console.error(`WARN: sync-committee rewards failed for slot ${slot}:`, err?.message || err);
+                }
+            }
+
+            const clTotalGwei = clAttGwei + clPropGwei + scGwei;
 
             // Wei calculation over BigInt, save to CSV as string
             const GWEI = 1_000_000_000n;
@@ -250,9 +280,10 @@ class RewardsCalculator {
             results.push({
                 date: day.toISOString().slice(0, 10),
                 cl_attestations_wei: clAttWei.toString(),
-                cl_proposer_wei: clPropWei.toString(),
-                cl_total_wei: clTotalWei.toString(),
-                cl_total_eth: clTotalEth,
+                cl_proposer_wei:     clPropWei.toString(),
+                cl_sync_wei:         (BigInt(scGwei) * 1_000_000_000n).toString(),
+                cl_total_wei:        clTotalWei.toString(),
+                cl_total_eth:        clTotalEth,
             });
         }
 
@@ -270,7 +301,7 @@ class RewardsCalculator {
 
         const rows = await this.aggregateDaily();
 
-        const header = [ "date", "cl_attestations_wei", "cl_proposer_wei", "cl_total_wei", "cl_total_eth", ];
+        const header = ["date","cl_attestations_wei","cl_proposer_wei","cl_sync_wei","cl_total_wei","cl_total_eth"];
         const csvLines = [header.join(",")];
         for (const r of rows) {
             csvLines.push( `${r.date},${r.cl_attestations_wei},${r.cl_proposer_wei},${r.cl_total_wei},${r.cl_total_eth}` );
