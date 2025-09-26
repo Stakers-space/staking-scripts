@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
-* Daily Ethereum/Gnosis validator consensus rewards for a given month. | version: 0.0.3
+* Daily Ethereum/Gnosis validator consensus rewards for a given month. | version: 0.0.4
 *
  * CLI (--arguments; default values in Config):
  *   --beacon            Beacon API base URL (default: "http://localhost:5052")
@@ -10,7 +10,7 @@
  *   --day               Day 1–31 (default: all days in month)
  *   --chain             "ethereum" | "gnosis"
  *   --outputCsv         Output CSV path (default: print to stdout)
- *   --httpTimeoutMs     Timeout for HTTP requests in ms (default: 1000)
+ *   --httpTimeoutMs     Timeout for HTTP requests in ms (default: 60000)
  *   --sleepMs           Delay between requests in ms (default: 10)
  *
  * Output:
@@ -38,18 +38,65 @@ class Config {
         this.day = null;
         this.chain = "ethereum"; // placeholder
         this.outputCsv = null;
-        this.httpTimeoutMs = 1000;
+        this.httpTimeoutMs = 60000;
         this.sleepMs = 10;
 
-        this.slotSetup = {
-            SLOT_SECONDS: 12,
-            SLOTS_PER_EPOCH: 32,
-        };
+        this.slotSetup = { SLOT_SECONDS: 12, SLOTS_PER_EPOCH: 32, };
 
         this.calulateSetup = {
             attestation: true,
-            proposer: false,
+            proposer: true,
             syncCommittee: false
+        }
+    }
+}
+
+class EpochRewards {
+    constructor() {
+        this.epochs = Object.create(null); // { [epoch:number]: { attestation, blockProposal, syncCommittee, sum }:gwei }
+        this.dates = Object.create(null);  // { [date:string]: { attestation, blockProposal, syncCommittee, sum }:gwei }
+    }
+
+    newEpochEntry(defValue = 0) {
+        return { attestation: defValue,  blockProposal: defValue, syncCommittee: defValue, sum: defValue };  // Number | null
+    }
+
+    attachReward(date, epoch, type, value) {
+        if(!this.epochs[date]) this.epochs[date] = {};
+        const row = (this.epochs[date][epoch] ||= this.newEpochEntry(0));
+
+        if(type === "sum") {
+            return console.error("Restricted type 'sum'");
+        } else {
+            if (!(type in row)) { console.error("Invalid reward type", type); return; }
+        }
+        
+        row[type] = value;
+        this._processSumOperation(row, "sum", value);
+    }
+
+    calculateDaySum(date) {
+        let daySum = (this.dates[date] ||= this.newEpochEntry(null));
+        const dayEpochs = this.epochs[date];
+        if(!dayEpochs) return;
+
+        daySum = this.newEpochEntry(0);
+
+        for (const row of Object.values(dayEpochs)) { 
+            this._processSumOperation(daySum, "attestation", row.attestation);
+            this._processSumOperation(daySum, "blockProposal", row.blockProposal);
+            this._processSumOperation(daySum, "syncCommittee", row.syncCommittee);
+            this._processSumOperation(daySum, "sum", row.sum);
+        }
+    }
+
+    _processSumOperation(row, type, value){
+        if(row[type] !== null) {
+            if(value === null) {
+                row[type] = null;
+            } else {
+                row[type] += value;
+            }
         }
     }
 }
@@ -74,14 +121,14 @@ class RewardsCalculator {
     }
 
     // ---------- Low-level HTTP (localhost over http) ----------
-    httpRequest(url, options = {}, timeoutMs = 20000) {
+    httpRequest(url, options = {}, timeoutMs = 0) {
         return new Promise((resolve, reject) => {
             const req = http.request(
                 url,
                 {
                     method: options.method || "GET",
                     headers: options.headers || {},
-                    timeout: timeoutMs, // fires 'timeout' event
+                   ...(timeoutMs > 0 ? { timeout: timeoutMs } : {}),
                 },
                 (res) => {
                     let data = "";
@@ -113,20 +160,20 @@ class RewardsCalculator {
     }
 
     // ---------- Beacon helpers ----------
-    async beaconGet(path, params = undefined) {
-        const { beacon, httpTimeoutMs, sleepMs } = this.config;
+    async beaconGet(path, params = undefined, timeoutMs = 0) {
+        const { beacon, sleepMs } = this.config;
         let url = beacon.replace(/\/$/, "") + path;
         if (params) {
             const usp = new URLSearchParams(params);
             url += "?" + usp.toString();
         }
-        const json = await this.httpRequest(url, {}, httpTimeoutMs);
+        const json = await this.httpRequest(url, {}, timeoutMs);
         if (sleepMs) await new Promise((r) => setTimeout(r, sleepMs));
         return json;
     }
 
-    async beaconPost(path, body) {
-        const { beacon, httpTimeoutMs, sleepMs } = this.config;
+    async beaconPost(path, body, timeoutMs = 0) {
+        const { beacon, sleepMs } = this.config;
         let url = beacon.replace(/\/$/, "") + path;
         const json = await this.httpRequest(
             url,
@@ -135,7 +182,7 @@ class RewardsCalculator {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             },
-            httpTimeoutMs
+            timeoutMs
         );
         if (sleepMs) await new Promise((r) => setTimeout(r, sleepMs));
         return json;
@@ -143,7 +190,7 @@ class RewardsCalculator {
 
     async getCanonicalHeaderForSlot(slot) {
         try {
-            const j = await this.beaconGet(`/eth/v1/beacon/headers/${slot}`);
+            const j = await this.beaconGet(`/eth/v1/beacon/headers/${slot}`, {}, this.config.httpTimeoutMs );
             // j.data = { root, header: { message: { slot, ... }, ... } }
             return j.data || null;
         } catch (e) {
@@ -154,7 +201,7 @@ class RewardsCalculator {
 
     async isInSyncCommittee(epoch, validatorIndex) {
         // use „finalized“ state for history (more stable than „head“)
-        const j = await this.beaconGet( `/eth/v1/beacon/states/finalized/sync_committees?epoch=${epoch}` );
+        const j = await this.beaconGet( `/eth/v1/beacon/states/finalized/sync_committees?epoch=${epoch}`, {}, this.config.httpTimeoutMs );
         // j.data.validators = [indices...]
         const arr = j.data?.validators || [];
         return arr.some(v => parseInt(v, 10) === validatorIndex);
@@ -162,14 +209,14 @@ class RewardsCalculator {
 
     // ----------- Beacon endpoints -----------
     async getGenesisTime() {
-        const j = await this.beaconGet("/eth/v1/beacon/genesis");
+        const j = await this.beaconGet("/eth/v1/beacon/genesis", {}, this.config.httpTimeoutMs);
         return parseInt(j.data.genesis_time, 10);
     }
 
     // https://ethereum.github.io/beacon-APIs/#/Rewards/getAttestationsRewards
     async getAttestationRewards(epoch, indices) {
         const body = indices.map(i => i.toString());
-        const j = await this.beaconPost( `/eth/v1/beacon/rewards/attestations/${epoch}`, body );
+        const j = await this.beaconPost( `/eth/v1/beacon/rewards/attestations/${epoch}`, body, this.config.httpTimeoutMs );
         console.log(`Fetching attestation rewards for epoch ${epoch} / body`, JSON.stringify(body), "→", j);
 
         // Lodestar / spec: j.data = { ideal_rewards: [...], total_rewards: [...] }
@@ -191,12 +238,13 @@ class RewardsCalculator {
 
     async getProposerDutySlot(epoch, validatorIndex) {
         const j = await this.beaconGet(`/eth/v1/validator/duties/proposer/${epoch}`);
-        console.log(`Fetching proposer duty for epoch ${epoch} / validatorIndex ${validatorIndex} |`, j);
+        //console.log(`Fetching proposer duty for epoch ${epoch} / validatorIndex ${validatorIndex} |`, j);
         for (const duty of j.data || []) {
             if (parseInt(duty.validator_index, 10) === validatorIndex) {
                 return parseInt(duty.slot, 10);
             }
         }
+        // no proposer duty for validatorIndex
         return -1;
     }
 
@@ -219,7 +267,7 @@ class RewardsCalculator {
         if (!header) return 0;
 
         const body = indices.map(i => i.toString());
-        const j = await this.beaconPost( `/eth/v1/beacon/rewards/sync_committee/${slot}`, body );
+        const j = await this.beaconPost( `/eth/v1/beacon/rewards/sync_committee/${slot}`, body, this.config.httpTimeoutMs );
         console.log(`Fetching sync committee rewards for slot ${slot} / indices ${indices} |`, j);
         let sumGwei = 0;
         for (const item of j.data || []) {
@@ -257,8 +305,9 @@ class RewardsCalculator {
     async aggregateDaily() {
         const { validatorIndex, year, month } = this.config;
 
+        const epochRewards = new EpochRewards();
+
         const genesis = await this.getGenesisTime();
-        const results = [];
 
         for (const day of this.daysToProcess(year, month)) {
             const start = Date.UTC( day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 0, 0, 0 ) / 1000;
@@ -267,89 +316,79 @@ class RewardsCalculator {
             const eStart = this.epochForTimestamp(genesis, start);
             const eEnd = this.epochForTimestamp(genesis, end);
 
-            console.log(`\nCalculating rewards for ${day.toISOString().slice(0, 10)} (epochs ${eStart}–${eEnd - 1}))`);
 
-            let clAttGwei = 0;
-            let clPropGwei = 0;
-            let scGwei = 0;
+            const date = day.toISOString().slice(0, 10);
+            console.log(`\nCalculating rewards for ${date} (epochs ${eStart}–${eEnd - 1}))`);
 
-            // 1) Attestations
-            if(this.config.calulateSetup.attestation){
-                for (let e = eStart; e < eEnd; e++) {
+            for (let e = eStart; e < eEnd; e++) {
+                // 1) Attestations
+                if(this.config.calulateSetup.attestation){
                     try {
                         const r = await this.getAttestationRewards(e, [validatorIndex]);
-                        clAttGwei += r[validatorIndex] || 0;
+                        epochRewards.attachReward(date, e, "attestation", (r[validatorIndex] ?? 0));
                     } catch (err) {
-                        console.error(
-                            `WARN: attestation rewards failed for epoch ${e}:`,
-                            err?.message || err
-                        );
+                        epochRewards.attachReward(date, e, "attestation", null);
+                        console.error( `WARN: attestation rewards failed for epoch ${e}:`, err?.message || err );
                     }
-                }
-            }
+                } 
             
-             // 2) Proposer rewards (if pubId is proposer in the epoch)
-            if(this.config.calulateSetup.proposer){
-                for (let e = eStart; e < eEnd; e++) {
+                // 2) Proposer rewards (if pubId is proposer in the epoch)
+                if(this.config.calulateSetup.proposer){
                     try {
                         const slot = await this.getProposerDutySlot(e, validatorIndex);
                         if (slot !== -1) {
-                            clPropGwei += await this.getBlockRewards(String(slot));
+                            console.log(`Epoch ${e} | Getting getBlockRewards for proposer slot:`, slot);
+                            try {
+                                const g = await this.getBlockRewards(String(slot));
+                                epochRewards.attachReward(date, e, "blockProposal", g);
+                            } catch (err) {
+                                epochRewards.attachReward(date, e, "blockProposal", null);
+                                console.error( `WARN: block rewards failed for epoch ${e} slot ${slot}:`, inner?.message || inner );
+                            }
                         }
                     } catch (err) {
-                        console.error(
-                            `WARN: proposer/block rewards failed for epoch ${e}:`,
-                            err?.message || err
-                        );
+                        epochRewards.attachReward(date, e, "blockProposal", null);
+                        console.error( `WARN: getProposerDutySlot failed for epoch ${e}:`, err?.message || err );
                     }
                 }
-            }
-            
 
-            // 3) Sync committee reward
-            if(this.config.calulateSetup.syncCommittee){
-                const maybeEpoch = eStart;
-                const inSC = await this.isInSyncCommittee(maybeEpoch, validatorIndex);
-                if (inSC) {
-                    const { SLOTS_PER_EPOCH } = this.config.slotSetup;
-                    const firstSlot = eStart * SLOTS_PER_EPOCH;
-                    const lastSlot  = eEnd   * SLOTS_PER_EPOCH - 1;
+                // 3) Sync committee reward
+                if(this.config.calulateSetup.syncCommittee){
+                    try {
+                        const inSC = await this.isInSyncCommittee(e, validatorIndex);
+                        if (inSC) {
+                            const { SLOTS_PER_EPOCH } = this.config.slotSetup;
+                            const firstSlot = e * SLOTS_PER_EPOCH;
+                            const lastSlot  = (e + 1) * SLOTS_PER_EPOCH - 1;
+                            let sum = 0, broken = false;
 
-                    for (let slot = firstSlot; slot <= lastSlot; slot++) {
-                        try {
-                            scGwei += await this.getSyncCommitteeRewardsForSlot(slot, [validatorIndex]);
-                        } catch (err) {
-                            console.error(`WARN: sync-committee rewards failed for slot ${slot}:`, err?.message || err);
+                            for (let slot = firstSlot; slot <= lastSlot; slot++) {
+                            try {
+                                sum += await this.getSyncCommitteeRewardsForSlot(slot, [validatorIndex]);
+                            } catch (err) {
+                                broken = true;
+                                console.error(`WARN: sync-committee rewards failed for slot ${slot}:`, err?.message || err);
+                                break;
+                            }
+                            }
+                            epochRewards.attachReward(date, e, "syncCommittee", broken ? null : sum);
+                        } else {
+                            epochRewards.attachReward(date, e, "syncCommittee", 0);
                         }
+                    } catch (err) {
+                        epochRewards.attachReward(date, e, "syncCommittee", null);
+                        console.error(`WARN: sync-committee membership failed for epoch ${e}:`, err?.message || err);
                     }
                 }
             }
-            
-            const clTotalGwei = clAttGwei + clPropGwei + scGwei;
 
-            // Wei calculation over BigInt, save to CSV as string
-            const GWEI = 1_000_000_000n;
-            const clTotalWei = BigInt(clTotalGwei) * GWEI;
-            const clAttWei = BigInt(clAttGwei) * GWEI;
-            const clPropWei = BigInt(clPropGwei) * GWEI;
-
-            // Human-readeable ETH format (orientation, floating)
-            const clTotalEth = Number(clTotalWei) / 1e18;
-
-            results.push({
-                date: day.toISOString().slice(0, 10),
-                cl_attestations_wei: clAttWei.toString(),
-                cl_proposer_wei:     clPropWei.toString(),
-                cl_sync_wei:         (BigInt(scGwei) * 1_000_000_000n).toString(),
-                cl_total_wei:        clTotalWei.toString(),
-                cl_total_eth:        clTotalEth,
-            });
+            epochRewards.calculateDaySum(date);
         }
 
-        return results;
+        return epochRewards;
     }
 
-    // ----------- Luunching (I/O) -----------
+    // ----------- Launching (I/O) -----------
     async run() {
         if (this.config.month < 1 || this.config.month > 12) {
             throw new Error(`Invalid month '${this.config.month}'. Use 1-12.`);
@@ -358,15 +397,27 @@ class RewardsCalculator {
             throw new Error(`Invalid validatorIndex '${this.config.validatorIndex}'.`);
         }
 
-        const rows = await this.aggregateDaily();
+        const Rewards = await this.aggregateDaily();
 
-        const header = ["date","cl_attestations_wei","cl_proposer_wei","cl_sync_wei","cl_total_wei","cl_total_eth"];
-        const csvLines = [header.join(",")];
-        for (const r of rows) {
-            csvLines.push(`${r.date},${r.cl_attestations_wei},${r.cl_proposer_wei},${r.cl_sync_wei},${r.cl_total_wei},${r.cl_total_eth}`);
+        if(!this.config.outputCsv) {
+            console.log("Values in WEI");
+            return console.log(Rewards); 
         }
-        const csvOut = csvLines.join("\n");
 
+        //const toWei = (v) => v === null ? "unknown" : (BigInt(v) * 1_000_000_000n).toString();
+
+        // if save to csv
+        // epochs
+        const header = ["epoch","cl_attestations_wei","cl_proposer_wei","cl_sync_wei","sum_wei","date"];
+        const csvLines = [header.join(",")];
+        for (const [epoch, r] of Object.entries(Rewards.epochs)) {
+            csvLines.push(`${epoch},${r.attestation},${r.blockProposal},${r.syncCommittee},${r.sum},${r.date}`);
+            // toWei(r.attestation)
+        }
+
+        // ToDO: days
+
+        const csvOut = csvLines.join("\n");
         if (this.config.outputCsv) {
             fs.writeFileSync(this.config.outputCsv, csvOut + "\n");
             console.log(`Wrote ${rows.length} rows to ${this.config.outputCsv}`);
