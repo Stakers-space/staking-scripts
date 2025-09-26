@@ -168,19 +168,25 @@ class RewardsCalculator {
 
     // https://ethereum.github.io/beacon-APIs/#/Rewards/getAttestationsRewards
     async getAttestationRewards(epoch, indices) {
-        const arr = indices.map(i => i.toString());
-        const j = await this.beaconPost( `/eth/v1/beacon/rewards/attestations/${epoch}`, arr );
-        console.log(`Fetching attestation rewards for epoch ${epoch} / indices ${indices} |`, j);
+        const body = indices.map(i => i.toString());
+        const j = await this.beaconPost( `/eth/v1/beacon/rewards/attestations/${epoch}`, body );
+        console.log(`Fetching attestation rewards for epoch ${epoch} / body ${body} |`, j);
+
+        // Lodestar / spec: j.data = { ideal_rewards: [...], total_rewards: [...] }
+        const totals = j?.data?.total_rewards || [];
+
         const out = {};
-        for (const item of j.data || []) {
-            const idx = parseInt(item.validator_index ?? item.index, 10);
-            const att = item.attestation_rewards || item;
-            const src = parseInt(att.source ?? 0, 10);
-            const tgt = parseInt(att.target ?? 0, 10);
-            const head = parseInt(att.head ?? 0, 10);
-            out[idx] = (out[idx] || 0) + src + tgt + head;
+        for (const r of totals) {
+            const idx = parseInt(r.validator_index ?? r.index, 10);
+
+            // array in Gwei; sum all relevant (incl. penalties)
+            const fields = ["head", "target", "source", "inclusion_delay", "inactivity"];
+            let sum = 0;
+            for (const f of fields) sum += parseInt(r[f] ?? 0, 10);
+
+            out[idx] = (out[idx] || 0) + sum;
         }
-        return out; // { validatorIndex: rewardGwei }
+        return out; // { [validatorIndex]: gwei }
     }
 
     async getProposerDutySlot(epoch, validatorIndex) {
