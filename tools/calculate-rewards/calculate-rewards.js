@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
-* Daily Ethereum/Gnosis validator consensus rewards for a given month. | version: 0.0.1
+* Daily Ethereum/Gnosis validator consensus rewards for a given month. | version: 0.0.2
 *
  * CLI (--arguments; default values in Config):
  *   --beacon            Beacon API base URL (default: "http://localhost:5052")
@@ -10,21 +10,23 @@
  *   --chain             "ethereum" | "gnosis"
  *   --outputCsv         Output CSV path (default: print to stdout)
  *   --httpTimeoutMs     Timeout for HTTP requests in ms (default: 10000)
- *   --sleepMs           Deleay between requests in ms (default: 100)
+ *   --sleepMs           Delay between requests in ms (default: 10)
  *
  * Output:
  *   CSV: date, cl_attestations_wei, cl_proposer_wei, cl_total_wei, cl_total_eth
  *
  * Notes:
- *   - Day = UTC Day.
- *   - Currently Only CL (attestations + proposer). TODO: sync-committee & execution-layer rewards.
+ *   - Day = UTC day.
+ *   - Currently only CL (attestations + proposer). TODO: sync-committee & execution-layer rewards.
  */
-
 import fs from "fs";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const loadFromArgs = require("./load-from-process-arguments.js");
-import fetch from "node-fetch";
+import http from "http";
+import loadFromArgumentsUtil from "./load-from-process-arguments.js";
+
+// Consensus Layer
+// POST /eth/v1/beacon/rewards/attestations/{epoch}
+// GET /eth/v1/beacon/rewards/blocks/{block_id}
+// POST /eth/v1/beacon/rewards/sync_committee/{block_id}
 
 class Config {
     constructor() {
@@ -34,8 +36,8 @@ class Config {
         this.month = 8;
         this.chain = "ethereum"; // placeholder
         this.outputCsv = null;
-        this.httpTimeoutMs = 20000;
-        this.sleepMs = 0;
+        this.httpTimeoutMs = 10000;
+        this.sleepMs = 10;
 
         this.slotSetup = {
             SLOT_SECONDS: 12,
@@ -49,27 +51,60 @@ class RewardsCalculator {
         this.config = new Config();
         loadFromArgumentsUtil(this.config);
 
-        if(this.chain === "ethereum"){
-            this.slotSetup = {
-                SLOT_SECONDS: 12,
-                SLOTS_PER_EPOCH: 32
-            };
-        } else if(this.chain === "gnosis"){
-            this.slotSetup = {
-                SLOT_SECONDS: 5,
-                SLOTS_PER_EPOCH: 16
-            };
-        } // else use custom values from config
-
-        console.log("Loaded config:", config);
+        switch(this.config.chain){
+            case "ethereum":
+                this.config.slotSetup = { SLOT_SECONDS: 12, SLOTS_PER_EPOCH: 32 };
+                break;
+            case "gnosis":
+                this.config.slotSetup = { SLOT_SECONDS: 5, SLOTS_PER_EPOCH: 16 };
+                break;
+            default:
+                // leave custom values from config.slotSetup
+                break;
+        }
+        console.log("Loaded config:", this.config);
     }
 
-    // Consensus Layer
-    // POST /eth/v1/beacon/rewards/attestations/{epoch}
-    // GET /eth/v1/beacon/rewards/blocks/{block_id}
-    // POST /eth/v1/beacon/rewards/sync_committee/{block_id}
+    // ---------- Low-level HTTP (localhost over http) ----------
+    httpRequest(url, options = {}, timeoutMs = 20000) {
+        return new Promise((resolve, reject) => {
+            const req = http.request(
+                url,
+                {
+                    method: options.method || "GET",
+                    headers: options.headers || {},
+                    timeout: timeoutMs, // fires 'timeout' event
+                },
+                (res) => {
+                    let data = "";
+                    res.on("data", (chunk) => (data += chunk));
+                    res.on("end", () => {
+                        if (res.statusCode >= 200 && res.statusCode < 300) {
+                        try {
+                            resolve(JSON.parse(data || "{}"));
+                        } catch (err) {
+                            reject(new Error("Invalid JSON response: " + err.message));
+                        }
+                        } else {
+                        reject(new Error(`HTTP ${res.statusCode}: ${data}`));
+                        }
+                    });
+                }
+            );
 
+            req.on("timeout", () => {
+                req.destroy(new Error(`HTTP timeout after ${timeoutMs} ms`));
+            });
+            req.on("error", reject);
 
+            if (options.body) {
+                req.write(options.body);
+            }
+            req.end();
+        });
+    }
+
+    // ---------- Beacon helpers ----------
     async beaconGet(path, params = undefined) {
         const { beacon, httpTimeoutMs, sleepMs } = this.config;
         let url = beacon.replace(/\/$/, "") + path;
@@ -77,38 +112,25 @@ class RewardsCalculator {
             const usp = new URLSearchParams(params);
             url += "?" + usp.toString();
         }
-        const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), httpTimeoutMs);
-        try {
-            const res = await fetch(url, { signal: controller.signal });
-            if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-            const data = await res.json();
-            if (sleepMs) await new Promise((r) => setTimeout(r, sleepMs));
-            return data;
-        } finally {
-            clearTimeout(t);
-        }
+        const json = await this.httpRequest(url, {}, httpTimeoutMs);
+        if (sleepMs) await new Promise((r) => setTimeout(r, sleepMs));
+        return json;
     }
 
     async beaconPost(path, body) {
         const { beacon, httpTimeoutMs, sleepMs } = this.config;
         let url = beacon.replace(/\/$/, "") + path;
-        const controller = new AbortController();
-        const t = setTimeout(() => controller.abort(), httpTimeoutMs);
-        try {
-            const res = await fetch(url, {
+        const json = await this.httpRequest(
+            url,
+            {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
-                signal: controller.signal,
-            });
-            if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-            const data = await res.json();
-            if (sleepMs) await new Promise((r) => setTimeout(r, sleepMs));
-            return data;
-        } finally {
-            clearTimeout(t);
-        }
+            },
+            httpTimeoutMs
+        );
+        if (sleepMs) await new Promise((r) => setTimeout(r, sleepMs));
+        return json;
     }
 
     // ----------- Beacon endpoints -----------
@@ -147,13 +169,12 @@ class RewardsCalculator {
     }
 
     async getBlockRewards(blockId) {
-        console.log(`Fetching block rewards for slot ${blockId} ...`);
         const j = await this.beaconGet(`/eth/v1/beacon/rewards/blocks/${blockId}`);
-        let total = 0;
-        for (const comp of j.data || []) {
-            total += parseInt(comp.reward || 0, 10);
-        }
-        return total; // gwei
+        console.log(`Fetching block rewards for slot ${blockId} |`, j);
+        const val = (j.data || []).find(
+            x => parseInt(x.validator_index ?? x.index, 10) === this.config.validatorIndex
+        );
+        return val ? parseInt(val.reward || 0, 10) : 0; // gwei
     }
 
     // ----------- Time helpers -----------
@@ -182,7 +203,7 @@ class RewardsCalculator {
             const eStart = this.epochForTimestamp(genesis, start);
             const eEnd = this.epochForTimestamp(genesis, end);
 
-            console.log(`\nCalculating rewards for ${day.toISOString().slice(0, 10)} (${start} - ${end}) | epochs ${eStart}–${eEnd - 1}) ...`);
+            console.log(`\nCalculating rewards for ${day.toISOString().slice(0, 10)} (${start} - ${end - 1}) | epochs ${eStart}–${eEnd - 1}) ...`);
 
             let clAttGwei = 0;
             let clPropGwei = 0;
@@ -267,7 +288,7 @@ class RewardsCalculator {
 
 // ------------------------- Entrypoint -------------------------
 (async () => {
-    const calc = new RewardsCalculator(config);
+    const calc = new RewardsCalculator();
     try {
         await calc.run();
     } catch (err) {

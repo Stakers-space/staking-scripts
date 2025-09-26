@@ -49,7 +49,7 @@ sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/calculate-reward
 
 ### Run Calculation
 ```
-node calculate-rewards.js \
+node /srv/stakersspace_utils/calculate-rewards.js \
   --beacon=http://localhost:5052 \
   --validatorIndex=1 \
   --year=2025 \
