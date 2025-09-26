@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
-* Daily Ethereum/Gnosis validator consensus rewards for a given month. | version: 0.0.2
+* Daily Ethereum/Gnosis validator consensus rewards for a given month. | version: 0.0.3
 *
  * CLI (--arguments; default values in Config):
  *   --beacon            Beacon API base URL (default: "http://localhost:5052")
@@ -133,6 +133,25 @@ class RewardsCalculator {
         return json;
     }
 
+    async getCanonicalHeaderForSlot(slot) {
+        try {
+            const j = await this.beaconGet(`/eth/v1/beacon/headers/${slot}`);
+            // j.data = { root, header: { message: { slot, ... }, ... } }
+            return j.data || null;
+        } catch (e) {
+            // 404 -> slot without block (missed), 500 -> BN does not have data
+            return null;
+        }
+    }
+
+    async isInSyncCommittee(epoch, validatorIndex) {
+        // use „finalized“ state for history (more stable than „head“)
+        const j = await this.beaconGet( `/eth/v1/beacon/states/finalized/sync_committees?epoch=${epoch}` );
+        // j.data.validators = [indices...]
+        const arr = j.data?.validators || [];
+        return arr.some(v => parseInt(v, 10) === validatorIndex);
+    }
+
     // ----------- Beacon endpoints -----------
     async getGenesisTime() {
         const j = await this.beaconGet("/eth/v1/beacon/genesis");
@@ -181,6 +200,10 @@ class RewardsCalculator {
     }
 
     async getSyncCommitteeRewardsForSlot(blockId, indices) {
+        // does the block exists?
+        const header = await this.getCanonicalHeaderForSlot(slot);
+        if (!header) return 0;
+
         const body = indices.map(i => i.toString());   // ["1000", ...]
         const j = await this.beaconPost( `/eth/v1/beacon/rewards/sync_committee/${blockId}`, body );
         console.log(`Fetching sync committee rewards for slot ${blockId} / indices ${indices} |`, j);
@@ -191,7 +214,7 @@ class RewardsCalculator {
             }
         }
         return sumGwei; // Gwei
-        }
+    }
 
     // ----------- Time helpers -----------
     epochForTimestamp(genesisTimeSec, tsSec) {
@@ -254,18 +277,24 @@ class RewardsCalculator {
             }
 
             // 3) Sync committee reward
-            const { SLOTS_PER_EPOCH } = this.config.slotSetup;
-            const firstSlot = eStart * SLOTS_PER_EPOCH;
-            const lastSlot  = eEnd   * SLOTS_PER_EPOCH - 1;
+            if(false){
+                const maybeEpoch = eStart;
+                const inSC = await this.isInSyncCommittee(maybeEpoch, validatorIndex);
+                if (inSC) {
+                    const { SLOTS_PER_EPOCH } = this.config.slotSetup;
+                    const firstSlot = eStart * SLOTS_PER_EPOCH;
+                    const lastSlot  = eEnd   * SLOTS_PER_EPOCH - 1;
 
-            for (let slot = firstSlot; slot <= lastSlot; slot++) {
-                try {
-                    scGwei += await this.getSyncCommitteeRewardsForSlot(slot, [validatorIndex]);
-                } catch (err) {
-                    console.error(`WARN: sync-committee rewards failed for slot ${slot}:`, err?.message || err);
+                    for (let slot = firstSlot; slot <= lastSlot; slot++) {
+                        try {
+                            scGwei += await this.getSyncCommitteeRewardsForSlot(slot, [validatorIndex]);
+                        } catch (err) {
+                            console.error(`WARN: sync-committee rewards failed for slot ${slot}:`, err?.message || err);
+                        }
+                    }
                 }
             }
-
+            
             const clTotalGwei = clAttGwei + clPropGwei + scGwei;
 
             // Wei calculation over BigInt, save to CSV as string
