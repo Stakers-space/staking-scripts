@@ -168,12 +168,9 @@ class RewardsCalculator {
 
     // https://ethereum.github.io/beacon-APIs/#/Rewards/getAttestationsRewards
     async getAttestationRewards(epoch, indices) {
-        const body = Array.isArray(indices) ? indices.map(i => i.toString()) : [String(indices)];
-        if (!Array.isArray(body) || body.length === 0) {
-            throw new Error("getAttestationRewards: indices must be a non-empty array");
-        }
+        const body = indices.map(i => i.toString());
         const j = await this.beaconPost( `/eth/v1/beacon/rewards/attestations/${epoch}`, body );
-        console.log(`Fetching attestation rewards for epoch ${epoch} / body ${body} |`, j);
+        console.log(`Fetching attestation rewards for epoch ${epoch} / body`, JSON.stringify(body), "→", j);
 
         // Lodestar / spec: j.data = { ideal_rewards: [...], total_rewards: [...] }
         const totals = j?.data?.total_rewards || [];
