@@ -6,7 +6,8 @@
  *   --beacon            Beacon API base URL (default: "http://localhost:5052")
  *   --validatorIndex    Integer validator index ("pubId") (default: 1000)
  *   --year              Year (default: 2025)
- *   --month             Month 1–12 (default: 8)
+ *   --month             Month 1–12 (default: 9)
+ *   --day               Day 1–31 (default: all days in month)
  *   --chain             "ethereum" | "gnosis"
  *   --outputCsv         Output CSV path (default: print to stdout)
  *   --httpTimeoutMs     Timeout for HTTP requests in ms (default: 10000)
@@ -34,6 +35,7 @@ class Config {
         this.validatorIndex = 1000;
         this.year = 2025;
         this.month = 8;
+        this.day = null;
         this.chain = "ethereum"; // placeholder
         this.outputCsv = null;
         this.httpTimeoutMs = 10000;
@@ -199,14 +201,14 @@ class RewardsCalculator {
         return parseInt(row.total, 10); // Gwei
     }
 
-    async getSyncCommitteeRewardsForSlot(blockId, indices) {
+    async getSyncCommitteeRewardsForSlot(slot, indices) {
         // does the block exists?
         const header = await this.getCanonicalHeaderForSlot(slot);
         if (!header) return 0;
 
-        const body = indices.map(i => i.toString());   // ["1000", ...]
-        const j = await this.beaconPost( `/eth/v1/beacon/rewards/sync_committee/${blockId}`, body );
-        console.log(`Fetching sync committee rewards for slot ${blockId} / indices ${indices} |`, j);
+        const body = indices.map(i => i.toString());
+        const j = await this.beaconPost( `/eth/v1/beacon/rewards/sync_committee/${slot}`, body );
+        console.log(`Fetching sync committee rewards for slot ${slot} / indices ${indices} |`, j);
         let sumGwei = 0;
         for (const item of j.data || []) {
             if (indices.includes(parseInt(item.validator_index, 10))) {
@@ -228,6 +230,17 @@ class RewardsCalculator {
         return Array.from({ length: count }, (_, i) => new Date(Date.UTC(year, month - 1, i + 1)));
     }
 
+    daysToProcess(year, month) {
+        if (this.config.day != null) {
+            const d = Number(this.config.day);
+            if (!Number.isInteger(d) || d < 1 || d > new Date(year, month, 0).getDate()) {
+            throw new Error(`Invalid --day '${this.config.day}' for ${year}-${month}`);
+            }
+            return [new Date(Date.UTC(year, month - 1, d))];
+        }
+        return this.daysInMonth(year, month);
+    }
+
     // ----------- Aggergation day/month -----------
     async aggregateDaily() {
         const { validatorIndex, year, month } = this.config;
@@ -235,14 +248,14 @@ class RewardsCalculator {
         const genesis = await this.getGenesisTime();
         const results = [];
 
-        for (const day of this.daysInMonth(year, month)) {
+        for (const day of this.daysToProcess(year, month)) {
             const start = Date.UTC( day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 0, 0, 0 ) / 1000;
             const   end = Date.UTC( day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), 23, 59, 59 ) / 1000 + 1;
 
             const eStart = this.epochForTimestamp(genesis, start);
             const eEnd = this.epochForTimestamp(genesis, end);
 
-            console.log(`\nCalculating rewards for ${day.toISOString().slice(0, 10)} (${new Date(start*1000)} - ${new Date(end * 1000 - 1)}) | epochs ${eStart}–${eEnd - 1})`);
+            console.log(`\nCalculating rewards for ${day.toISOString().slice(0, 10)} (epochs ${eStart}–${eEnd - 1}))`);
 
             let clAttGwei = 0;
             let clPropGwei = 0;
@@ -333,7 +346,7 @@ class RewardsCalculator {
         const header = ["date","cl_attestations_wei","cl_proposer_wei","cl_sync_wei","cl_total_wei","cl_total_eth"];
         const csvLines = [header.join(",")];
         for (const r of rows) {
-            csvLines.push( `${r.date},${r.cl_attestations_wei},${r.cl_proposer_wei},${r.cl_total_wei},${r.cl_total_eth}` );
+            csvLines.push(`${r.date},${r.cl_attestations_wei},${r.cl_proposer_wei},${r.cl_sync_wei},${r.cl_total_wei},${r.cl_total_eth}`);
         }
         const csvOut = csvLines.join("\n");
 

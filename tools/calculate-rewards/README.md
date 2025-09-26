@@ -17,6 +17,7 @@ Supported networks:
 ## Usage
 ### Prerequisites
 - Synced [Consensus (Beacon) client](https://stakers.space/guides)
+  - added `--serveHistoricalState` flag (Lodestar) or alternative flag for used client
 - Installed utils below (Installation guide on each util page)
   - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/utils/load-from-process-arguments)
 
@@ -48,10 +49,20 @@ sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/calculate-reward
 ```
 
 ### Run Calculation
+- For certain day
 ```
 node /srv/stakersspace_utils/calculate-rewards.js \
   --beacon=http://localhost:5052 \
   --validatorIndex=1 \
   --year=2025 \
-  --month=8
+  --month=9 \
+  --day=25
+```
+- For each day in a certain month
+```
+node /srv/stakersspace_utils/calculate-rewards.js \
+  --beacon=http://localhost:5052 \
+  --validatorIndex=1 \
+  --year=2025 \
+  --month=9
 ```
