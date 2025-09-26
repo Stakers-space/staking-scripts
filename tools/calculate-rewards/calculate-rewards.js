@@ -10,7 +10,7 @@
  *   --day               Day 1–31 (default: all days in month)
  *   --chain             "ethereum" | "gnosis"
  *   --outputCsv         Output CSV path (default: print to stdout)
- *   --httpTimeoutMs     Timeout for HTTP requests in ms (default: 10000)
+ *   --httpTimeoutMs     Timeout for HTTP requests in ms (default: 1000)
  *   --sleepMs           Delay between requests in ms (default: 10)
  *
  * Output:
@@ -38,13 +38,19 @@ class Config {
         this.day = null;
         this.chain = "ethereum"; // placeholder
         this.outputCsv = null;
-        this.httpTimeoutMs = 10000;
+        this.httpTimeoutMs = 1000;
         this.sleepMs = 10;
 
         this.slotSetup = {
             SLOT_SECONDS: 12,
             SLOTS_PER_EPOCH: 32,
         };
+
+        this.calulateSetup = {
+            attestation: true,
+            proposer: false,
+            syncCommittee: false
+        }
     }
 }
 
@@ -262,35 +268,40 @@ class RewardsCalculator {
             let scGwei = 0;
 
             // 1) Attestations
-            for (let e = eStart; e < eEnd; e++) {
-                try {
-                    const r = await this.getAttestationRewards(e, [validatorIndex]);
-                    clAttGwei += r[validatorIndex] || 0;
-                } catch (err) {
-                    console.error(
-                        `WARN: attestation rewards failed for epoch ${e}:`,
-                        err?.message || err
-                    );
-                }
-            }
-
-            // 2) Proposer rewards (if pubId is proposer in the epoch)
-            for (let e = eStart; e < eEnd; e++) {
-                try {
-                    const slot = await this.getProposerDutySlot(e, validatorIndex);
-                    if (slot !== -1) {
-                        clPropGwei += await this.getBlockRewards(String(slot));
+            if(this.config.calulateSetup.attestation){
+                for (let e = eStart; e < eEnd; e++) {
+                    try {
+                        const r = await this.getAttestationRewards(e, [validatorIndex]);
+                        clAttGwei += r[validatorIndex] || 0;
+                    } catch (err) {
+                        console.error(
+                            `WARN: attestation rewards failed for epoch ${e}:`,
+                            err?.message || err
+                        );
                     }
-                } catch (err) {
-                    console.error(
-                        `WARN: proposer/block rewards failed for epoch ${e}:`,
-                        err?.message || err
-                    );
                 }
             }
+            
+             // 2) Proposer rewards (if pubId is proposer in the epoch)
+            if(this.config.calulateSetup.proposer){
+                for (let e = eStart; e < eEnd; e++) {
+                    try {
+                        const slot = await this.getProposerDutySlot(e, validatorIndex);
+                        if (slot !== -1) {
+                            clPropGwei += await this.getBlockRewards(String(slot));
+                        }
+                    } catch (err) {
+                        console.error(
+                            `WARN: proposer/block rewards failed for epoch ${e}:`,
+                            err?.message || err
+                        );
+                    }
+                }
+            }
+            
 
             // 3) Sync committee reward
-            if(false){
+            if(this.config.calulateSetup.syncCommittee){
                 const maybeEpoch = eStart;
                 const inSC = await this.isInSyncCommittee(maybeEpoch, validatorIndex);
                 if (inSC) {
