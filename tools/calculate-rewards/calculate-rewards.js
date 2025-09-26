@@ -168,7 +168,10 @@ class RewardsCalculator {
 
     // https://ethereum.github.io/beacon-APIs/#/Rewards/getAttestationsRewards
     async getAttestationRewards(epoch, indices) {
-        const body = indices.map(i => i.toString());
+        const body = Array.isArray(indices) ? indices.map(i => i.toString()) : [String(indices)];
+        if (!Array.isArray(body) || body.length === 0) {
+            throw new Error("getAttestationRewards: indices must be a non-empty array");
+        }
         const j = await this.beaconPost( `/eth/v1/beacon/rewards/attestations/${epoch}`, body );
         console.log(`Fetching attestation rewards for epoch ${epoch} / body ${body} |`, j);
 
