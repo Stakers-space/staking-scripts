@@ -23,6 +23,8 @@
 import fs from "fs";
 import http from "http";
 import loadFromArgumentsUtil from "./load-from-process-arguments.js";
+import snapshotMod from "./validators-snapshot.js"; // CJS → default interop
+const { processSnapshot } = snapshotMod;
 
 // Consensus Layer
 // POST /eth/v1/beacon/rewards/attestations/{epoch}
@@ -425,15 +427,83 @@ class RewardsCalculator {
             console.log(csvOut);
         }
     }
+
+    // ----------- Subcommand: snapshot (for cron) -----------
+    static toArrayMaybeCSV(x) {
+        if (x == null) return null;
+        if (Array.isArray(x)) return x;
+        const s = String(x).trim();
+        if (!s) return null;
+        return s.includes(",") ? s.split(",").map(v => v.trim()).filter(Boolean) : s;
+        }
+
+    static async runSnapshotCLI(argv = []) {
+       const cfg = {
+            snapshot: {
+                beaconBaseUrl: "http://localhost:5052",
+                state: "finalized",                  // "finalized" | "head" | epoch | root
+                pubIdsList: null,                    // CSV string or array (indices/pubkeys)
+                statuses: null,                      // "active_ongoing" or CSV/array
+                includeFields: "index,balance,status", // CSV
+                timeoutMs: 20000,
+                sleepMs: 0,
+                verboseLog: false,
+                // output
+                outPath: "",                         
+                format: "jsonl",                     // jsonl|json|csv
+            }
+        };
+
+        loadFromArgs(cfg);
+
+        const s = cfg.snapshot;
+
+        const pubIdsList = toArrayMaybeCSV(s.pubIdsList);
+        const statuses   = toArrayMaybeCSV(s.statuses);
+        const include    = toArrayMaybeCSV(s.includeFields);
+
+        const toFile = s.outPath ? { path: s.outPath, format: String(s.format || "jsonl").toLowerCase(), atomic: true } : null;
+
+        const res = await processSnapshot({
+            beaconBaseUrl: s.beaconBaseUrl,
+            state: s.state,
+            pubIdsList,
+            statuses,
+            includeFields: include,        // když null → uloží vše, co vrátí transform
+            toFile,
+            timeoutMs: Number(s.timeoutMs),
+            sleepMs: Number(s.sleepMs),
+            verboseLog: Boolean(s.verboseLog),
+        });
+
+        if (!toFile) {
+            console.log(JSON.stringify(res.rows, null, 2));
+        } else if (s.verboseLog) {
+            console.log(`[snapshot] saved ${res.meta.count} rows → ${s.outPath}`);
+        }
+    }
 }
 
 // ------------------------- Entrypoint -------------------------
 (async () => {
-    const calc = new RewardsCalculator();
+  // subcommand: `snapshot`
+  const argv = process.argv.slice(2);
+  if (argv[0] === "snapshot") {
     try {
-        await calc.run();
+      await RewardsCalculator.runSnapshotCLI(argv.slice(1));
+      process.exit(0);
     } catch (err) {
-        console.error(err);
-        process.exit(1);
+      console.error(err?.message || err);
+      process.exit(1);
     }
+  }
+
+  // default: `calculate-rewards`
+  const calc = new RewardsCalculator();
+  try {
+    await calc.run();
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
 })();

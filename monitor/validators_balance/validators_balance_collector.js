@@ -2,8 +2,8 @@
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
-const getValidatorsSnapshotUtil = require('/srv/stakersspace_utils/get-validators-snapshot.js');
-//const getValidatorsSnapshotUtil = require('../../utils/get-validators-snapshot/get-validators-snapshot.js');
+const { fetchSnapshot } = require('/srv/stakersspace_utils/validators-snapshot.js');
+//const { fetchSnapshot } = require('../../utils/validators-snapshot/validators-snapshot.js');
 const loadFromArgumentsUtil = require('/srv/stakersspace_utils/load-from-process-arguments.js');
 //const loadFromArgumentsUtil = require('../../utils/load-from-process-arguments/load-from-process-arguments.js');
 
@@ -154,7 +154,12 @@ class MonitorValidators {
                 
                 try {
                     // process snapshot
-                    const snapshotData = await getValidatorsSnapshotUtil( this.config.beaconChain.port, null, state );
+                    const snapshotData = await fetchSnapshot({
+                        beaconBaseUrl: `http://localhost:${this.config.beaconChain.port}`,
+                        state: "head",
+                        statuses: state,
+                        verboseLog: true,
+                    });
                     for (const obj of snapshotData.data) {
                         const balance = (this.config.chain === "gnosis") ? (Number(obj.validator.effective_balance) / 32000000000) : (Number(obj.validator.effective_balance) / 1000000000);
                         this.balanceCache.ValidatorState(

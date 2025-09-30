@@ -8,7 +8,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const getValidatorsSnapshotUtil = require('./get-validators-snapshot.js');
+const { fetchSnapshot } = require('./validators-snapshot.js');
 const GetFilesContentUtil = require('./get-files-data-in-directory');
 const loadFromArgumentsUtil = require('./load-from-process-arguments.js');
 
@@ -41,7 +41,11 @@ class KeystoresTool {
         await Promise.all(
             this.states.map(async (state) => {
                 try {
-                    const snapshotData = await getValidatorsSnapshotUtil(port, null, state);
+                    const snapshotData = await fetchSnapshot({
+                        beaconBaseUrl: `http://localhost:${port}`,
+                        state: "head",
+                        statuses: state
+                    });
                     const arr = snapshotData?.data || [];
                     for (const obj of arr) {
                         // https://github.com/Stakers-space/staking-scripts/tree/main/api_general/beacon-client

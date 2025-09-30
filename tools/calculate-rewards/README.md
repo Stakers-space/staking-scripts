@@ -3,7 +3,7 @@
 Utility scripts for getting validator rewards.
 
 > [!CAUTION]
-> Under development. Internal testing release.
+> Under development. Internal dev/testing release. Do not use.
 
 Supported networks:
 - Ethereum mainnet
@@ -48,7 +48,37 @@ sudo usermod -aG myserveruser stakersspace
 sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/calculate-rewards.js
 ```
 
+### Run Snapshot
+```
+node /srv/stakersspace_utils/calculate-rewards.js snapshot \
+  --snapshot.beaconBaseUrl=http://localhost:5052 \
+  --snapshot.state=finalized \
+  --snapshot.pubIdsList=1000,1001,1002 \
+  --snapshot.outPath=/var/data/snap_$(date -u +%F).jsonl \
+  --snapshot.format=jsonl \
+  --snapshot.verboseLog=true
+```
+e.g. in cronetab
+```
+crontab -e
+```
+```
+TZ=UTC
+20 0 * * * /usr/bin/flock -n /var/lock/val-snapshot.lock \
+  /usr/bin/node /srv/stakersspace_utils/calculate-rewards.js snapshot \
+    --snapshot.beaconBaseUrl=http://localhost:5052 \
+    --snapshot.state=finalized \
+    --snapshot.pubIdsList=1000,1001,1002 \
+    --snapshot.includeFields=index,balance,effective_balance,status \
+    --snapshot.outPath=/var/data/snap_$(date -u +\%F).jsonl \
+    --snapshot.format=jsonl \
+    --snapshot.verboseLog=true \
+  >> /var/log/validator_snapshots.log 2>&1
+```
+
 ### Run Calculation
+- Calculates balance difference between daily snapshots
+
 - For certain day
 ```
 node /srv/stakersspace_utils/calculate-rewards.js \
