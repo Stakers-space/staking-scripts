@@ -1,53 +1,20 @@
 'use strict';
 
 /**
- * Validator Snapshot Util | V 1.0.1 | 2025-09-30
+ * Validator Snapshot Util | V 1.0.2 | 2025-10-01
  * 
  * Fetches validator data snapshot from beacon node REST API.
  */
-
-const http = require('http');
-const https = require('https');
-const { URL } = require('url');
+const { httpRequest } = require('/srv/stakersspace_utils/libs/http-request');
 const fs = require('fs/promises');
-
-function httpRequest(options, body = null) {
-	const lib = (options.protocol && options.protocol === 'https:' ? https : http);
-	
-	return new Promise((resolve, reject) => {
-		const req = lib.request(options, (res) => {
-			let response = '';
-			res.setEncoding('utf8');
-			res.on('data', (chunk) => { response += chunk; });
-			res.on('end', () => {
-				if (res.statusCode < 200 || res.statusCode >= 300) {
-					return reject(new Error(`HTTP ${res.statusCode}: ${response.slice(0, 200)}`));
-				}
-				resolve(response);
-			});
-		});
-
-		if (typeof options.timeout === 'number' && Number.isFinite(options.timeout) && options.timeout > 0) {
-			req.setTimeout(options.timeout, () => {
-				req.destroy(new Error(`Request timeout after ${options.timeout} ms`));
-			});
-		}
-		
-		req.on('error', reject);
-
-		if (body != null) req.write(body);
-		req.end();
-	});
-}
 
 async function fetchSnapshot(
 	{
 		beaconBaseUrl = "http://localhost:9596",
 		state = "finalized",           // "finalized" | "head" | epoch | root
-		pubIdsList = null,                // array<number|string> or "1000,1001"
+		pubIdsList = null,             // array<number|string> or "1000,1001"
 		statuses = null,               // array<string> or "active_ongoing,active_exiting"
 		timeoutMs = 20000,
-		sleepMs = 0,
 		verboseLog = false
 	}) {
 
@@ -58,41 +25,39 @@ async function fetchSnapshot(
 	let path = `/eth/v1/beacon/states/${state}/validators`;
 
 	const qs = [];
-	if (pubIdsList && (Array.isArray(pubIdsList) ? pubIdsList.length : true)) {
-		const ids = Array.isArray(pubIdsList) ? pubIdsList.join(",") : String(pubIdsList);
-		qs.push(`id=${encodeURIComponent(ids)}`);
+	if (Array.isArray(pubIdsList) && pubIdsList.length) {
+		qs.push(`id=${encodeURIComponent(pubIdsList.join(','))}`);
+	} else if (typeof pubIdsList === 'string' && pubIdsList.trim()) {
+		qs.push(`id=${encodeURIComponent(pubIdsList.trim())}`);
 	}
-	if (statuses && (Array.isArray(statuses) ? statuses.length : true)) {
-		const st = Array.isArray(statuses) ? statuses.join(",") : String(statuses);
-		qs.push(`status=${encodeURIComponent(st)}`);
+	if (Array.isArray(statuses) && statuses.length) {
+		qs.push(`status=${encodeURIComponent(statuses.join(','))}`);
+	} else if (typeof statuses === 'string' && statuses.trim()) {
+		qs.push(`status=${encodeURIComponent(statuses.trim())}`);
 	}
 	if (qs.length) path += `?${qs.join("&")}`;
 
 	const u = new URL(base);
 	if(!u.protocol || !u.hostname || !u.port) throw new Error(`Invalid beaconBase URL: ${beaconBaseUrl} | must include protocol, hostname and port, e.g. http://localhost:9596`);
 
-	const raw = await httpRequest({
-		protocol: u.protocol,                      			    // 'http:' | 'https:'
-		hostname: u.hostname,
-		port: u.port,
-		path,
+	const fullUrl = new URL(path, base).toString();
+
+	const raw = await httpRequest(fullUrl, {
 		method: 'GET',
 		headers: { 'Accept': 'application/json' },
 		timeout: timeoutMs,                                    // socket inactivity timeout (ms)
 	}, null);
 
-	if (sleepMs > 0) await new Promise(r => setTimeout(r, sleepMs));
-
 	let json;
 	try {
 		json = JSON.parse(raw);
 	} catch (e) {
-		throw new Error(`Invalid JSON from ${u.origin}${path}: ${e.message}\nPayload(head): ${raw.slice(0,200)}`);
+		throw new Error(`Invalid JSON from ${fullUrl}: ${e.message}\nPayload(head): ${raw.slice(0,200)}`);
 	}
 
 	if (verboseLog) {
 		const count = Array.isArray(json?.data) ? json.data.length : 0;
-		console.log(`[fetchSnapshot] ${u.origin}${path} → ${count} validators`);
+		console.log(`[fetchSnapshot] ${fullUrl} → ${count} validators`);
 	}
 	return json; // { execution_optimistic, finalized, data: [...] }
 }
@@ -110,15 +75,15 @@ function defaultTransform(v /*, ctx */) {
 	const effGwei = Number(v?.validator?.effective_balance || 0);
 	const pk = v?.validator?.pubkey || null;
 	return {
-		index: idx,
-		pubkey: pk,
-		balance: balGwei,
-		effective_balance: effGwei,
-		status: v.status || '',
-		withdrawal_credentials: v?.validator?.withdrawal_credentials || '',
-		activation_epoch: Number(v?.validator?.activation_epoch || 0),
-		exit_epoch: Number(v?.validator?.exit_epoch || 0),
-		withdrawable_epoch: Number(v?.validator?.withdrawable_epoch || 0),
+		i: idx, // validator index
+		p: pk, // pubkey
+		b: balGwei, // balance
+		eb: effGwei, // effective_balance
+		s: v.status || '', // status
+		w: v?.validator?.withdrawal_credentials || '', // withdrawal_credentials
+		ae: Number(v?.validator?.activation_epoch || 0), // activation_epoch
+		ee: Number(v?.validator?.exit_epoch || 0), // exit_epoch
+		we: Number(v?.validator?.withdrawable_epoch || 0), // withdrawable_epoch
 	};
 }
 
@@ -157,9 +122,8 @@ async function processSnapshot({
 	onRecord = null,                                  // (rec, raw) => void|Promise
 	onBatch = null,                                   // (rows, rawJson) => void|Promise
 	toFile = null,                                    // { path, format: "jsonl"|"json"|"csv", atomic?: true }
-	includeFields = ["index","balance","effective_balance"],
+	includeFields = ["i","b","eb"],
 	timeoutMs = 20000,
-	sleepMs = 0,
 	verboseLog = false,                               
 }) {
 	const raw = await fetchSnapshot({
@@ -168,7 +132,6 @@ async function processSnapshot({
 		pubIdsList,
 		statuses,
 		timeoutMs,
-		sleepMs,
 		verboseLog
 	});
 
@@ -189,5 +152,6 @@ async function processSnapshot({
 
 module.exports = {
 	fetchSnapshot,
-	processSnapshot
+	processSnapshot,
+	defaultTransform
 };

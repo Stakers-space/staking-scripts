@@ -17,10 +17,12 @@ Supported networks:
 ## Usage
 ### Prerequisites
 - Synced [Consensus (Beacon) client](https://stakers.space/guides)
-  - added `--serveHistoricalState` flag (Lodestar) or alternative flag for used client
-- Installed utils below (Installation guide on each util page)
+  - added `--serveHistoricalState` flag (Lodestar) or alternative flag for used client - obsolete?
+- Installed libs & utils below (Installation guide on each util page)
   - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/utils/load-from-process-arguments)
-
+  - [validators snapshot util](https://github.com/Stakers-space/staking-scripts/tree/main/utils/validaotrs-snapshot) at `/srv/stakersspace_utils`
+  - [http-request.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/http-request) at `/srv/stakersspace_utils/libs`
+  - [recognize-chain.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api) at `/srv/stakersspace_utils/libs`
 
 ### Tool Installation
 - Check the `calculate-rewards.js` util

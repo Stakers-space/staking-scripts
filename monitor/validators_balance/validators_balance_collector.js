@@ -2,8 +2,7 @@
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
-const { fetchSnapshot } = require('/srv/stakersspace_utils/validators-snapshot.js');
-//const { fetchSnapshot } = require('../../utils/validators-snapshot/validators-snapshot.js');
+const { fetchValidatorsSnapshot } = require('/srv/stakersspace_utils/libs/beacon-api.js');
 const loadFromArgumentsUtil = require('/srv/stakersspace_utils/load-from-process-arguments.js');
 //const loadFromArgumentsUtil = require('../../utils/load-from-process-arguments/load-from-process-arguments.js');
 
@@ -154,7 +153,7 @@ class MonitorValidators {
                 
                 try {
                     // process snapshot
-                    const snapshotData = await fetchSnapshot({
+                    const snapshotData = await fetchValidatorsSnapshot({
                         beaconBaseUrl: `http://localhost:${this.config.beaconChain.port}`,
                         state: "head",
                         statuses: state,

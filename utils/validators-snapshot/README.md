@@ -2,6 +2,7 @@
 
 ## Prerequisites
 - Synchronized and running beaconchain client with enabled API.
+- [http-request.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/http-request) at `/srv/stakersspace_utils/libs`
 
 ## Installation
 - Check the `validators-snapshot.js` util

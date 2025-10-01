@@ -8,7 +8,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const { fetchSnapshot } = require('./validators-snapshot.js');
+const { fetchValidatorsSnapshot } = require('./beacon-api.js');
 const GetFilesContentUtil = require('./get-files-data-in-directory');
 const loadFromArgumentsUtil = require('./load-from-process-arguments.js');
 
@@ -41,7 +41,7 @@ class KeystoresTool {
         await Promise.all(
             this.states.map(async (state) => {
                 try {
-                    const snapshotData = await fetchSnapshot({
+                    const snapshotData = await fetchValidatorsSnapshot({
                         beaconBaseUrl: `http://localhost:${port}`,
                         state: "head",
                         statuses: state
