@@ -14,8 +14,8 @@
  *   --sleepMs           Delay between requests in ms (default: 10)
  *
  * Subcommands:
- *   snapshot                 → denní snapshot přes validators-snapshot.js (pro cron)
- *   calc-from-snapshots      → výpočet denního výnosu z uložených snapshotů (Δ balance + withdrawals + EL)
+ *   snapshot                 → 
+ *   calc-from-snapshots      → 
  * 
  * Example (cron, UTC 00:20):
  *   node calculate-rewards.js snapshot \
