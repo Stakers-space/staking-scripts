@@ -38,6 +38,7 @@ const path = require('path');
 const loadFromArgs = require("/srv/stakersspace_utils/load-from-process-arguments.js");
 const { RecognizeChain, fetchValidatorsSnapshot, getGenesisTime, getSecondsPerSlot } = require("/srv/stakersspace_utils/libs/beacon-api.js");
 const { SaveJsonl, ReadJsonl } = require("/srv/stakersspace_utils/libs/filesystem-api.js");
+const { getJson } = require('/srv/stakersspace_utils/libs/http-request');
 
 function _toArrayMaybeCSV(x) {
     if (x == null) return null;
@@ -267,16 +268,15 @@ class RewardsCalculator {
                 if (slot >= endSlot) return;
                 const url = `${base}/eth/v2/beacon/blocks/${slot}`;
                 try {
-                    const raw = await httpRequest(url, { method: 'GET', headers: { Accept: 'application/json' }, timeout: Number(this.config.httpTimeoutMs) });
-                    const j = JSON.parse(raw);
+                    const j = await getJson(url, {timeout: Number(this.config.httpTimeoutMs) });
                     const w = j?.data?.message?.body?.execution_payload?.withdrawals
                         || j?.data?.execution_payload?.withdrawals
                         || [];
                     for (const wi of w) {
-                    const vidx = Number(wi.validator_index ?? wi.validatorIndex ?? wi.index);
-                    if (!wanted.has(vidx)) continue;
-                    const amtGwei = BigInt(wi.amount || 0);
-                    sumWei += amtGwei * 1_000_000_000n;
+                        const vidx = Number(wi.validator_index ?? wi.validatorIndex ?? wi.index);
+                        if (!wanted.has(vidx)) continue;
+                        const amtGwei = BigInt(wi.amount || 0);
+                        sumWei += amtGwei * 1_000_000_000n;
                     }
                 } catch (e) {
                     // tolerate missing/historical-regeneration errors

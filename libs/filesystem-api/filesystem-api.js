@@ -4,6 +4,7 @@ const fs  = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 
+
 /** Naive check if string looks like a file path (has an extension). */
 function isLikelyFilePath(p) { return /\.[a-z0-9]+$/i.test(String(p || ''));}
 
@@ -130,6 +131,56 @@ function ReadJsonl(filePath) {
     return { envelope: hasEnvelope ? first : null, rows };
 }
 
+
+async function GetSubdirectories(directory) {
+    console.log("getSubdirectories in",directory);
+    try {
+        const files = await fsp.readdir(directory, { withFileTypes: true });
+        const subdirs = files
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+        return subdirs;
+    } catch (err) {
+        console.error(`Error reading directory: ${err.message}`);
+        return [];
+    }
+}
+
+async function GetFilesContent(directoryPath, startsPrefix, endsPrefix, cb) {
+    if (!directoryPath) {
+        console.error("directoryPath parameter is required");
+        cb("directoryPath parameter is required", null);
+        return;
+    }
+    try {
+        const files = await fsp.readdir(directoryPath);
+        let filesContent = {};
+       
+        for (const file of files) {
+            if ((!startsPrefix && !endsPrefix) ||
+                (startsPrefix && file.startsWith(startsPrefix) && !endsPrefix) ||
+                (endsPrefix && file.endsWith(endsPrefix) && !startsPrefix) ||
+                (startsPrefix && endsPrefix && file.startsWith(startsPrefix) && file.endsWith(endsPrefix))) {
+                const filePath = path.join(directoryPath, file);
+                try {
+                    const data = await fsp.readFile(filePath, 'utf8');
+                    filesContent[file] = JSON.parse(data);
+                } catch (readErr) {
+                    console.log('Error reading or parsing file:', readErr);
+                    return cb(readErr, null);
+                }
+            } else {
+                console.log(`skipping "${file}" (It does not meet prefix conditions)`);
+            }
+        }
+        cb(null, filesContent);
+    } catch (err) {
+        console.log('Unable to scan directory:', err);
+        cb(err, null);
+    }
+}
+
+
 module.exports = {
     VERSION,
     isLikelyFilePath,
@@ -138,5 +189,7 @@ module.exports = {
     resolveTargetPath,
     SaveJson,
     SaveJsonl,
-    ReadJsonl
+    ReadJsonl,
+    GetSubdirectories,
+    GetFilesContent
 };

@@ -8,7 +8,7 @@ It is commonly used in scripts and tools operated by [Stakers.space](https://git
 ## Installation
 - Check the `load-from-process-arguments.js` util
 ```
-curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/utils/load-from-process-arguments/load-from-process-arguments.js
+curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/libs/load-from-process-arguments/load-from-process-arguments.js
 ```
 - Create `/srv/stakersspace_utils` directory, if does not exist yet
 ```
@@ -16,7 +16,7 @@ sudo mkdir /srv/stakersspace_utils
 ```
 - Download the script to `/srv/stakersspace_utils/` directory
 ```
-sudo curl -o /srv/stakersspace_utils/load-from-process-arguments.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/utils/load-from-process-arguments/load-from-process-arguments.js
+sudo curl -o /srv/stakersspace_utils/load-from-process-arguments.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/libs/load-from-process-arguments/load-from-process-arguments.js
 ```
 - Define service user `stakersspace` (if does not exists yet)
 ```

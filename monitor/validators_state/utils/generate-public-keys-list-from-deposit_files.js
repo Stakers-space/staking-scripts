@@ -1,8 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const GetSubdirectories = require('../../../utils/get_files_content/get-subdirectories');
-const GetFilesContent = require('../../../utils/get_files_content/get-files-data-in-directory');
+const {GetSubdirectories, GetFilesContent} = require('../../../libs/filesystem-api/filesystem-api');
 
 const publicKeysList_outputFile = path.join(__dirname, '..', 'public_keys_list.json');
 const depositsDataFileDirectory = path.join(__dirname, '..', '..', '..', 'get-validator-indexes/data/deposit_data');

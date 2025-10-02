@@ -25,9 +25,9 @@ Supported networks:
 ## Usage
 ### Prerequisites
 - Installed utils below (Installation guide on each util page)
-  - [Get Validators snapshot](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api)
-  - [Get Files data in Directory](https://github.com/Stakers-space/staking-scripts/tree/main/utils/get_files_content)
-  - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/utils/load-from-process-arguments)
+  - [beacon-api lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api)
+  - [filesystem-api lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/filesystem-api)
+  - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/libs/load-from-process-arguments)
 
 
 ### Tool Installation

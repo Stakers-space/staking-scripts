@@ -9,7 +9,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const { fetchValidatorsSnapshot } = require('./beacon-api.js');
-const GetFilesContentUtil = require('./get-files-data-in-directory');
+const { GetFilesContent } = require('./filesystem-api.js');
 const loadFromArgumentsUtil = require('./load-from-process-arguments.js');
 
 class Config {
@@ -126,7 +126,7 @@ class KeystoresTool {
 
     async getFilesFromDir(dir) {
         return new Promise((resolve, reject) => {
-            GetFilesContentUtil(dir, 'keystore-m_12381_3600_', ".json", (err, files) => {
+            GetFilesContent(dir, 'keystore-m_12381_3600_', ".json", (err, files) => {
                 if (err) return reject(err);
                 resolve(files);
             });
