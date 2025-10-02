@@ -35,7 +35,7 @@
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
-const loadFromArgs = require("/srv/stakersspace_utils/load-from-process-arguments.js");
+const loadFromArgs = require("/srv/stakersspace_utils/libs/load-from-process-arguments.js");
 const { RecognizeChain, fetchValidatorsSnapshot, getGenesisTime, getSecondsPerSlot } = require("/srv/stakersspace_utils/libs/beacon-api.js");
 const { SaveJsonl, ReadJsonl } = require("/srv/stakersspace_utils/libs/filesystem-api.js");
 const { getJson } = require('/srv/stakersspace_utils/libs/http-request');

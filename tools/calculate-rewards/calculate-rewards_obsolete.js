@@ -28,7 +28,7 @@
  *     --snapshot.verboseLog=true
  */
 import fs from "fs";
-import loadFromArgumentsUtil from "/srv/stakersspace_utils/load-from-process-arguments.js";
+import loadFromArgumentsUtil from "/srv/stakersspace_utils/libs/load-from-process-arguments.js";
 import snapshotMod from "./validators-snapshot.js"; // CJS → default interop
 const { processSnapshot } = snapshotMod;
 

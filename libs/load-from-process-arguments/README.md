@@ -10,13 +10,13 @@ It is commonly used in scripts and tools operated by [Stakers.space](https://git
 ```
 curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/libs/load-from-process-arguments/load-from-process-arguments.js
 ```
-- Create `/srv/stakersspace_utils` directory, if does not exist yet
+- Create `/srv/stakersspace_utils/libs` directory, if does not exist yet
 ```
-sudo mkdir /srv/stakersspace_utils
+sudo mkdir /srv/stakersspace_utils/libs
 ```
-- Download the script to `/srv/stakersspace_utils/` directory
+- Download the script to `/srv/stakersspace_utils/libs` directory
 ```
-sudo curl -o /srv/stakersspace_utils/load-from-process-arguments.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/libs/load-from-process-arguments/load-from-process-arguments.js
+sudo curl -o /srv/stakersspace_utils/libs/load-from-process-arguments.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/libs/load-from-process-arguments/load-from-process-arguments.js
 ```
 - Define service user `stakersspace` (if does not exists yet)
 ```
@@ -28,12 +28,12 @@ sudo usermod -aG myserveruser stakersspace
 ```
 - Set file ownership dfirectory
 ```
-sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/load-from-process-arguments.js
+sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/libs/load-from-process-arguments.js
 ```
 
 ## Usage
 ```
-const loadFromArgumentsUtil = require('/srv/stakersspace_utils/load-from-process-arguments.js');
+const loadFromArgumentsUtil = require('/srv/stakersspace_utils/libs/load-from-process-arguments.js');
 loadFromArgumentsUtil(this.config);
 ```
 

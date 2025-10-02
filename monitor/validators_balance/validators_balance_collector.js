@@ -3,7 +3,7 @@
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
 const { fetchValidatorsSnapshot } = require('/srv/stakersspace_utils/libs/beacon-api.js');
-const loadFromArgumentsUtil = require('/srv/stakersspace_utils/load-from-process-arguments.js');
+const loadFromArgumentsUtil = require('/srv/stakersspace_utils/libs/load-from-process-arguments.js');
 
 /* run on localhost through console
  * node validators_balance_collector.js --beaconChain.port 9596 --output.keepInFile false
