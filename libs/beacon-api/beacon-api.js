@@ -60,16 +60,10 @@ async function fetchValidatorsSnapshot(
 	let path = `/eth/v1/beacon/states/${state}/validators`;
 
 	const qs = [];
-	if (Array.isArray(pubIdsList) && pubIdsList.length) {
-		qs.push(`id=${encodeURIComponent(pubIdsList.join(','))}`);
-	} else if (typeof pubIdsList === 'string' && pubIdsList.trim()) {
-		qs.push(`id=${encodeURIComponent(pubIdsList.trim())}`);
-	}
-	if (Array.isArray(statuses) && statuses.length) {
-		qs.push(`status=${encodeURIComponent(statuses.join(','))}`);
-	} else if (typeof statuses === 'string' && statuses.trim()) {
-		qs.push(`status=${encodeURIComponent(statuses.trim())}`);
-	}
+	const idsCsv = toCsvParam(pubIdsList);   // handles ["1000","1001"] or "1000,1001" or "1000"
+	const stCsv  = toCsvParam(statuses);     // handles ["active_ongoing"] or "active_ongoing,active_exiting"
+	if (idsCsv) qs.push(`id=${idsCsv}`);
+	if (stCsv)  qs.push(`status=${stCsv}`);
 	if (qs.length) path += `?${qs.join("&")}`;
 
 	const u = new URL(base);
@@ -83,6 +77,24 @@ async function fetchValidatorsSnapshot(
 		console.log(`[fetchSnapshot] ${fullUrl} → ${count} validators`);
 	}
 	return json; // { execution_optimistic, finalized, data: [...] }
+
+
+	function toCsvParam(values) {
+		if (values == null) return null;
+
+		// If it's already an array, use it; if it's a string, split by comma.
+		const arr = Array.isArray(values)
+			? values
+			: String(values).split(','); // allow single or CSV string
+
+		// Clean + encode each item; keep commas literal when joining.
+		const cleaned = arr
+			.map(v => String(v).trim())
+			.filter(Boolean)
+			.map(v => encodeURIComponent(v));
+
+		return cleaned.length ? cleaned.join(',') : null;
+	}
 }
 
 async function getGenesisTime(beaconBaseUrl, timeoutMs = 20000) {
