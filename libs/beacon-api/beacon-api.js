@@ -124,7 +124,7 @@ async function RecognizeChain({ beaconBaseUrl, timeoutMs = 20000 }){
         case "0x00000000219ab540356cbb839cbe05303d7705fa": return 'ethereum';
         case "0x0b98057ea310f4d31f2a452b414647007d1645d9": return 'gnosis';
         default: 
-            console.warn("Chain not recognized | DEPOSIT_CONTRACT_ADDRESS:", jResp.data["DEPOSIT_CONTRACT_ADDRESS"]);
+            console.warn("Chain not recognized | DEPOSIT_CONTRACT_ADDRESS:", addr);
             return 'unknown';
     }
 }

@@ -17,10 +17,11 @@ Supported networks:
 ## Usage
 ### Prerequisites
 - Synced [Consensus (Beacon) client](https://stakers.space/guides)
-  - added `--serveHistoricalState` flag (Lodestar) or alternative flag for used client - obsolete?
+- Synced [Execution client](https://stakers.space/guides)
 - Installed libs & utils below (Installation guide on each util page)
   - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/libs/load-from-process-arguments)
-  - [beacon-api lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api) at `/srv/stakersspace_utils/libs`
+  - [beacon-api.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api) at `/srv/stakersspace_utils/libs`
+  - [execution-api.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/execution-api) at `/srv/stakersspace_utils/libs`
   - [http-request.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/http-request) at `/srv/stakersspace_utils/libs`
 
 ### Tool Installation
@@ -52,12 +53,13 @@ sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/calculate-reward
 ### Run Snapshot
 ```
 node /srv/stakersspace_utils/calculate-rewards.js snapshot \
-  --snapshot.beaconBaseUrl=http://localhost:5052 \
-  --snapshot.state=finalized \
-  --snapshot.pubIdsList=1000,1001,1002 \
-  --snapshot.outPath=/var/data/snap_$(date -u +%F).jsonl \
-  --snapshot.format=jsonl \
-  --snapshot.verboseLog=true
+  --beaconBaseUrl=http://localhost:5052 \
+  --executionBaseUrl=http://localhost:5052 \
+  --snapshot_state=finalized \
+  --pubIdsList=1000,1001,1002 \
+  --fileStorageDir=/var/data/snap_$(date -u +%F).jsonl \
+  --format=jsonl \
+  --verboseLog=true
 ```
 e.g. in cronetab
 ```
@@ -67,33 +69,15 @@ crontab -e
 TZ=UTC
 20 0 * * * /usr/bin/flock -n /var/lock/val-snapshot.lock \
   /usr/bin/node /srv/stakersspace_utils/calculate-rewards.js snapshot \
-    --snapshot.beaconBaseUrl=http://localhost:5052 \
-    --snapshot.state=finalized \
-    --snapshot.pubIdsList=1000,1001,1002 \
-    --snapshot.includeFields=index,balance,effective_balance,status \
-    --snapshot.outPath=/var/data/snap_$(date -u +\%F).jsonl \
-    --snapshot.format=jsonl \
-    --snapshot.verboseLog=true \
+  --beaconBaseUrl=http://localhost:5052 \
+  --executionBaseUrl=http://localhost:5052 \
+  --snapshot_state=finalized \
+  --pubIdsList=1000,1001,1002 \
+  --fileStorageDir=/var/data/snap_$(date -u +%F).jsonl \
+  --format=jsonl \
+  --verboseLog=true \
   >> /var/log/validator_snapshots.log 2>&1
 ```
 
 ### Run Calculation
 - Calculates balance difference between daily snapshots
-
-- For certain day
-```
-node /srv/stakersspace_utils/calculate-rewards.js \
-  --beacon=http://localhost:5052 \
-  --validatorIndex=1 \
-  --year=2025 \
-  --month=9 \
-  --day=25
-```
-- For each day in a certain month
-```
-node /srv/stakersspace_utils/calculate-rewards.js \
-  --beacon=http://localhost:5052 \
-  --validatorIndex=1 \
-  --year=2025 \
-  --month=9
-```

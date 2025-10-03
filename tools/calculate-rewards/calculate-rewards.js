@@ -37,6 +37,7 @@ const fsp = require('fs/promises');
 const path = require('path');
 const loadFromArgs = require("/srv/stakersspace_utils/libs/load-from-process-arguments.js");
 const { RecognizeChain, fetchValidatorsSnapshot, getGenesisTime, getSecondsPerSlot } = require("/srv/stakersspace_utils/libs/beacon-api.js");
+const { getLatestBlockNumber, getBlock } = require("/srv/stakersspace_utils/libs/execution-api.js");
 const { SaveJsonl, ReadJsonl } = require("/srv/stakersspace_utils/libs/filesystem-api.js");
 const { getJson } = require('/srv/stakersspace_utils/libs/http-request');
 
@@ -51,6 +52,7 @@ function _toArrayMaybeCSV(x) {
 class Config {
     constructor() {
         this.beaconBaseUrl = "http://localhost:5052";
+        this.executionBaseUrl = "http://localhost:8551";
         this.chain = "ethereum"; // placeholder
         this.pubIdsList = null,
         this.fileStorageDir = "/tmp/validators-balance-snapshots";
@@ -171,26 +173,28 @@ class RewardsCalculator {
             // [WITHDRAWALS] — extra scan over the day window
             let wdWei = 0n;
             const scanIndices = currRows.map(r => Number(r.i ?? r.index)).filter(Number.isFinite);
-            const startTs = Date.UTC(currDate.getUTCFullYear(), currDate.getUTCMonth(), currDate.getUTCDate(), 0, 0, 0) / 1000;
-            const endTs   = Date.UTC(currDate.getUTCFullYear(), currDate.getUTCMonth(), currDate.getUTCDate(), 23, 59, 59) / 1000 + 1;
-            if (this.config.verboseLog) console.log("[fetchWithdrawalsBetween]", currDate, "scanIndices:", scanIndices, "time range:",startTs,"→",endTs);
-            try {
-                wdWei = await fetchWithdrawalsBetween({
-                    startTs,
-                    endTs,
-                    indices: scanIndices
-                });
-            } catch (e) {
-                if (this.config.verboseLog) console.warn(`[calc] withdrawals failed for ${day}: ${e.message}`);
-            }
+            const y = currDate.getUTCFullYear();
+            const m = currDate.getUTCMonth();
+            const d = currDate.getUTCDate();
+            const startTs = Date.UTC(y, m, d, 0, 0, 0) / 1000;
+            const endTs   = Date.UTC(y, m, d, 23, 59, 59) / 1000 + 1;
+            wdWei = await this.fetchWithdrawalsBetweenEL({
+                elBaseUrl: this.config.executionBaseUrl,
+                startTs, endTs,
+                indices: scanIndices,
+                timeoutMs: Number(this.config.httpTimeoutMs),
+                verboseLog: Boolean(this.config.verboseLog),
+                concurrency: 6,
+            });
+            console.log("fetchWithdrawalsBetweenEL", currDate, "→", wdWei);
 
             const totalWei = resBase.totalWei + wdWei;
 
             daily.push({
                 date: day,
-                cl_delta_wei: res.clDeltaWei.toString(),
-                withdrawals_wei: res.withdrawalsWei.toString(),
-                el_income_wei: res.elIncomeWei.toString(),
+                cl_delta_wei: resBase.clDeltaWei.toString(),
+                withdrawals_wei: (resBase.withdrawalsWei + wdWei).toString(),
+                el_income_wei: resBase.elIncomeWei.toString(),
                 total_wei: totalWei.toString(),
                 total_eth: (Number(totalWei) / 1e18).toFixed(12),
             });
@@ -211,7 +215,7 @@ class RewardsCalculator {
             days: daily
         };
 
-        JSON.stringify(jsonStorage, null, 2);
+        console.log(JSON.stringify(jsonStorage, null, 2));
 
         // ToDO: save to CSV
     }
@@ -237,8 +241,80 @@ class RewardsCalculator {
         return { clDeltaWei, withdrawalsWei, elIncomeWei, totalWei: clDeltaWei + withdrawalsWei + elIncomeWei };
     }
 
+    // binary search block number for timestamp boundary
+    async findBlockByTimestamp(elBase, targetTs, lo, hi, timeout = 20000) {
+        // invariant: we want smallest block with timestamp >= targetTs
+        while (lo < hi) {
+            const mid = Math.floor((lo + hi) / 2);
+            const b = await getBlock(elBase, mid, timeout);
+            const ts = b ? parseInt(b.timestamp, 16) : 0;
+            if (ts >= targetTs) hi = mid;
+            else lo = mid + 1;
+        }
+        return lo;
+    }
+
+    /**
+     * Sum withdrawals (wei) for selected validator indices inside [startTs, endTs)
+     * Uses EL JSON-RPC eth_getBlockByNumber which exposes `withdrawals` per EIP-4895.
+     */
+    async fetchWithdrawalsBetweenEL({
+        elBaseUrl = this.config.executionBaseUrl,
+        startTs,               // seconds (UTC)
+        endTs,                 // seconds (UTC)
+        indices,               // array<number|string> of validator indices
+        timeoutMs = 20000,
+        verboseLog = false,
+        concurrency = 4
+    }) {
+        if (!indices || !indices.length) return 0n;
+
+        const wanted = new Set(indices.map(n => Number(n)).filter(Number.isFinite));
+        const latest = await getLatestBlockNumber(elBaseUrl, timeoutMs);
+
+        // crude lower bound – genesis EL block is fine as 0
+        const lo0 = 0;
+        const hi0 = latest;
+
+        const startBlock = await findBlockByTimestamp(elBaseUrl, startTs, lo0, hi0, timeoutMs);
+        const endBlock   = await findBlockByTimestamp(elBaseUrl, endTs,   lo0, hi0, timeoutMs);
+
+        let sumWei = 0n;
+        let next = startBlock;
+
+        const worker = async () => {
+            while (true) {
+            const n = next++;
+            if (n >= endBlock) return;
+            try {
+                const b = await getBlock(elBaseUrl, n, timeoutMs);
+                if (!b || !Array.isArray(b.withdrawals)) continue;
+                for (const w of b.withdrawals) {
+                // keys per RPC: index, validatorIndex, address, amount (gwei)
+                const vIdx = Number(w.validatorIndex ?? w.validator_index ?? w.validatorindex);
+                if (!wanted.has(vIdx)) continue;
+                const amtGwei = BigInt(w.amount);               // already decimal string or hex depending on client
+                // some clients return hex; normalize
+                const amt = (typeof w.amount === 'string' && w.amount.startsWith('0x'))
+                    ? BigInt(parseInt(w.amount, 16))
+                    : BigInt(w.amount);
+                sumWei += amt * 1_000_000_000n;
+                }
+            } catch (e) {
+                if (verboseLog) console.warn(`[EL withdrawals] block ${n}: ${e.message}`);
+            }
+            }
+        };
+
+        const workers = Array.from({ length: Math.min(concurrency, Math.max(0, endBlock - startBlock)) }, worker);
+        await Promise.all(workers);
+
+        if (verboseLog) console.log(`[EL withdrawals] blocks ${startBlock}..${endBlock - 1} | idx=${wanted.size} → ${sumWei} wei`);
+        return sumWei;
+    }
+
     // Sum withdrawals (wei) for specific validator indices within [startTs, endTs)
-    async fetchWithdrawalsBetween({
+    /*async fetchWithdrawalsBetween({
         startTs,
         endTs,
         indices,                 // array<number|string>
@@ -288,7 +364,7 @@ class RewardsCalculator {
 
         if (this.config.verboseLog) console.log(`[withdrawals] ${startSlot}..${endSlot} for ${wanted.size} indices → ${sumWei} wei`);
         return sumWei;
-    }
+    }*/
 
     /** Return array of UTC day strings for either a single day or the whole month from this.config.calc */
     _getDayRangeFromConfig() {

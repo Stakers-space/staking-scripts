@@ -1,0 +1,94 @@
+'use strict';
+const VERSION = '1.0.0';
+const { httpRequest, getJson } = require('./http-request');
+
+// --- helpers ---
+function ensure0x(s) { return s.startsWith('0x') ? s : `0x${s}`;}
+function strip0x(s) { return s.startsWith('0x') ? s.slice(2) : s;}
+function pad64(hexNo0x) { return hexNo0x.padStart(64, '0'); }
+function isAddress(addr) { return typeof addr === 'string' && /^0x[0-9a-fA-F]{40}$/.test(addr); }
+/** Convert wei (BigInt) to decimal string with 18 decimals */
+function formatWeiToEthString(weiBigInt, decimals = 18) {
+    const neg = weiBigInt < 0n ? '-' : '';
+    const v = weiBigInt < 0n ? -weiBigInt : weiBigInt;
+    const base = 10n ** BigInt(decimals);
+    const intPart = (v / base).toString();
+    const frac = (v % base).toString().padStart(decimals, '0').replace(/0+$/, '');
+    return neg + (frac ? `${intPart}.${frac}` : intPart);
+}
+/**
+ * Low-level EL JSON-RPC eth_call wrapper for read-only contract calls.
+ */
+async function ethCall({ elBaseUrl = 'http://localhost:8545', to, data, timeoutMs = 20000, blockTag = 'latest' }) {
+    const payload = {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_call',
+        params: [{ to, data }, blockTag]
+    };
+    const res = await getJson(elBaseUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        timeout: timeoutMs,
+        body: JSON.stringify(payload)
+    });
+    if (res?.error) {
+        throw new Error(`eth_call error: ${res.error?.message || JSON.stringify(res.error)}`);
+    }
+    return res?.result; // hex string like 0x1a2b...
+}
+
+async function getUnclaimedGNORewardsByWallet(executionCLientApiUrl, wallet, timeoutMs = 20000){
+    const GNO_UNCLAIMED_CONTRACT = '0x0B98057eA310F4d31F2a452B414647007d1645d9';
+    const FN_WITHDRAWABLE_SELECTOR = '0xbe7ab51b'; // withdrawableAmount(address) or equivalent
+
+    if (!isAddress(wallet)) throw new Error(`Invalid wallet address: ${wallet}`);
+    // Build calldata: selector + 32B padded address
+    const addrNo0x = strip0x(wallet).toLowerCase();
+    const data = ensure0x(FN_WITHDRAWABLE_SELECTOR + pad64(addrNo0x));
+    const resultHex = await ethCall({
+        executionCLientApiUrl,
+        to: GNO_UNCLAIMED_CONTRACT,
+        data,
+        timeoutMs
+    });
+
+    // Parse hex → BigInt wei
+    const wei = BigInt(resultHex || '0x0');
+    return {
+        wallet: wallet.toLowerCase(),
+        wei: wei.toString(),
+        gno: formatWeiToEthString(wei, 18),
+        decimalValue: parseInt(resultHex, 16)
+    };
+}
+
+// get latest block number (hex -> number)
+async function getLatestBlockNumber(elBase, timeout = 20000) {
+    const j = await getJson(elBase, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        timeout,
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] })
+    });
+    return parseInt(j.result, 16);
+}
+
+// get block by number with withdrawals
+async function getBlock(elBase, number, timeout = 20000) {
+  const hex = '0x' + number.toString(16);
+  const j = await getJson(elBase, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    timeout,
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_getBlockByNumber', params: [hex, false] })
+  });
+  return j.result; // may be null (reorg, pruned)
+}
+
+module.exports = {
+    VERSION,
+    getLatestBlockNumber,
+    getBlock,
+    getUnclaimedGNORewardsByWallet
+}
