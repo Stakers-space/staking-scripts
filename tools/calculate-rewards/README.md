@@ -22,6 +22,7 @@ Supported networks:
   - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/libs/load-from-process-arguments)
   - [beacon-api.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api) at `/srv/stakersspace_utils/libs`
   - [execution-api.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/execution-api) at `/srv/stakersspace_utils/libs`
+  - [filesystem-api.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/filesystem-api) at `/srv/stakersspace_utils/libs`
   - [http-request.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/http-request) at `/srv/stakersspace_utils/libs`
 
 ### Tool Installation
