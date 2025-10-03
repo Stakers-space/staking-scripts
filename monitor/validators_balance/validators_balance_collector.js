@@ -2,16 +2,13 @@
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
-const { fetchValidatorsSnapshot } = require('/srv/stakersspace_utils/libs/beacon-api.js');
+const { fetchValidatorsSnapshot, RecognizeChain, getFinalityCheckpoint } = require('/srv/stakersspace_utils/libs/beacon-api.js');
 const loadFromArgumentsUtil = require('/srv/stakersspace_utils/libs/load-from-process-arguments.js');
+const { ensureDir, SaveJson } = require('/srv/stakersspace_utils/libs/filesystem-api.js');
 
 /* run on localhost through console
  * node validators_balance_collector.js --beaconChain.port 9596 --output.keepInFile false
 */
-const http = require('http');
-const fs = require("fs");
-var app = null;
-
 class Config {
     constructor(){
         this.chain = null;
@@ -133,7 +130,7 @@ class MonitorValidators {
 
     async PrepareOutputDirectory(){
         if (!this.config.output.keepInFile) return;
-        await fs.promises.mkdir(this.config.output.storageDirectory, { recursive: true });
+        await ensureDir(this.config.output.storageDirectory);
     }
 
     async Process(){
@@ -143,8 +140,8 @@ class MonitorValidators {
         this.balanceCache.ClearData(); // Clear
 
         try {
-            const { epoch } = await this.ProcessFinalityCheckpoint(); // epoch tracking start
-            if (epoch == null) throw new Error('No epoch data');
+            const epoch = Number((await getFinalityCheckpoint({ beaconBaseUrl: `http://localhost:${this.config.beaconChain.port}` }))?.data?.current_justified?.epoch);
+            if (!Number.isFinite(epoch)) throw new Error('No epoch data');
             this.balanceCache.SetEpoch(epoch);
 
             for (const state of this.config.states_track) {
@@ -159,7 +156,7 @@ class MonitorValidators {
                         verboseLog: true,
                     });
                     for (const obj of snapshotData.data) {
-                        const balance = (this.config.chain === "gnosis") ? (Number(obj.validator.balance) / 32000000000) : (Number(obj.validator.balance) / 1000000000);
+                        const balance = (this.config.chain === "gnosis") ? (Number(obj.balance) / 32000000000) : (Number(obj.balance) / 1000000000);
                         this.balanceCache.ValidatorState(
                             this.config.output.filesSegmentation,
                             Number(obj.index),
@@ -169,8 +166,14 @@ class MonitorValidators {
                     }
 
                     if(this.config.output.keepInFile && this.config.output.filesSegmentation){
-                        await fs.promises.writeFile( `${this.config.output.storageDirectory}/${this.config.chain}_${state}.json`, JSON.stringify(this.balanceCache, null, 0) );
-                        console.log(`${this.config.output.storageDirectory}/${this.config.chain}_${state}.json file has been updated`);
+                        await SaveJson({
+                            outPath: this.config.output.storageDirectory,
+                            filename: `${this.config.chain}_${(state ?? 'aggregated')}.json`,
+                            json: this.balanceCache,
+                            atomic: true,
+                            space: 0
+                        }); // :contentReference[oaicite:13]{index=13}
+                        console.log(`${this.config.output.storageDirectory}/${this.config.chain}_${(state ?? 'aggregated')}.json updated`);
                     }
                     
                 } catch (err) {
@@ -185,9 +188,15 @@ class MonitorValidators {
 
             if(this.config.output.keepInFile){
                 if (!this.config.output.filesSegmentation) {
-                    await fs.promises.writeFile( `${this.config.output.storageDirectory}/${this.config.chain}_states.json`,JSON.stringify(this.balanceCache, null, 0));
-                    console.log(`${this.config.output.storageDirectory}/${this.config.chain}_states.json file has been updated`);
-                    }
+                    await SaveJson({
+                        outPath: this.config.output.storageDirectory,
+                        filename: `${this.config.chain}_states.json`,
+                        json: this.balanceCache,
+                        atomic: true,
+                        space: 0
+                    }); // :contentReference[oaicite:14]{index=14}
+                    console.log(`${this.config.output.storageDirectory}/${this.config.chain}_states.json updated`);
+                }
             } else {
                 console.log(this.balanceCache);
             }
@@ -198,104 +207,23 @@ class MonitorValidators {
         }
     }
 
-    ProcessFinalityCheckpoint(){
-        return new Promise((resolve, reject) => {
-            this.GetFinalityCheckpoint((err, resp) => {
-                if (err) return reject(err);
-                try {
-                    const json = JSON.parse(resp);
-                    resolve({ epoch: Number(json.data.current_justified.epoch) });
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        });
-    }
-
-    RecognizeChain(cb){
-        const options = {
-            hostname: 'localhost',
-            port: app.config.beaconChain.port,
-            path: `/eth/v1/config/spec`,
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            }
-        }
-        this.HttpRequest(options, null, (err,resp) => {
-            if(err) {
-                console.error("OnRecognizeChain:", err);
-                return cb(err); 
-            }
-            try {  resp = JSON.parse(resp); } catch(e){ return cb(e); }
-            
-            let chainName = null;
-            switch(resp.data["DEPOSIT_CONTRACT_ADDRESS"].toLowerCase()){
-                case "0x00000000219ab540356cbb839cbe05303d7705fa": chainName = "ethereum"; break;
-                case "0x0b98057ea310f4d31f2a452b414647007d1645d9": chainName = "gnosis"; break;
-                default: 
-                    console.log("Chain not recognized | DEPOSIT_CONTRACT_ADDRESS:", resp.data["DEPOSIT_CONTRACT_ADDRESS"]);
-                    chainName = "unknown";
-            }
-            app.config.chain = chainName;
-            console.log("├─ Recognized chain:", chainName);
-            return cb();
-        });
-    }
-
-    HttpRequest(options, body, cb){
-        const req = http.request(options, (res) => {
-            let response = '';
-            res.setEncoding('utf8');
-            res.on('data', (chunk) => { response += chunk; });
-            res.on('end', () => { 
-                if (res.statusCode < 200 || res.statusCode >= 300) {
-                    return cb(new Error(`HTTP ${res.statusCode}: ${response.slice(0,200)}`));
-                }
-                cb(null, response)
-            });     
-        }).on('error', (err) => {
-            cb(err);
-        });
-        //req.setTimeout(60000, () => req.destroy(new Error('Request timeout')));
-        if(body) req.write(body);
-        req.end();
-    }
-
-    GetFinalityCheckpoint(cb){
-        const options = {
-            hostname: 'localhost',
-            port: app.config.beaconChain.port,
-            path: `/eth/v1/beacon/states/head/finality_checkpoints`,
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-            }
-        }
-        this.HttpRequest(options, null, cb);
-    }
-
     cleanUpAndExit() {
-        console.log("exiting");
-        try {
-            clearInterval(this.cron);
-        } catch (e) {
-            console.log(e);
-        }
+        try { clearInterval(this.cron); } catch (e) { console.log(e); }
         process.exit(0);
     }
 }
 
 /** Run Util */
-app = new MonitorValidators();
-app.RecognizeChain(async(err) => {
-    if(err) return console.error(err);
-    console.log("├─ Config loaded from arguments:", app.config);
+(async () => {
+    const app = new MonitorValidators();
     try {
+        app.config.chain = await RecognizeChain({ beaconBaseUrl: `http://localhost:${app.config.beaconChain.port}` });
+        console.log("├─ Config loaded from arguments:", app.config);
+
         await app.PrepareOutputDirectory();
         app.ConfigurateCronWorker();
         await app.Process();
     } catch (e) {
         console.error("Startup failed:", e);
     }
-});
+})();

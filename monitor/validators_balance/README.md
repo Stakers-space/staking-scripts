@@ -4,7 +4,8 @@ This utility script monitors each active pubkey for its current balance.
 
 ## Install
 - Install Prerequisities (if they are not on the sever, yet)
-    - [Beacon API Lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api)
+    - [beacon-api.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api)
+    - [http-request.js lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/http-request)
     - [Load From Process Arguments](https://github.com/Stakers-space/staking-scripts/tree/main/libs/load-from-process-arguments)
 
 - Check the `validators_balance_collector.js` script

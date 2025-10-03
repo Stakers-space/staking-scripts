@@ -141,11 +141,18 @@ async function RecognizeChain({ beaconBaseUrl, timeoutMs = 20000 }){
     }
 }
 
+async function getFinalityCheckpoint({ beaconBaseUrl, timeoutMs = 20000 }){
+	const base = beaconBaseUrl.replace(/\/$/, "");
+	const url  = new URL('/eth/v1/beacon/states/head/finality_checkpoints', base).toString();
+	return await getJson(url, { timeout: timeoutMs });
+}
+
 module.exports = { 
 	VERSION,
     RecognizeChain,
     fetchValidatorsSnapshot,
 	getGenesisTime,
 	getSpec,
-	getSecondsPerSlot
+	getSecondsPerSlot,
+	getFinalityCheckpoint
 };
