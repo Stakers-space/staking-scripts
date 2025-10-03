@@ -52,14 +52,7 @@ sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/calculate-reward
 
 ### Run Snapshot
 ```
-node /srv/stakersspace_utils/calculate-rewards.js snapshot \
-  --beaconBaseUrl=http://localhost:5052 \
-  --executionBaseUrl=http://localhost:5052 \
-  --snapshot_state=finalized \
-  --pubIdsList=1000,1001,1002 \
-  --fileStorageDir=/var/data/snap_$(date -u +%F).jsonl \
-  --format=jsonl \
-  --verboseLog=true
+node /srv/stakersspace_utils/calculate-rewards.js snapshot --snapshot_state=finalized --fileStorageDir=/tmp/reward_snap --format=jsonl --verboseLog=true --beaconBaseUrl=http://localhost:9799 --executionBaseUrl=http://localhost:8749
 ```
 e.g. in cronetab
 ```
@@ -69,7 +62,7 @@ crontab -e
 TZ=UTC
 20 0 * * * /usr/bin/flock -n /var/lock/val-snapshot.lock \
   /usr/bin/node /srv/stakersspace_utils/calculate-rewards.js snapshot \
-  --beaconBaseUrl=http://localhost:5052 \
+  --beaconBaseUrl=http://localhost:8545 \
   --executionBaseUrl=http://localhost:5052 \
   --snapshot_state=finalized \
   --pubIdsList=1000,1001,1002 \

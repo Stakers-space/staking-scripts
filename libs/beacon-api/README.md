@@ -8,7 +8,7 @@ curl -H "Cache-Control: no-cache" -o- https://raw.githubusercontent.com/Stakers-
 ```
 - Create `/srv/stakersspace_utils/libs` directory, if does not exist yet
 ```
-sudo mkdir /srv/stakersspace_utils
+sudo mkdir /srv/stakersspace_utils/libs
 ```
 - Download the script to `/srv/stakersspace_utils/libs` directory
 ```
