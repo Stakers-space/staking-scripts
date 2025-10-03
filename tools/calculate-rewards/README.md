@@ -62,15 +62,7 @@ crontab -e
 ```
 TZ=UTC
 20 0 * * * /usr/bin/flock -n /var/lock/val-snapshot.lock \
-  /usr/bin/node /srv/stakersspace_utils/calculate-rewards.js snapshot \
-  --beaconBaseUrl=http://localhost:8545 \
-  --executionBaseUrl=http://localhost:5052 \
-  --snapshot_state=finalized \
-  --pubIdsList=1000,1001,1002 \
-  --fileStorageDir=/var/data/snap_$(date -u +%F).jsonl \
-  --format=jsonl \
-  --verboseLog=true \
-  >> /var/log/validator_snapshots.log 2>&1
+  /usr/bin/node /srv/stakersspace_utils/calculate-rewards.js snapshot --format=jsonl --snapshot_state=finalized --verboseLog=true --fileStorageDir=/srv/stakersspace_utils/data --beaconBaseUrl=http://localhost:9799 --executionBaseUrl=http://localhost:8749 >> /var/log/validator_snapshots.log 2>&1
 ```
 
 ### Run Calculation

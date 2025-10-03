@@ -109,8 +109,8 @@ class RewardsCalculator {
         for (const val of snapshot.data || []) {
             lines.push(JSON.stringify({
                 i: Number(val.index),                               // index          
-                b: Number(val.balance),                             // balance (gwei)
-                eb: Number(val.validator?.effective_balance || 0)   // effective_balance (gwei)
+                b: Number(val.balance)                             // balance (gwei)
+                //eb: Number(val.validator?.effective_balance || 0)   // effective_balance (gwei)
                 //ur: null // unclaimed_reward
             }));
         }
