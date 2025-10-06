@@ -1,4 +1,4 @@
-// Version 1.0.3 /* removed cron - frequency is now controlled by initializer (crontab, custom service...) */ 
+// Version 1.0.4 /* removed cron - frequency is now controlled by initializer (crontab, custom service...) */ 
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
@@ -7,14 +7,12 @@ const loadFromArgumentsUtil = require('/srv/stakersspace_utils/libs/load-from-pr
 const { ensureDir, SaveJson } = require('/srv/stakersspace_utils/libs/filesystem-api.js');
 
 /* run on localhost through console
- * node validators_balance_collector.js --beaconChain.port 9596 --output.keepInFile false
+ * node validators_balance_collector.js --beaconBaseUrl http://localhost:9596 --output.keepInFile false
 */
 class Config {
     constructor(){
         this.chain = null;
-        this.beaconChain = {
-            port: 9596
-        },
+        this.beaconBaseUrl = 'http://localhost:9596';
         this.states_track = ['active_exiting', 'active_ongoing', 'exited_unslashed', 'pending_initialized', 'pending_queued', 'withdrawal_done', 'withdrawal_possible'];
         this.requestDelayMs = 5000;
         this.output = {
@@ -127,7 +125,7 @@ class MonitorValidators {
         let catchedErrs = [];
 
         try {
-            const epoch = Number((await getFinalityCheckpoint({ beaconBaseUrl: `http://localhost:${this.config.beaconChain.port}` }))?.data?.current_justified?.epoch);
+            const epoch = Number((await getFinalityCheckpoint({ beaconBaseUrl: this.config.beaconBaseUrl }))?.data?.current_justified?.epoch);
             if (!Number.isFinite(epoch)) throw new Error('No epoch data');
             this.balanceCache.SetEpoch(epoch);
 
@@ -137,7 +135,7 @@ class MonitorValidators {
                 try {
                     // process snapshot
                     const snapshotData = await fetchValidatorsSnapshot({
-                        beaconBaseUrl: `http://localhost:${this.config.beaconChain.port}`,
+                        beaconBaseUrl: this.config.beaconBaseUrl,
                         statuses: state,
                         verboseLog: true,
                     });
@@ -220,7 +218,7 @@ class MonitorValidators {
 (async () => {
     const app = new MonitorValidators();
     try {
-        app.config.chain = await RecognizeChain({ beaconBaseUrl: `http://localhost:${app.config.beaconChain.port}` });
+        app.config.chain = await RecognizeChain({ beaconBaseUrl: app.config.beaconBaseUrl });
         console.log("├─ Config loaded from arguments:", app.config);
         await app.Process();
     } catch (e) {

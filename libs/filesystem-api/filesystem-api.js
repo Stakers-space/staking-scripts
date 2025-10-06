@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = '1.0.0';
+const VERSION = '1.0.1'; // +verifyPath
 const fs  = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
@@ -180,6 +180,48 @@ async function GetFilesContent(directoryPath, startsPrefix, endsPrefix, cb) {
     }
 }
 
+/**
+ * Verify path existence, expected type and access rights.
+ * Throws Error on failure; returns true on success.
+ *
+ * @param {string} p
+ * @param {'any'|'file'|'dir'} [type='any']
+ * @param {object} [opts]
+ * @param {boolean} [opts.readable=false]
+ * @param {boolean} [opts.writable=false]
+ * @returns {Promise<boolean>}
+ */
+async function verifyPath(p, type = 'any', opts = {}) {
+    if (!p) throw new Error('verifyPath: path is required');
+    const { readable = false, writable = false } = opts;
+
+    // existence + stat
+    let st;
+    try {
+        st = await fsp.stat(p);
+    } catch (e) {
+        if (e && (e.code === 'ENOENT' || e.code === 'ENOTDIR')) {
+            throw new Error(`verifyPath: path does not exist: ${p}`);
+        }
+        throw new Error(`verifyPath: stat failed for ${p}: ${e.message || e}`);
+    }
+
+    if (type === 'file' && !st.isFile()) throw new Error(`verifyPath: expected a file, got not-a-file: ${p}`);
+    if (type === 'dir' && !st.isDirectory()) throw new Error(`verifyPath: expected a directory, got not-a-directory: ${p}`);
+    
+    // access checks
+    let mode = 0;
+    if (readable) mode |= fs.constants.R_OK;
+    if (writable) mode |= fs.constants.W_OK;
+    if (mode) {
+        try {
+            await fsp.access(p, mode);
+        } catch (e) {
+            throw new Error(`verifyPath: insufficient access for ${p} (need ${readable?'read':''}${readable&&writable?'+':''}${writable?'write':''})`);
+        }
+    }
+    return true;
+}
 
 module.exports = {
     VERSION,
@@ -191,5 +233,6 @@ module.exports = {
     SaveJsonl,
     ReadJsonl,
     GetSubdirectories,
-    GetFilesContent
+    GetFilesContent,
+    verifyPath
 };

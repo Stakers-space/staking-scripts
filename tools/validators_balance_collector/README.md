@@ -49,7 +49,7 @@ sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/validators_balan
 ### 1. ▶️ Manual one-time run
 ```
 node /srv/stakersspace_utils/validators_balance_collector.js \
-  --beaconChain.port 9596 \
+  --beaconBaseUrl http://localhost:9596 \
   --output.keepInFile true \
   --output.filesSegmentation true \
   --output.storageDirectory "/tmp/validator_state_balances"
@@ -60,7 +60,7 @@ Use `crontab` (open with command `crontab -e`) with `flock`, see below:
 ```
 */5 * * * * flock -n /tmp/val_bal.lock \
   node /srv/stakersspace_utils/validators_balance_collector.js \
-    --beaconChain.port 9596 \
+    --beaconBaseUrl http://localhost:9596 \
     --output.keepInFile true \
     --output.filesSegmentation true \
     --output.storageDirectory "/tmp/validator_state_balances" \
@@ -80,7 +80,7 @@ export function runCollectorOnce() {
     const cp = fork(
       script,
       [
-        '--beaconChain.port','9596',
+        '--beaconBaseUrl','http://localhost:9596',
         '--output.keepInFile','true',
         '--output.filesSegmentation','true',
         '--output.storageDirectory','/tmp/validator_state_balances'
@@ -110,7 +110,7 @@ export function runCollectorOnce() {
 ## ⚙️ Command-line options
 | Argument | Description |
 |-----------|-------------|
-| `--beaconChain.port <number>` | Port of the local beacon node (e.g. `9596`). |
+| `--beaconBaseUrl <url>` | Base url of the beacon node (e.g. `http://localhost:9596`). |
 | `--states_track <json\|csv\|null>` | List of validator states to include.<br>Example: `["active_ongoing","withdrawal_possible",null]` or `active_ongoing,withdrawal_possible,null`.<br>`null` = aggregated snapshot of all states. Unknown states are ignored. |
 | `--output.keepInFile <true\|false>` | Write results to disk (`true`) or print JSON to stdout (`false`). |
 | `--output.filesSegmentation <true\|false>` | `true`: one JSON file per state.<br>`false`: single JSON with all states. |
