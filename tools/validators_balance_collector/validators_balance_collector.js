@@ -1,4 +1,4 @@
-// Version 1.0.2
+// Version 1.0.3 /* removed cron - frequency is now controlled by initializer (crontab, custom service...) */ 
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
@@ -16,7 +16,6 @@ class Config {
             port: 9596
         },
         this.states_track = ['active_exiting', 'active_ongoing', 'exited_unslashed', 'pending_initialized', 'pending_queued', 'withdrawal_done', 'withdrawal_possible'];
-        this.frequencySeconds = 3000;
         this.requestDelayMs = 5000;
         this.output = {
             keepInFile: true,
@@ -115,7 +114,6 @@ class MonitorValidators {
             this.config.states_track = [null];
         }
 
-        this.isRunning = false;
         this.balanceCache = new BalanceCache();
     }
 
@@ -124,20 +122,9 @@ class MonitorValidators {
         process.on('SIGINT', this.cleanUpAndExit.bind(this));
     }
 
-    ConfigurateCronWorker(){ 
-        this.cron = setInterval(this.Process.bind(this), this.config.frequencySeconds * 1000); // update each 50 minutes
-    }
-
-    async PrepareOutputDirectory(){
-        if (!this.config.output.keepInFile) return;
-        await ensureDir(this.config.output.storageDirectory);
-    }
-
     async Process(){
-        if(this.isRunning) return console.log("Skipping (Previous instance is still active)");
-        this.isRunning = true;
-
-        this.balanceCache.ClearData(); // Clear
+        let filesUpdated = [];
+        let catchedErrs = [];
 
         try {
             const epoch = Number((await getFinalityCheckpoint({ beaconBaseUrl: `http://localhost:${this.config.beaconChain.port}` }))?.data?.current_justified?.epoch);
@@ -151,7 +138,6 @@ class MonitorValidators {
                     // process snapshot
                     const snapshotData = await fetchValidatorsSnapshot({
                         beaconBaseUrl: `http://localhost:${this.config.beaconChain.port}`,
-                        state: "head",
                         statuses: state,
                         verboseLog: true,
                     });
@@ -174,10 +160,14 @@ class MonitorValidators {
                             space: 0
                         }); // :contentReference[oaicite:13]{index=13}
                         console.log(`${this.config.output.storageDirectory}/${this.config.chain}_${(state ?? 'aggregated')}.json updated`);
+                        
+                        const p = `${this.config.output.storageDirectory}/${this.config.chain}_${(state ?? 'aggregated')}.json`;
+                        filesUpdated.push(p);
                     }
                     
                 } catch (err) {
                     console.error(`Failed to fetch state '${state}':`, err);
+                    catchedErrs.push(err);
                 }
 
                 // Rate-limit (delay between 2 requests)
@@ -187,6 +177,7 @@ class MonitorValidators {
             }
 
             if(this.config.output.keepInFile){
+                await ensureDir(this.config.output.storageDirectory);
                 if (!this.config.output.filesSegmentation) {
                     await SaveJson({
                         outPath: this.config.output.storageDirectory,
@@ -196,19 +187,31 @@ class MonitorValidators {
                         space: 0
                     }); // :contentReference[oaicite:14]{index=14}
                     console.log(`${this.config.output.storageDirectory}/${this.config.chain}_states.json updated`);
+
+                    const p2 = `${this.config.output.storageDirectory}/${this.config.chain}_states.json`;
+                    filesUpdated.push(p2);
                 }
             } else {
                 console.log(this.balanceCache);
             }
         } catch (err) {
             console.error('Process failed:', err);
+            catchedErrs.push(err);
         } finally {
-            this.isRunning = false;
+            const base = {
+                epoch: this.balanceCache?.epoch ?? null,
+                statesProcessed: this.config.states_track.map(s => s ?? 'aggregated'),
+                filesUpdated: filesUpdated.slice(),
+            };
+            const ok = (catchedErrs.length === 0);
+            const out = ok ? { type: 'complete', ...base } : { type: 'error', ...base, errors: catchedErrs.map(e => String(e?.message || e)) };
+            if (typeof process.send === 'function') process.send(out);
+            await new Promise(res => process.stdout.write(`@@${ok?'COMPLETE':'ERROR'}@@ ` + JSON.stringify(out) + '\n', res));
+            process.exit(ok ? 0 : 1);
         }
     }
 
     cleanUpAndExit() {
-        try { clearInterval(this.cron); } catch (e) { console.log(e); }
         process.exit(0);
     }
 }
@@ -219,9 +222,6 @@ class MonitorValidators {
     try {
         app.config.chain = await RecognizeChain({ beaconBaseUrl: `http://localhost:${app.config.beaconChain.port}` });
         console.log("├─ Config loaded from arguments:", app.config);
-
-        await app.PrepareOutputDirectory();
-        app.ConfigurateCronWorker();
         await app.Process();
     } catch (e) {
         console.error("Startup failed:", e);
