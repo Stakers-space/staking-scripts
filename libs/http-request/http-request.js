@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = '1.0.0';
+const VERSION = '1.0.1'; // stream support
 const http  = require('http');
 const https = require('https');
 const { URL } = require('url');
@@ -27,8 +27,13 @@ function httpRequest(url, options = {}, body = null) {
         
         req.on('error', reject);
 
-        if (body != null) req.write(body);
-        req.end();
+        if (body && typeof body.pipe === 'function') {
+            body.on('error', reject);
+            body.pipe(req);
+        } else {
+            if (body != null) req.write(body);
+            req.end();
+        }
     });
 }
 

@@ -123,6 +123,7 @@ class MonitorValidators {
     async Process(){
         let filesUpdated = [];
         let catchedErrs = [];
+        let validatorsCount = {};
 
         try {
             const epoch = Number((await getFinalityCheckpoint({ beaconBaseUrl: this.config.beaconBaseUrl }))?.data?.current_justified?.epoch);
@@ -139,7 +140,11 @@ class MonitorValidators {
                         statuses: state,
                         verboseLog: true,
                     });
-                    for (const obj of snapshotData.data) {
+
+                    const arr = Array.isArray(snapshotData?.data) ? snapshotData.data : [];
+                    const vc = arr.length;
+                    for (let i = 0; i < vc; i++) {
+                        const obj = arr[i];
                         const balance = (this.config.chain === "gnosis") ? (Number(obj.balance) / 32000000000) : (Number(obj.balance) / 1000000000);
                         this.balanceCache.ValidatorState(
                             this.config.output.filesSegmentation,
@@ -148,6 +153,7 @@ class MonitorValidators {
                             balance
                         );
                     }
+                    validatorsCount[(state ?? 'aggregated')] = vc;
 
                     if(this.config.output.keepInFile && this.config.output.filesSegmentation){
                         await SaveJson({
@@ -159,8 +165,7 @@ class MonitorValidators {
                         }); // :contentReference[oaicite:13]{index=13}
                         console.log(`${this.config.output.storageDirectory}/${this.config.chain}_${(state ?? 'aggregated')}.json updated`);
                         
-                        const p = `${this.config.output.storageDirectory}/${this.config.chain}_${(state ?? 'aggregated')}.json`;
-                        filesUpdated.push(p);
+                        filesUpdated.push(`${this.config.chain}_${(state ?? 'aggregated')}.json`);
                     }
                     
                 } catch (err) {
@@ -171,7 +176,6 @@ class MonitorValidators {
                 // Rate-limit (delay between 2 requests)
                 const delay = Number(this.config.requestDelayMs) || 0;
                 if (delay > 0) await new Promise(r => setTimeout(r, delay));
-                
             }
 
             if(this.config.output.keepInFile){
@@ -186,8 +190,7 @@ class MonitorValidators {
                     }); // :contentReference[oaicite:14]{index=14}
                     console.log(`${this.config.output.storageDirectory}/${this.config.chain}_states.json updated`);
 
-                    const p2 = `${this.config.output.storageDirectory}/${this.config.chain}_states.json`;
-                    filesUpdated.push(p2);
+                    filesUpdated.push(`${this.config.chain}_states.json`);
                 }
             } else {
                 console.log(this.balanceCache);
@@ -201,6 +204,7 @@ class MonitorValidators {
                 epoch: this.balanceCache?.epoch ?? null,
                 statesProcessed: this.config.states_track.map(s => s ?? 'aggregated'),
                 filesUpdated: filesUpdated.slice(),
+                validatorsCount
             };
             const ok = (catchedErrs.length === 0);
             const out = ok ? { type: 'complete', ...base } : { type: 'error', ...base, errors: catchedErrs.map(e => String(e?.message || e)) };
