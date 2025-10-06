@@ -197,6 +197,7 @@ class MonitorValidators {
             catchedErrs.push(err);
         } finally {
             const base = {
+                chain: this.config.chain,
                 epoch: this.balanceCache?.epoch ?? null,
                 statesProcessed: this.config.states_track.map(s => s ?? 'aggregated'),
                 filesUpdated: filesUpdated.slice(),
