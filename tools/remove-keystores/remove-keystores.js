@@ -44,7 +44,7 @@ class KeystoresTool {
                     const snapshotData = await fetchValidatorsSnapshot({
                         beaconBaseUrl: `http://localhost:${port}`,
                         state: "head",
-                        statuses: state
+                        status_filter: state
                     });
                     const arr = snapshotData?.data || [];
                     for (const obj of arr) {

@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = '1.0.1'; // +verifyPath
+const VERSION = '1.0.2'; // +ReadJson
 const fs  = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
@@ -72,6 +72,12 @@ async function SaveJson({ outPath = '', filename = '', json, atomic = true, spac
     else await fsp.writeFile(targetPath, payload);
 
     return targetPath;
+}
+
+async function ReadJson(filePath) {
+  await verifyPath(filePath, 'file', { readable: true });
+  const txt = await fsp.readFile(filePath, 'utf8');
+  return JSON.parse(txt);
 }
 
 /**
@@ -230,6 +236,7 @@ module.exports = {
     atomicWrite,
     resolveTargetPath,
     SaveJson,
+    ReadJson,
     SaveJsonl,
     ReadJsonl,
     GetSubdirectories,

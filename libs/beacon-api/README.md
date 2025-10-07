@@ -26,3 +26,10 @@ sudo usermod -aG myserveruser stakersspace
 ```
 sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/libs/beacon-api.js
 ```
+
+
+### Required by
+- calculate-rewards
+- generate-validators-snapshot
+- remove-keystores
+- validators_balance_collector

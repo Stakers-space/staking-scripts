@@ -88,7 +88,7 @@ class RewardsCalculator {
                 beaconBaseUrl: this.config.beaconBaseUrl,
                 state: this.config.snapshot_state,
                 pubIdsList: this.config.pubIdsList,
-                statuses: this.config.statuses,
+                status_filter: this.config.statuses,
                 timeoutMs: Number(this.config.httpTimeoutMs),
                 verboseLog: Boolean(this.config.verboseLog),
             })

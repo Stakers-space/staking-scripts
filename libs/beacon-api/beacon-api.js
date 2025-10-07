@@ -1,5 +1,8 @@
-const VERSION = '1.0.0';
+const VERSION = '1.0.1'; // filter_status, validation
 const { getJson } = require('./http-request');
+
+const VALIDATOR_STATES = new Set(['active_exiting','active_ongoing','exited_unslashed','pending_initialized','pending_queued','withdrawal_done','withdrawal_possible']);
+//const SNAPSHOT_STATES = new Set(['finalized', 'head', epoch_number ...]);
 
 /**
  * @typedef {Object} BeaconValidator
@@ -32,14 +35,14 @@ const { getJson } = require('./http-request');
  * @param {string} [options.beaconBaseUrl="http://localhost:5052"] - Beacon REST base URL.
  * @param {string|number} [options.state="finalized"] - "head" | "finalized" | epoch number | block root.
  * @param {string|string[]} [options.pubIdsList=null] - Filter: indices or pubkeys (CSV or array).
- * @param {string|string[]} [options.statuses=null] - Filter: validator statuses (CSV or array).
+ * @param {string|string[]} [options.status_filter=null] - Filter: validator statuses (CSV or array).
  * @param {number} [options.timeoutMs=20000] - Socket inactivity timeout in ms.
  * @param {boolean} [options.verboseLog=false] - Enable verbose logging.
  * @returns {Promise<ValidatorsResponse>} Raw beacon response with `data` array of validators.
  * @throws {Error} If the REST call fails, times out, or returns invalid JSON.
  *
  * @example
- * const res = await fetchSnapshot({ beaconBaseUrl: 'http://localhost:5052', state: 'finalized',
+ * const res = await fetchValidatorsSnapshot({ beaconBaseUrl: 'http://localhost:5052', state: 'finalized',
  *   statuses: ['active_ongoing','active_exiting'] });
  * console.log(res.data.length);
  */
@@ -48,20 +51,36 @@ async function fetchValidatorsSnapshot(
 		beaconBaseUrl = "http://localhost:9596",
 		state = "finalized",           // "finalized" | "head" | epoch | root
 		pubIdsList = null,             // array<number|string> or "1000,1001"
-		statuses = null,               // array<string> or "active_ongoing,active_exiting"
+		status_filter = null,               // "active_ongoing" or "active_ongoing,active_exiting" or arr ["active_ongoing", "active_exiting"]
 		timeoutMs = 20000,
 		verboseLog = false
 	}) {
+	// validate state
+	//if(!SNAPSHOT_STATES.has(state)) throw new Error(`Invalid state: ${state} | Allowed: head, finalized, <epoch>, <root>`);
 
-	if(verboseLog) console.log(`Fetching validators snapshot for ${state} state on ${beaconBaseUrl} | statuses filter: ${statuses}`);
+	function validateStatusFilter(input) {
+		let inputArr = null;
+		if (typeof input === 'string'){ 
+			inputArr = input.split(',').map(x => x.trim()).filter(Boolean); 
+		} else if(Array.isArray(input)){ 
+			inputArr = input; 
+		}
+		if(!inputArr) throw new Error('status_filter must be string | string[] | null');
+		for (const st of inputArr) { 
+			if (!VALIDATOR_STATES.has(st)) throw new Error(`Invalid status_filter: "${st}". Allowed: ${[...VALIDATOR_STATES].join(', ')}`); 
+		}
+	}
+	if(status_filter !== null) validateStatusFilter(status_filter);
+
+	if(verboseLog) console.log(`Fetching validators snapshot for ${state} state on ${beaconBaseUrl} | statuses filter: ${status_filter}`);
 	
 	// base URL parsing + canonicalization
 	const base = beaconBaseUrl.replace(/\/$/, "");
 	let path = `/eth/v1/beacon/states/${state}/validators`;
 
 	const qs = [];
-	const idsCsv = toCsvParam(pubIdsList);   // handles ["1000","1001"] or "1000,1001" or "1000"
-	const stCsv  = toCsvParam(statuses);     // handles ["active_ongoing"] or "active_ongoing,active_exiting"
+	const idsCsv = toCsvParam(pubIdsList);   		// handles ["1000","1001"] or "1000,1001" or "1000"
+	const stCsv  = toCsvParam(status_filter);     // handles ["active_ongoing"] or "active_ongoing,active_exiting"
 	if (idsCsv) qs.push(`id=${idsCsv}`);
 	if (stCsv)  qs.push(`status=${stCsv}`);
 	if (qs.length) path += `?${qs.join("&")}`;
@@ -74,10 +93,9 @@ async function fetchValidatorsSnapshot(
 
 	if (verboseLog) {
 		const count = Array.isArray(json?.data) ? json.data.length : 0;
-		console.log(`[fetchSnapshot] ${fullUrl} → ${count} validators`);
+		console.log(`[fetchValidatorsSnapshot] ${fullUrl} | filter: ${status_filter} → ${count} validators`);
 	}
 	return json; // { execution_optimistic, finalized, data: [...] }
-
 
 	function toCsvParam(values) {
 		if (values == null) return null;
@@ -150,6 +168,7 @@ async function getFinalityCheckpoint({ beaconBaseUrl, timeoutMs = 20000 }){
 module.exports = { 
 	VERSION,
     RecognizeChain,
+	VALIDATOR_STATES,
     fetchValidatorsSnapshot,
 	getGenesisTime,
 	getSpec,
