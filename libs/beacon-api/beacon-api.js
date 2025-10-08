@@ -1,4 +1,5 @@
-const VERSION = '1.0.1'; // filter_status, validation
+'use strict';
+const VERSION = 1.1;
 
 const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
     const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);

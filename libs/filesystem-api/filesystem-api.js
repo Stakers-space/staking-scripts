@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = '1.0.2'; // +ReadJson
+const VERSION = 1.1;
 const fs  = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');

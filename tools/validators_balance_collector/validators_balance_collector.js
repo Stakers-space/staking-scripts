@@ -1,4 +1,4 @@
-// Version 1.0.4 /* removed cron - frequency is now controlled by initializer (crontab, custom service...) */ 
+const VERSION = 1.1;
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */

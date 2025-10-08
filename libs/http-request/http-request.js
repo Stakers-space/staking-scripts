@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = '1.0.1'; // stream support
+const VERSION = 1.1; // stream support
 const http  = require('http');
 const https = require('https');
 const { URL } = require('url');

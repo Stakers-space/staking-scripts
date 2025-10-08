@@ -1,8 +1,8 @@
-// Version 1.0.5
+
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
-
+const VERSION = 1.1;
 const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
     const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
     if (fs.existsSync(p)) return require(p);
@@ -235,5 +235,5 @@ if (require.main === module) {
         }
     })();
 } else {
-    module.exports = { runGenerateValidatorsSnapshot };
+    module.exports = { VERSION, runGenerateValidatorsSnapshot };
 }
