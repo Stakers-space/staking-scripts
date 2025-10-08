@@ -1,4 +1,4 @@
-// Version 1.0.4 /* removed cron - frequency is now controlled by initializer (crontab, custom service...) */ 
+// Version 1.0.5
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
@@ -66,7 +66,6 @@ class ProcessSnapshot {
         this.setupSignalHandlers();
 
         this.config = new Config();
-        loadFromArgumentsUtil(this.config);
         
         (function normalizeStates(cfg) {
             let states = cfg.states_track;
@@ -179,9 +178,7 @@ class ProcessSnapshot {
             };
             const ok = (catchedErrs.length === 0);
             const out = ok ? { type: 'complete', ...base } : { type: 'error', ...base, errors: catchedErrs.map(e => String(e?.message || e)) };
-            if (typeof process.send === 'function') process.send(out);
-            await new Promise(res => process.stdout.write(`@@${ok?'COMPLETE':'ERROR'}@@ ` + JSON.stringify(out) + '\n', res));
-            process.exit(ok ? 0 : 1);
+            return out;
         }
     }
 
@@ -190,14 +187,44 @@ class ProcessSnapshot {
     }
 }
 
-/** Run Util */
-(async () => {
+async function runGenerateValidatorsSnapshot(args = {}) {
     const app = new ProcessSnapshot();
-    try {
-        app.config.chain = await RecognizeChain({ beaconBaseUrl: app.config.beaconBaseUrl });
-        console.log("├─ Config loaded from arguments:", app.config);
-        await app.Process();
-    } catch (e) {
-        console.error("Startup failed:", e);
+
+    if (args.beaconBaseUrl) app.config.beaconBaseUrl = args.beaconBaseUrl;
+    if (Array.isArray(args.states_track) || typeof args.states_track === 'string' || args.states_track === null) {
+        app.config.states_track = args.states_track;
     }
-})();
+    if (typeof args.requestDelayMs === 'number') app.config.requestDelayMs = args.requestDelayMs;
+    if (args.output && typeof args.output === 'object') {
+        app.config.output = { ...app.config.output, ...args.output };
+    }
+
+    if (!app.config.chain) app.config.chain = await RecognizeChain({ beaconBaseUrl: app.config.beaconBaseUrl });
+    
+    return await app.Process();
+}
+
+// --- CLI mode ---
+if (require.main === module) {
+    (async () => {
+        try {
+            const app = new ProcessSnapshot();
+            loadFromArgumentsUtil(app.config);
+            app.config.chain = await RecognizeChain({ beaconBaseUrl: app.config.beaconBaseUrl });
+            console.log("├─ Config loaded from arguments:", app.config);
+
+            const out = await app.Process();
+            if (typeof process.send === 'function') process.send(out);
+            const tag = out.type === 'complete' ? 'COMPLETE' : 'ERROR';
+            await new Promise(res => process.stdout.write(`@@${tag}@@ ` + JSON.stringify(out) + '\n', res));
+            process.exit(out.type === 'complete' ? 0 : 1);
+        } catch (e) {
+            const errOut = { type: 'error', errors: [String(e?.message || e)] };
+            if (typeof process.send === 'function') process.send(errOut);
+            await new Promise(res => process.stdout.write('@@ERROR@@ ' + JSON.stringify(errOut) + '\n', res));
+            process.exit(1);
+        }
+    })();
+} else {
+    module.exports = { runGenerateValidatorsSnapshot };
+}

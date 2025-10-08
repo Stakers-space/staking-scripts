@@ -47,20 +47,25 @@ async function getUnclaimedGNORewardsByWallet(executionCLientApiUrl, wallet, tim
     const addrNo0x = strip0x(wallet).toLowerCase();
     const data = ensure0x(FN_WITHDRAWABLE_SELECTOR + pad64(addrNo0x));
     const resultHex = await ethCall({
-        executionCLientApiUrl,
+        elBaseUrl: executionCLientApiUrl,
         to: GNO_UNCLAIMED_CONTRACT,
         data,
         timeoutMs
     });
+    return BigInt(resultHex || '0x0');
+}
 
-    // Parse hex → BigInt wei
-    const wei = BigInt(resultHex || '0x0');
-    return {
-        wallet: wallet.toLowerCase(),
-        wei: wei.toString(),
-        gno: formatWeiToEthString(wei, 18),
-        decimalValue: parseInt(resultHex, 16)
-    };
+async function getAssetbalance(executionCLientApiUrl, wallet, asset_contract, timeoutMs = 20000){
+    if (!isAddress(wallet)) throw new Error(`Invalid wallet address: ${wallet}`);
+    const addrNo0x = strip0x(wallet).toLowerCase();
+    const data = `0x70a08231000000000000000000000000${addrNo0x}`;
+    const resultHex = await ethCall({
+        elBaseUrl: executionCLientApiUrl,
+        to: asset_contract,
+        data,
+        timeoutMs
+    });
+    return BigInt(resultHex || '0x0');
 }
 
 // get latest block number (hex -> number)
@@ -90,5 +95,6 @@ module.exports = {
     VERSION,
     getLatestBlockNumber,
     getBlock,
-    getUnclaimedGNORewardsByWallet
+    getUnclaimedGNORewardsByWallet,
+    getAssetbalance
 }

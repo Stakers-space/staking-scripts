@@ -1,18 +1,21 @@
 # Validators Snapshot Generator
 
-CLI tool to fetch and persist validator snapshots from Ethereum-compatible Beacon APIs (Lodestar/Prysm/…). Supports aggregated (no status filter) and per-status snapshots, validates inputs, and writes compact JSON with totals and per-status summaries. For space savings, each validator item stores the status field only in aggregated mode.
+A dual-mode Node.js utility that fetches and optionally stores **validator snapshots** from any Ethereum-compatible **Beacon API** (e.g., Lodestar, Prysm, Lighthouse).  
+Supports both **CLI** and **programmatic (library)** use.
 
 ## ✨ Features
-- Fetch validators via Beacon API: /eth/v1/beacon/states/{state}/validators
-- State filtering: null (aggregated) or specific statuses
-- states_track as CSV, JSON array, or null for all states
-- Validation against a known set of validator states
-- Storage: single combined file or one file per status
-- Summaries: total counts, sum of balances, sum of effective balances
-- Size-optimized: item-level status is written only in aggregated mode
+- Fetches validators from `/eth/v1/beacon/states/{state}/validators`
+- Works with **aggregated** (`null`) or **per-status** snapshots  
+- Supports CSV, JSON array, or `null` for `--states_track`
+- Writes compact JSON with per-status totals (validator count, balance sums)
+- Rate-limiting between requests (`--requestDelayMs`)
+- Supports graceful shutdown on SIGINT / SIGTERM
+- Dual-mode design:
+  - **CLI execution** with full `process.argv` parsing via `loadFromArgumentsUtil`
+  - **Library import** returning `responseObj` as a Promise
 
  ## 📦 Requirements
-- Node.js 18+
+- Node.js v18+
 - A reachable Beacon API endpoint (e.g., http://localhost:9596)
 - Installed utils below (Installation guide on each util page)
   - [beacon-api lib](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api)
@@ -46,10 +49,24 @@ sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/generate-validat
 ```
 
 ---
-
 ## Usage
+- 🚀 CLI Usage
 ```
-node /srv/stakersspace_utils/generate-validators-snapshot.js
+node /srv/stakersspace_utils/generate-validators-snapshot.js --beaconBaseUrl http://localhost:9596 --states_track 'active_ongoing,withdrawal_done' --output.keepInFile true --output.storageDirectory /tmp/validator_state_balances
+```
+- 🧩 Library Usage
+```
+const { runGenerateValidatorsSnapshot } = require('/srv/stakersspace_utils/generate-validators-snapshot.js');
+
+(async () => {
+  const result = await runGenerateValidatorsSnapshot({
+    beaconBaseUrl: 'http://localhost:9596',
+    states_track: ['active_ongoing', 'withdrawal_possible'],
+    output: { keepInFile: true, storageDirectory: '/tmp/validator_state_balances_v2' },
+    requestDelayMs: 1500
+  });
+  console.log(result);
+})();
 ```
 
 ## ⚙️ Configuration (CLI Arguments)

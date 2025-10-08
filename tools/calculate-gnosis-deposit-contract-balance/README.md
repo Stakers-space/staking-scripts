@@ -1,32 +1,113 @@
-# Check Inner debt of Gnosis Deposit Contract
-GNO rewards to validators are not paid through a emission of new token, instead, they are paid by GnosisDAO.
+# Gnosis Deposit Contract Balance Calculator
 
-As the [deposit contract](https://gnosisscan.io/address/0x0b98057ea310f4d31f2a452b414647007d1645d9) processing deposits as wel las withdrawals (including rewards), with each reward (claimed as well as unclaimed), an internal debt is being generated. This debt should be covered by Gnosis DAO to keep all validator funds covered.
+This Node.js utility calculates the **internal debt** of the [Gnosis Beacon Deposit Contract](https://gnosisscan.io/address/0x0b98057ea310f4d31f2a452b414647007d1645d9).
 
-Gnosis deposit contract balance is being tracked by Stakers.space. [Check GNO deposit balance online](https://stakers.space/gnosis-staking/deposit-contract-balance)
+Unlike Ethereum, **Gnosis Chain (GNO)** does not issue new tokens to reward validators. Rewards are covered directly by **GnosisDAO**, which periodically tops up the deposit contract.  
+As validators claim or leave rewards unclaimed, the balance of this contract represents the current **net internal debt** owed by GnosisDAO to validators.
 
-This script allows to get current state of the internal debt on the deposit contract.
+The utility is part of the [Stakers.space](https://stakers.space/gnosis-staking/deposit-contract-balance) monitoring suite.
 
-## Prerequisities
-- node.js installed
-- Synchronized Execution and Beacon client
+---
 
-## Download script to server
+## 🔧 Features
+- Fetches live validator balances and deposit contract balance.
+- Calculates **claimed / unclaimed GNO** across all active validators.
+- Computes the **internal debt** (difference between total validator holdings and deposit contract balance).
+- Supports both **CLI execution** and **library import** (Promise-based API).
+- Provides **human-readable** and **machine-readable (JSON/IPC)** outputs.
+
+---
+
+## 📋 Prerequisites
+- Node.js (v18+ recommended)
+- Running and synchronized **Execution** and **Beacon** clients
+- Required utility libraries:
+  - [`beacon-api.js`](https://github.com/Stakers-space/staking-scripts/tree/main/libs/beacon-api)
+  - [`execution-api.js`](https://github.com/Stakers-space/staking-scripts/tree/main/libs/execution-api)
+  - [`http-request.js`](https://github.com/Stakers-space/staking-scripts/tree/main/libs/http-request)
+  - [`load-from-process-arguments.js`](https://github.com/Stakers-space/staking-scripts/tree/main/libs/load-from-process-arguments)
+
+---
+
+## 📦 Installation
 - View the script
 ```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/get-data-utils/gnosis_deposit_contract_balance/check-balance.js
+curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/tools/calculate-gnosis-deposit-contract-balance/calculate-gnosis-deposit-contract-balance.js
 ```
-- Download the script to `/opt/stakersspace/gnosis-deposit-contract-balance` directory
+- Create `/srv/stakersspace_utils` directory, if does not exist yet
 ```
-sudo curl -o check-gnosis-deposit-contract-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/get-data-utils/gnosis_deposit_contract_balance/check-balance.js
+sudo mkdir /srv/stakersspace_utils
 ```
-- Set ownership
-sudo chown stakersspace:stakersspace check-gnosis-deposit-contract-balance.js
+- Download the script to `/srv/stakersspace_utils` directory
+```
+sudo curl -o /srv/stakersspace_utils/calculate-gnosis-deposit-contract-balance.js https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/tools/calculate-gnosis-deposit-contract-balance/calculate-gnosis-deposit-contract-balance.js
+```
+- Define service user `stakersspace` (if does not exists yet)
+```
+sudo useradd --system --no-create-home --shell /bin/false stakersspace
+```
+- Add `stakersspace` user into the group with NodeJs user (if not added yet)
+```
+sudo usermod -aG myserveruser stakersspace
+```
+- Set file ownership dfirectory
+```
+sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/calculate-gnosis-deposit-contract-balance.js
+```
 
-### Usage
-Run `node check-gnosis-deposit-contract-balance.js --beaconPort 9596 --executionPort 8545`.
+---
 
-### Output
+## 🚀 CLI Usage
+```
+node calculate-gnosis-deposit-contract-balance.js --beaconBaseUrl http://localhost:9596 --executionBaseUrl http://localhost:8545
+```
+Example CLI Output
+```
+Starting Gnosis Deposit Contract Balance calculation
+├─ beaconBaseUrl: http://localhost:9596
+├─ executionBaseUrl: http://localhost:8545
+├── Fetching latest epoch and validator data...
+├── Processing validator snapshot for head slot state...
+├── Contract balance: 307183.7587 GNO
+├── Validators’ total GNO on beaconchain: 328981.2514 GNO
+├── Unclaimed validator rewards: 5864.9754 GNO
+└── Internal debt: -27662.4680 GNO
+```
+
+### 🧩 Library Usage
+You can use this tool programmatically in another Node.js application:
+- 1) as import
+```
+const { runCalculateGnosisDepositContractBalance } = require('/srv/stakersspace_utils/calculate-gnosis-deposit-contract-balance.js');
+
+(async () => {
+  const result = await runCalculateGnosisDepositContractBalance({
+    beaconBaseUrl: 'http://localhost:9596',
+    executionBaseUrl: 'http://localhost:8545',
+  });
+
+  console.log('Result:', result);
+})();
+```
+- 2) as child process
+```
+const { fork } = require('child_process');
+
+const child = fork('/srv/stakersspace_utils/calculate-gnosis-deposit-contract-balance.js', [
+  '--beaconBaseUrl=http://localhost:9596',
+  '--executionBaseUrl=http://localhost:8545'
+]);
+
+child.on('message', (msg) => {
+  console.log('Received from child process:', msg);
+});
+
+child.on('exit', (code) => {
+  console.log('Process exited with code', code);
+});
+```
+
+### Detailed Output
 There's a text based UI output as well as object-based output allowing connection of the util with other scripts.
 - UI based output:
 ```
