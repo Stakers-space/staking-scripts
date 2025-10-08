@@ -1,5 +1,13 @@
 const VERSION = '1.0.1'; // filter_status, validation
-const { getJson } = require('./http-request');
+
+const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
+    const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
+    if (fs.existsSync(p)) return require(p);
+    const fallback_AbsPath = path.join(os.homedir(), fallback_HomeDirPath);
+    if(fs.existsSync(fallback_AbsPath)) return require(fallback_AbsPath);
+    throw new Error(`Module not found at ${p} neither ${fallback_HomeDirPath}`);
+}
+const { getJson } = requireLib('./http-request', 'staking-scripts/libs/http-request/http-request.js');
 
 const VALIDATOR_STATES = new Set(['active_exiting','active_ongoing','exited_unslashed','pending_initialized','pending_queued','withdrawal_done','withdrawal_possible']);
 //const SNAPSHOT_STATES = new Set(['finalized', 'head', epoch_number ...]);

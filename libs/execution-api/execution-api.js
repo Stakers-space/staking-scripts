@@ -1,6 +1,15 @@
 'use strict';
 const VERSION = '1.0.0';
-const { httpRequest, getJson } = require('./http-request');
+
+const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
+    const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
+    if (fs.existsSync(p)) return require(p);
+    const fallback_AbsPath = path.join(os.homedir(), fallback_HomeDirPath);
+    if(fs.existsSync(fallback_AbsPath)) return require(fallback_AbsPath);
+    throw new Error(`Module not found at ${p} neither ${fallback_HomeDirPath}`);
+}
+
+const { getJson } = requireLib('./http-request', 'staking-scripts/libs/http-request/http-request.js');
 
 // --- helpers ---
 function ensure0x(s) { return s.startsWith('0x') ? s : `0x${s}`;}

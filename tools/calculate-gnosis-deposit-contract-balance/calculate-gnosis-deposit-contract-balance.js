@@ -1,9 +1,18 @@
 'use strict';
-// const version = "0.1.3";
+const VERSION = "0.1.4";
+
+const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
+    const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
+    if (fs.existsSync(p)) return require(p);
+    const fallback_AbsPath = path.join(os.homedir(), fallback_HomeDirPath);
+    if(fs.existsSync(fallback_AbsPath)) return require(fallback_AbsPath);
+    throw new Error(`Module not found at ${p} neither ${fallback_HomeDirPath}`);
+}
+
 // base unit: GWei
-const { getFinalityCheckpoint, fetchValidatorsSnapshot } = require('/srv/stakersspace_utils/libs/beacon-api');
-const { getUnclaimedGNORewardsByWallet, getAssetbalance } = require('/srv/stakersspace_utils/libs/execution-api');
-const loadFromArgumentsUtil = require('/srv/stakersspace_utils/libs/load-from-process-arguments.js');
+const { getFinalityCheckpoint, fetchValidatorsSnapshot } = requireLib('/srv/stakersspace_utils/libs/beacon-api','staking-scripts/libs/beacon-api/beacon-api.js');
+const { getUnclaimedGNORewardsByWallet, getAssetbalance } = requireLib('/srv/stakersspace_utils/libs/execution-api', 'staking-scripts/libs/execution-api/execution-api.js');
+const loadFromArgumentsUtil = requireLib('/srv/stakersspace_utils/libs/load-from-process-arguments.js', 'staking-scripts/libs/load-from-process-arguments/load-from-process-arguments.js');
 
 class CalculateGnosisDepositContractBalance {
     constructor() {
@@ -158,5 +167,5 @@ if (require.main === module) {
         }
     })();
 } else {
-    module.exports = { runCalculateGnosisDepositContractBalance };
+    module.exports = { VERSION, runCalculateGnosisDepositContractBalance };
 }

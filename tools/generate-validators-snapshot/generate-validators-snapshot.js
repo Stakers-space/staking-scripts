@@ -2,9 +2,18 @@
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
-const { fetchValidatorsSnapshot, RecognizeChain, getFinalityCheckpoint } = require('/srv/stakersspace_utils/libs/beacon-api.js');
-const loadFromArgumentsUtil = require('/srv/stakersspace_utils/libs/load-from-process-arguments.js');
-const { ensureDir, SaveJson } = require('/srv/stakersspace_utils/libs/filesystem-api.js');
+
+const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
+    const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
+    if (fs.existsSync(p)) return require(p);
+    const fallback_AbsPath = path.join(os.homedir(), fallback_HomeDirPath);
+    if(fs.existsSync(fallback_AbsPath)) return require(fallback_AbsPath);
+    throw new Error(`Module not found at ${p} neither ${fallback_HomeDirPath}`);
+}
+
+const { fetchValidatorsSnapshot, RecognizeChain, getFinalityCheckpoint } = requireLib('/srv/stakersspace_utils/libs/beacon-api.js','staking-scripts/libs/beacon-api/beacon-api.js');
+const loadFromArgumentsUtil = requireLib('/srv/stakersspace_utils/libs/load-from-process-arguments.js', 'staking-scripts/libs/load-from-process-arguments/load-from-process-arguments.js');
+const { ensureDir, SaveJson } = requireLib('/srv/stakersspace_utils/libs/filesystem-api.js', 'staking-scripts/libs/filesystem-api/filesystem-api.js');
 
 /* run on localhost through console
  * node validators_balance_collector.js --beaconBaseUrl http://localhost:9596 --output.keepInFile false
