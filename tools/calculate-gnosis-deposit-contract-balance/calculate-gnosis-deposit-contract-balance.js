@@ -10,8 +10,8 @@ const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = req
 }
 
 // base unit: GWei
-const { getFinalityCheckpoint, fetchValidatorsSnapshot } = requireLib('/srv/stakersspace_utils/libs/beacon-api','staking-scripts/libs/beacon-api/beacon-api.js');
-const { getUnclaimedGNORewardsByWallet, getAssetbalance } = requireLib('/srv/stakersspace_utils/libs/execution-api', 'staking-scripts/libs/execution-api/execution-api.js');
+const { getFinalityCheckpoint, fetchValidatorsSnapshot } = requireLib('/srv/stakersspace_utils/libs/beacon-api.js','staking-scripts/libs/beacon-api/beacon-api.js');
+const { getUnclaimedGNORewardsByWallet, getAssetbalance } = requireLib('/srv/stakersspace_utils/libs/execution-api.js', 'staking-scripts/libs/execution-api/execution-api.js');
 const loadFromArgumentsUtil = requireLib('/srv/stakersspace_utils/libs/load-from-process-arguments.js', 'staking-scripts/libs/load-from-process-arguments/load-from-process-arguments.js');
 
 class CalculateGnosisDepositContractBalance {
