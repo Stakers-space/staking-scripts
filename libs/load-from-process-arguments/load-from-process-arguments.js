@@ -57,7 +57,5 @@ function loadFromArgs(configObj) {
         setNestedProperty(configObj, key, rawValue);
         console.log(`├─ ${key} set to: ${rawValue} (from --${key})`);
     }
-
-    console.log("└─ Load from arguments util | configObj loaded");
 }
 module.exports = loadFromArgs;

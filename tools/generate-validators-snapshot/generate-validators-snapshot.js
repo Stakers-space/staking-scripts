@@ -1,7 +1,3 @@
-
-/**
- * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
- */
 const VERSION = 1.2; // logic order
 const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
     const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
