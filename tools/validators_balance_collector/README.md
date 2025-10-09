@@ -56,7 +56,8 @@ node /srv/stakersspace_utils/validators_balance_collector.js \
 ```
 
 ### 2. 🕒 Periodic run with crontab (recommended)
-Use `crontab` (open with command `crontab -e`) with `flock`, see below:
+You can create a systemd unit file and timer for the service. 
+Alternatively, with proper user / file permissions, you can use  `crontab` (open with command `crontab -e`) with `flock`, see below:
 ```
 */5 * * * * flock -n /tmp/val_bal.lock \
   node /srv/stakersspace_utils/validators_balance_collector.js \

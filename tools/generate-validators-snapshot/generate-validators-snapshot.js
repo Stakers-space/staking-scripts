@@ -134,6 +134,8 @@ class ProcessSnapshot {
             epoch = Number((await getFinalityCheckpoint({ beaconBaseUrl: this.config.beaconBaseUrl }))?.data?.current_justified?.epoch);
             if (!Number.isFinite(epoch)) throw new Error('No epoch data');
             
+            if(typeof this.config.states_track === "string") this.config.states_track = this.config.states_track.split(',').map(x => x.trim()).filter(Boolean); 
+
             for (const state of this.config.states_track) { 
                 this.dataFactory = new DataFactory();
                 this.dataFactory.SetEpoch(epoch);
