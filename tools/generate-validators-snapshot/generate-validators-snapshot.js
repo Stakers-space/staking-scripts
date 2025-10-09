@@ -95,8 +95,7 @@ class ProcessSnapshot {
                 if (!seen.has(st)) { seen.add(st); out.push(st); }
             }
             if (out.length === 0) out.push(null);
-            states = out;
-            console.log('├─ States to fetch:', out.map(s => s ?? 'aggregated').join(', '), '| chain:', this.config.chain);
+            this.config.states_track = out;
         }
     }
 
@@ -107,6 +106,9 @@ class ProcessSnapshot {
 
     async Process(){
         this.normalizeStates();
+        
+        console.log("├─{ Generate Validators Snapshot with config }:", this.config);
+
         let filesUpdated = [];
         let catchedErrs = [];
         let epoch = 0;
@@ -184,15 +186,14 @@ async function runGenerateValidatorsSnapshot(args = {}) {
     const app = new ProcessSnapshot();
 
     if (args.beaconBaseUrl) app.config.beaconBaseUrl = args.beaconBaseUrl;
-    if (Array.isArray(args.states_track) || typeof args.states_track === 'string' || args.states_track === null) {
-        app.config.states_track = args.states_track;
-    }
+    if (Array.isArray(args.states_track) || typeof args.states_track === 'string') app.config.states_track = args.states_track;
+    
     if (typeof args.requestDelayMs === 'number') app.config.requestDelayMs = args.requestDelayMs;
     if (args.output && typeof args.output === 'object') {
         app.config.output = { ...app.config.output, ...args.output };
     }
 
-    if (!app.config.chain) app.config.chain = await RecognizeChain({ beaconBaseUrl: app.config.beaconBaseUrl });
+    app.config.chain = await RecognizeChain({ beaconBaseUrl: app.config.beaconBaseUrl });
     
     return await app.Process();
 }
@@ -204,7 +205,6 @@ if (require.main === module) {
             const app = new ProcessSnapshot();
             loadFromArgumentsUtil(app.config);
             app.config.chain = await RecognizeChain({ beaconBaseUrl: app.config.beaconBaseUrl });
-            console.log("├─ Config loaded from arguments:", app.config);
 
             const out = await app.Process();
             if (typeof process.send === 'function') process.send(out);
