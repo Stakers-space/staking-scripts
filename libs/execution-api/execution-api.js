@@ -9,7 +9,7 @@ const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = req
     throw new Error(`Module not found at ${p} neither ${fallback_HomeDirPath}`);
 }
 
-const { getJson } = requireLib('./http-request', 'staking-scripts/libs/http-request/http-request.js');
+const { getJson } = requireLib('./http-request.js', 'staking-scripts/libs/http-request/http-request.js');
 
 // --- helpers ---
 function ensure0x(s) { return s.startsWith('0x') ? s : `0x${s}`;}

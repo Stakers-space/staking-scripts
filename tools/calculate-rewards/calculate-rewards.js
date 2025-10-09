@@ -32,14 +32,14 @@
  *   - withdrawals_wei can be computed from beacon blocks in the 24h window (optional flag)
  *   - el_income_wei is left as an optional field you can enrich into snapshots if you want
  */
-const fs = require('fs');
+/*const fs = require('fs');
 const fsp = require('fs/promises');
-const path = require('path');
+const path = require('path');*/
 const loadFromArgs = require("/srv/stakersspace_utils/libs/load-from-process-arguments.js");
 const { RecognizeChain, fetchValidatorsSnapshot, getGenesisTime, getSecondsPerSlot } = require("/srv/stakersspace_utils/libs/beacon-api.js");
 const { getLatestBlockNumber, getBlock } = require("/srv/stakersspace_utils/libs/execution-api.js");
 const { SaveJsonl, ReadJsonl } = require("/srv/stakersspace_utils/libs/filesystem-api.js");
-const { getJson } = require('/srv/stakersspace_utils/libs/http-request');
+//const { getJson } = require('/srv/stakersspace_utils/libs/http-request.js');
 
 function _toArrayMaybeCSV(x) {
     if (x == null) return null;

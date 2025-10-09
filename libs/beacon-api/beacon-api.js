@@ -8,7 +8,7 @@ const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = req
     if(fs.existsSync(fallback_AbsPath)) return require(fallback_AbsPath);
     throw new Error(`Module not found at ${p} neither ${fallback_HomeDirPath}`);
 }
-const { getJson } = requireLib('./http-request', 'staking-scripts/libs/http-request/http-request.js');
+const { getJson } = requireLib('./http-request.js', 'staking-scripts/libs/http-request/http-request.js');
 
 const VALIDATOR_STATES = new Set(['active_exiting','active_ongoing','exited_unslashed','pending_initialized','pending_queued','withdrawal_done','withdrawal_possible']);
 //const SNAPSHOT_STATES = new Set(['finalized', 'head', epoch_number ...]);
