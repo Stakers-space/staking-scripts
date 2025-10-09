@@ -2,7 +2,7 @@
 /**
  * Refactored segmentation (full snapshots a are too heavy for Ethereum Lodestar)
  */
-const VERSION = 1.1;
+const VERSION = 1.2; // logic order
 const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
     const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
     if (fs.existsSync(p)) return require(p);
@@ -75,46 +75,29 @@ class ProcessSnapshot {
         this.setupSignalHandlers();
 
         this.config = new Config();
-        
-        (function normalizeStates(cfg) {
-            let states = cfg.states_track;
+    }
 
-            if (states === null) {
+    normalizeStates() {
+        let states = this.config.states_track;
+        if (states === null) {
+            states = [null];
+        } else if (typeof states === 'string') {
+            if (states.toLowerCase() === 'null' || states === '') {
                 states = [null];
-            } else if (typeof states === 'string') {
-                const s = states.trim();
-                if (s.toLowerCase() === 'null' || s === '') {
-                    states = [null];
-                } else if (s.startsWith('[') && s.endsWith(']')) {
-                    try {
-                        const parsed = JSON.parse(s);
-                        states = Array.isArray(parsed) ? parsed : [null];
-                    } catch {
-                        console.warn("⚠️  Failed to parse --states_track JSON; falling back to aggregated.");
-                        states = [null];
-                    }
-                } else {
-                    states = s.split(',').map(x => x.trim()).filter(Boolean);
-                }
-            } else if (!Array.isArray(states) || states.length === 0) {
-                states = [null];
+            } else {
+                states = states.split(',').map(x => x.trim()).filter(Boolean); 
             }
-
+            
             const out = [];
             const seen = new Set();
             for (let st of states) {
-                if(st !== null) st = String(st).toLowerCase();
+                if (st !== null) st = String(st).toLowerCase();
                 if (!seen.has(st)) { seen.add(st); out.push(st); }
             }
-
-            if (out.length === 0) {
-                console.warn('⚠️  No valid states provided; falling back to aggregated snapshot.');
-                out.push(null);
-            }
-
-            cfg.states_track = out;
-            console.log('├─ States to fetch:', out.map(s => s ?? 'aggregated').join(', '));
-        })(this.config);
+            if (out.length === 0) out.push(null);
+            states = out;
+            console.log('├─ States to fetch:', out.map(s => s ?? 'aggregated').join(', '), '| chain:', this.config.chain);
+        }
     }
 
     setupSignalHandlers() {
@@ -123,6 +106,7 @@ class ProcessSnapshot {
     }
 
     async Process(){
+        this.normalizeStates();
         let filesUpdated = [];
         let catchedErrs = [];
         let epoch = 0;
@@ -134,8 +118,6 @@ class ProcessSnapshot {
             epoch = Number((await getFinalityCheckpoint({ beaconBaseUrl: this.config.beaconBaseUrl }))?.data?.current_justified?.epoch);
             if (!Number.isFinite(epoch)) throw new Error('No epoch data');
             
-            if(typeof this.config.states_track === "string") this.config.states_track = this.config.states_track.split(',').map(x => x.trim()).filter(Boolean); 
-
             for (const state of this.config.states_track) { 
                 this.dataFactory = new DataFactory();
                 this.dataFactory.SetEpoch(epoch);
