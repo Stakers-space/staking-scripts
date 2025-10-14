@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = 1.1;
+const VERSION = 1.2;
 
 const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
     const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
@@ -9,7 +9,7 @@ const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = req
     throw new Error(`Module not found at ${p} neither ${fallback_HomeDirPath}`);
 }
 
-const { getJson } = requireLib('./http-request.js', 'staking-scripts/libs/http-request/http-request.js');
+const { httpRequest, getJson } = requireLib('./http-request.js', 'staking-scripts/libs/http-request/http-request.js');
 
 // --- helpers ---
 function ensure0x(s) { return s.startsWith('0x') ? s : `0x${s}`;}
@@ -38,16 +38,20 @@ async function ethCall({ elBaseUrl = 'http://localhost:8545', to, data, timeoutM
 
     const postData = JSON.stringify(payload);
 
-    const res = await getJson(elBaseUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Content-Length': postData.length },
-        timeout: timeoutMs,
-        body: postData
-    });
+    const res = await httpRequest( // do not post accept
+        elBaseUrl, 
+        {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 60_000
+        },
+        postData
+    );
+    
     if (res?.error) {
         throw new Error(`eth_call error: ${res.error?.message || JSON.stringify(res.error)}`);
     }
-    return res?.result; // hex string like 0x1a2b...
+    return JSON.parse(res)?.result; // hex string like 0x1a2b...
 }
 
 async function getUnclaimedGNORewardsByWallet(executionCLientApiUrl, wallet, timeoutMs = 20000){
