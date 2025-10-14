@@ -35,11 +35,14 @@ async function ethCall({ elBaseUrl = 'http://localhost:8545', to, data, timeoutM
         method: 'eth_call',
         params: [{ to, data }, blockTag]
     };
+
+    const postData = JSON.stringify(payload);
+
     const res = await getJson(elBaseUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Content-Length': postData.length },
         timeout: timeoutMs,
-        body: JSON.stringify(payload)
+        body: postData
     });
     if (res?.error) {
         throw new Error(`eth_call error: ${res.error?.message || JSON.stringify(res.error)}`);
@@ -54,7 +57,7 @@ async function getUnclaimedGNORewardsByWallet(executionCLientApiUrl, wallet, tim
     if (!isAddress(wallet)) throw new Error(`Invalid wallet address: ${wallet}`);
     // Build calldata: selector + 32B padded address
     const addrNo0x = strip0x(wallet).toLowerCase();
-    const data = ensure0x(FN_WITHDRAWABLE_SELECTOR + pad64(addrNo0x));
+    const data = FN_WITHDRAWABLE_SELECTOR + pad64(addrNo0x);
     const resultHex = await ethCall({
         elBaseUrl: executionCLientApiUrl,
         to: GNO_UNCLAIMED_CONTRACT,
