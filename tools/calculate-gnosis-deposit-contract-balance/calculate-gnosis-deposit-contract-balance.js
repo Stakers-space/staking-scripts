@@ -1,5 +1,5 @@
 'use strict';
-const VERSION = "0.1.4";
+const VERSION = "0.1.5";
 
 const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
     const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
@@ -49,7 +49,7 @@ class CalculateGnosisDepositContractBalance {
             let beacon_gno_sum = 0;
     
             for(const v of arr){
-                const balance = Number(v?.balance) || 0;
+                const balance = (Number(v?.balance) / 32) || 0;
                 beacon_gno_sum += balance;
                     
                 const ww = this.NormalizeAddress(v?.validator?.withdrawal_credentials);
@@ -60,8 +60,7 @@ class CalculateGnosisDepositContractBalance {
                 this.withdrawalAddressSnapshot[ww].validators++;
 
                 // distribution of GNO balance in validators
-                //const beaconHoldingsKey = parseFloat((balance / 32 / 1e9).toFixed(2)).toString();
-                const beaconHoldingsKey = (Math.round((balance / 32 / 1e9) * 100) / 100).toString();
+                const beaconHoldingsKey = (Math.round((balance / 1e9) * 100) / 100).toString();
                 if(!this.distributionByRoundedBeaconchainBalance[beaconHoldingsKey]) this.distributionByRoundedBeaconchainBalance[beaconHoldingsKey] = 0;
                 this.distributionByRoundedBeaconchainBalance[beaconHoldingsKey]++;
             }
