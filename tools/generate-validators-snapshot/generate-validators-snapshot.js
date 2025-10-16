@@ -1,4 +1,4 @@
-const VERSION = 1.2; // logic order
+const VERSION = 1.3; // withdrawal wallets count
 const requireLib = function(relOrAbsPath, fallback_HomeDirPath) { const fs = require('fs'), os = require('os'), path = require('path');
     const p = path.isAbsolute(relOrAbsPath) ? relOrAbsPath : path.resolve(__dirname, relOrAbsPath);
     if (fs.existsSync(p)) return require(p);
@@ -34,6 +34,7 @@ class DataFactory {
         this.status = null;
         this.execution_optimistic = false;
         this.validators = [];
+        this.withdrawal_credentials = new Set();
     }
     SetEpoch(epoch){ this.epoch = epoch; }
     SetTimestamp() { this.timestamp = Date.now(); }
@@ -46,7 +47,7 @@ class DataFactory {
             eff_balance: (Number(v.validator.effective_balance) / balanceDivisor),
             wc: v.validator.withdrawal_credentials,
             slashed: Boolean(v.validator.slashed),
-            e: {
+            epoch: {
                 activation_eligibility: v.validator.activation_eligibility_epoch,
                 activation: v.validator.activation_epoch,
                 exit: v.validator.exit_epoch,
@@ -55,6 +56,7 @@ class DataFactory {
         }
         if (includeBeaconStatus) vObj.status = v.status;
         this.validators.push(vObj);
+        this.withdrawal_credentials.add(vObj.wc);
 
         if(stateSnap){
             if(!stateSnap[v.status]) stateSnap[v.status] = { validators: 0, balance: 0, eff_balance: 0 }
@@ -63,6 +65,12 @@ class DataFactory {
             stateSnap[v.status].eff_balance += vObj.eff_balance;
         }
     };
+    GetUniqueWithdrawalCredentialsCount(){
+        return this.withdrawal_credentials ? this.withdrawal_credentials.size : 0;
+    }
+    DeleteCredentialsKey(){
+        delete this.withdrawal_credentials;
+    }
 }
 
 /** Util Processor */
@@ -117,7 +125,10 @@ class ProcessSnapshot {
             if (!Number.isFinite(epoch)) throw new Error('No epoch data');
             
             for (const state of this.config.states_track) { 
-                this.dataFactory = new DataFactory();
+                
+                const stateStr = state ?? 'aggregated';
+                
+                this.dataFactory = new DataFactory(); // new dataFactory for each state? - is ok, as each state is saved separately
                 this.dataFactory.SetEpoch(epoch);
                 this.dataFactory.SetTimestamp();
                 this.dataFactory.SetStatus(state);
@@ -130,20 +141,25 @@ class ProcessSnapshot {
                     });
 
                     const arr = Array.isArray(snapshotData?.data) ? snapshotData.data : [];
-                    for (const val of arr) { this.dataFactory.AddValidator(val, (state === null), balanceDivisor, this.state_snap); }
+                    for (const val of arr) { 
+                        this.dataFactory.AddValidator(val, (state === null), balanceDivisor, this.state_snap);
+                    }
+
+                    if(this.state_snap[stateStr]) this.state_snap[stateStr].wallets = this.dataFactory.GetUniqueWithdrawalCredentialsCount();
+                    this.dataFactory.DeleteCredentialsKey();
 
                     if(this.config.output.keepInFile){
                         await ensureDir(this.config.output.storageDirectory);
                         await SaveJson({
                             outPath: this.config.output.storageDirectory,
-                            filename: `${this.config.chain}_${(state ?? 'aggregated')}.json`,
+                            filename: `${this.config.chain}_${stateStr}.json`,
                             json: this.dataFactory,
                             atomic: true,
                             space: 0
                         }); // :contentReference[oaicite:13]{index=13}
-                        console.log(`${this.config.output.storageDirectory}/${this.config.chain}_${(state ?? 'aggregated')}.json updated`);
+                        console.log(`${this.config.output.storageDirectory}/${this.config.chain}_${stateStr}.json updated`);
                         
-                        filesUpdated.push(`${this.config.chain}_${(state ?? 'aggregated')}.json`);
+                        filesUpdated.push(`${this.config.chain}_${stateStr}.json`);
                     } else {
                         console.log(this.dataFactory);
                     }

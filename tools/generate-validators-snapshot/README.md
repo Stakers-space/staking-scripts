@@ -108,7 +108,7 @@ node /srv/stakersspace_utils/generate-validators-snapshot.js \
       "eff_balance": 32.0,
       "wc": "0x...",
       "slashed": false,
-      "e": {
+      "epoch": {
         "activation_eligibility": "0",
         "activation": "0",
         "exit": "18446744073709551615",

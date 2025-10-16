@@ -19,12 +19,14 @@ class CalculateGnosisDepositContractBalance {
         this.config = {
             beaconBaseUrl: `http://localhost:9596`,
             executionBaseUrl: `http://localhost:8545`
-        }
+        };
         this.epoch = null;
         this.withdrawalAddressSnapshot = {};
         this.distributionByRoundedBeaconchainBalance = {};
         this.distributionByUnclaimedGNO = {};
         this.registeredValidators = 0;
+
+        // ToDo: Aggregation by state
     }
 
     async Process(){
@@ -36,7 +38,7 @@ class CalculateGnosisDepositContractBalance {
         try {
             const [finality, validatorsSnapshot] = await Promise.all([
                 getFinalityCheckpoint({beaconBaseUrl}),
-                fetchValidatorsSnapshot({ beaconBaseUrl, state: "head", verboseLog: true })
+                fetchValidatorsSnapshot({ beaconBaseUrl, state: "head", verboseLog: true }) // allow to load from files as well to make it more optimized in more complex architectures using also other scripts?
             ]);
 
             this.epoch = Number(finality?.data?.current_justified?.epoch);
