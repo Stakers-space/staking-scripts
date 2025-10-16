@@ -62,7 +62,7 @@ class DataFactory {
             if(!stateSnap[v.status]) stateSnap[v.status] = { validators: 0, balance: 0, eff_balance: 0 }
             stateSnap[v.status].validators += 1;
             stateSnap[v.status].balance += vObj.balance;
-            stateSnap[v.status].eff_balance += vObj.eff_balance;
+            //stateSnap[v.status].eff_balance += vObj.eff_balance;
         }
     };
     GetUniqueWithdrawalCredentialsCount(){

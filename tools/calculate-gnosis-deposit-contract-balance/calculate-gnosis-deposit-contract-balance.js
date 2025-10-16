@@ -120,7 +120,7 @@ class CalculateGnosisDepositContractBalance {
         for(const tWallet of wallets){
             try {
                 const weiValue = await getUnclaimedGNORewardsByWallet(executionBaseUrl, `0x${tWallet}`);
-                this.withdrawalAddressSnapshot[tWallet].unclaimed_gno = Number(weiValue) / 1e18;; // attach unclaimed GNO to each wallet
+                this.withdrawalAddressSnapshot[tWallet].unclaimed_gno = Number(weiValue) / 1e18; // attach unclaimed GNO to each wallet
                 sumWei += weiValue;
 
                 const unclaimedKey = (Math.round((Number(weiValue) / 1e18) * 100) / 100).toString();
