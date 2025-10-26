@@ -7,7 +7,7 @@ API_BEACON_PORT=0
 API_URL="https://stakers.space/api/node-snapshot"
 DO_NOT_SEND=0
 
-declare -r version="1.0.5"
+declare -r version="1.0.6"
 get_version() {
     echo -e "HW usage monitor version: $version | Powered by https://stakers.space"
     exit 0
@@ -109,6 +109,15 @@ get_swap_stats() {
 }
 get_swap_stats
 
+
+get_clock_sync_status() {
+    # get system clock synchronization time
+    clock_sync=$(timedatectl status 2>/dev/null | grep "System clock synchronized:" | awk '{print $4}')
+    if [[ -z "$clock_sync" ]]; then
+        clock_sync="unknown"
+    fi
+}
+get_clock_sync_status
 # CPU temp (requires sensors) || sudo apt install lm-sensors → sudo sensors-detect → sensors | grep 'Core'
 #cpu_temp=$(sensors | grep 'Core 0' | awk '{print $3}' | tr -d '+°C')
 
@@ -192,6 +201,7 @@ echo -e "├── disk_usage:   $disk_usage"
 echo -e "├── ram_usage:    $ram_usage"
 echo -e "├── swap_usage:   $swap_usage"
 echo -e "├── beacon_peers: $beacon_peers"
+echo -e "├── clock_sync:   $clock_sync"
 echo -e "├── vpn_status:   $vpn_status"
 echo -e "└── vpn_server:   $vpn_server"
 
@@ -205,6 +215,7 @@ curl -G "$API_URL" \
     --data-urlencode "ram_usage=$ram_usage" \
     --data-urlencode "swap_usage=$swap_usage" \
     --data-urlencode "peer=$beacon_peers" \
+    --data-urlencode "cs=$clock_sync" \
     --data-urlencode "vpn_s=$vpn_status" \
     --data-urlencode "vpn=$vpn_server"
 fi
