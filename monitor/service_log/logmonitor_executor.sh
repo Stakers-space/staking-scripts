@@ -7,9 +7,9 @@ set -euo pipefail
 executor_log_file=""
 occurancyKey=$1
 serviceName=$2
-# optional parameters
-executionServiceName=$3
-beaconServiceName=$4
+# manual parameters - preparation for future use through service file
+executionServiceName=""
+beaconServiceName=""
 
 declare -r version="1.1.0"
 
