@@ -3,28 +3,17 @@
 This utility script monitors lighthouse beacon log in real time and check its lines for defined regexs. The script allows to set any execution action of lighthouse beacon as well as any other service if certain issue is detected. There're attached known issue patterns for the lighthouse beacon log service through the `lighthousebeacon_tracking_records.txt` file.
 
 ## Installation
-This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on background and extends it with a custom tekubeacon related configuration.
+This script uses [.logmonitor.sh](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log) on background and extends it with a custom lighththousebeacon related configuration.
 ### Log Monitor utility
 1. Check `.logmonitor.sh` availability
 ```
 /usr/local/bin/logmonitor.sh version
 ```
-If the shell script is not available, install it
-- View the script
-```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
-```
-- Download the script to `/usr/local/bin` directory
-```
-sudo curl -o /usr/local/bin/logmonitor.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor.sh
-```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor.sh
-```
+If the shell script is not available, install it based on the installation guide at [Service Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log)
 
-2. Download errors list for tekubeacon service
-[Stakers.space](https://stakers.space) updates list with tekubeacon related errors occuring in a log. Take into notice that the file is kept as small as possible, containing only serious issues. High number of lines can increase CPU usage.
+
+2. Download errors list for lighththousebeacon service
+[Stakers.space](https://stakers.space) updates list with lighththousebeacon related errors occuring in a log. Take into notice that the file is kept as small as possible, containing only serious issues. High number of lines can increase CPU usage.
 ```
 sudo curl -o /usr/local/etc/lighthousebeacon_tracking_records.txt https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/lighthouse/beacon_log_monitor/lighthousebeacon_tracking_records.txt
 ```
@@ -44,39 +33,28 @@ Keep the required line format of `targetType@triggerCount@targetString`, where:
 ### Log monitor executor utility
 Executor utility allows to execute any action when certain pattern is reached (e.g. certain string found in a log for 50 times in a minute). Executor script is separated from `log_monitor`, as it's an optional extension of the `log_monitor` itself.
 
-`logmonitor_executor.sh` is attached to `log_monitor` utility as a parameter and as so it may be individual for each service. Do not hesitate to rename it for your custom clear service related name.
-
-1. Based on zour preference usage, check `.logmonitor_executor.sh` (general) or `.logmonitor_executor_lighthousebeacon.sh` (service-related) availability
+1. Check `.logmonitor_executor.sh` availability
 ```
 /usr/local/bin/logmonitor_executor_lighthousebeacon.sh version
 ```
 ```
 /usr/local/bin/logmonitor_executor.sh version
 ```
-If the shell script is not available, install it
-- View the script
-```
-curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
-```
-- Download the script to `/usr/local/bin` directory
-```
-sudo curl -o /usr/local/bin/logmonitor_executor_lighthousebeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
-```
-- Open the file and configurate execution actions
-```
-sudo nano /usr/local/bin/logmonitor_executor_lighthousebeacon.sh
-```
-- Enable execution of the shell script
-```
-sudo chmod +x /usr/local/bin/logmonitor_executor_lighthousebeacon.sh
-```
-- Executor is activated by adding executor-related arguments on launching `/usr/local/bin/logmonitor.sh`, see service file below.
+If the shell script is not available, install it based on the installation guide at [Service Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log).
 
+> [!NOTE]
+> There's a best practice to use a general `logmonitor_executor.sh` for all logmonitor services, as it keeps all actions at one place.
+> As the `logmonitor_executor.sh` is linked through a parameter in `lighthousebeacon_logmonitor.service` file, there's still an option to define individual `logmonitor_executor.sh` for each service.
+> This can be done e.g. as
+> ```
+> sudo curl -o /usr/local/bin/logmonitor_executor_lighthousebeacon.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/monitor/service_log/logmonitor_executor.sh
+> ```
+> Then work with `logmonitor_executor_lighthousebeacon.sh` instead of `logmonitor_executor.sh`.
 
 ### Log monitor service
 Log monitor service starts the log monitor with active executor utility (optional) automatically on OS startup.
 
-- Download a service file `lighthousebeacon_logmonitor.service` for running `tekubeacon_logmonitor.sh` on system backgorund
+- Download a service file `lighthousebeacon_logmonitor.service` for running `lighththousebeacon_logmonitor.sh` on system backgorund
 ```
 sudo curl -o /etc/systemd/system/lighthousebeacon_logmonitor.service https://raw.githubusercontent.com/Stakers-space/staking-scripts/refs/heads/main/lighthouse/beacon_log_monitor/lighthousebeacon_logmonitor.service
 ```
@@ -92,22 +70,32 @@ sudo systemctl start lighthousebeacon_logmonitor.service
 ```
 systemctl status lighthousebeacon_logmonitor.service
 ```
-> [!NOTE]  
+> [!IMPORTANT]
 > If the service did not start properly, it may require to set access to `journal` for the service user
 >
 > ```sudo usermod -aG systemd-journal <serviceUser>```
+
+Check the service
 ```
 journalctl -fu lighthousebeacon_logmonitor.service
 ```
-Monitor the service together with tekubeacon service
+Monitor the service together with lighththousebeacon service
 ```
-journalctl -f -u tekubeacon.service -u lighthousebeacon_logmonitor.service
+journalctl -f -u lighththousebeacon.service -u lighthousebeacon_logmonitor.service
 ```
-
 - Enable the service
 ```
 sudo systemctl enable lighthousebeacon_logmonitor.service
 ```
 
-### Set proper permissions for actions executed through the executor
-See section [Running Executor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log#running-executor)
+> [!IMPORTANT]
+> ### Set proper permissions for actions executed through the executor
+> See section [Running Executor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log#running-executor)
+> - Setting in 
+> ```
+> sudo visudo
+> ```
+> in format
+> ```
+> specificServiceUser ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart sampleService
+> ```
