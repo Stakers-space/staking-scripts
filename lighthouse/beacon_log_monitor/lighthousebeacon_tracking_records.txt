@@ -1,3 +1,4 @@
 EXECUTION@50@status: 503 Service Unavailable
 STOPSTART@100@ERRO Database write failed
 EXECUTION_CONSENSUS@400@status: 500 Internal Server Error, path: /eth/v1/validator/attestation_data
+EXECUTION_CONSENSUS@200@ERROR Database write failed!
