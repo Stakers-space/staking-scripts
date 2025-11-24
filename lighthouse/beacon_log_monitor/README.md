@@ -35,9 +35,6 @@ Executor utility allows to execute any action when certain pattern is reached (e
 
 1. Check `.logmonitor_executor.sh` availability
 ```
-/usr/local/bin/logmonitor_executor_lighthousebeacon.sh version
-```
-```
 /usr/local/bin/logmonitor_executor.sh version
 ```
 If the shell script is not available, install it based on the installation guide at [Service Log Monitor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log).
