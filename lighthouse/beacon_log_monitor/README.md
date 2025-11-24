@@ -87,6 +87,7 @@ sudo systemctl enable lighthousebeacon_logmonitor.service
 
 > [!IMPORTANT]
 > ### Set proper permissions for actions executed through the executor
+> If there are action made with services running under different users, there's a need to add a permission to do so for the logmonitor service user.
 > See section [Running Executor](https://github.com/Stakers-space/staking-scripts/tree/main/monitor/service_log#running-executor)
 > - Setting in 
 > ```

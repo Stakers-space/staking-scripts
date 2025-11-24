@@ -141,8 +141,8 @@ Sample:
 /usr/local/bin/logmonitor.sh --service_name "lodestarBeacon.service" --targets="/usr/local/etc/lodestarbeaconlog_patterns.txt" --executer_trigger_pause="500" ...
 ```
 
-> [!NOTE]  
-> If you use `sudo` commands within the executor, be sure you enabled that for the service user, see
+> [!IMPORTANT]  
+> If you use `sudo` commands within the executor, or you need execute command of services running under differet user than the logmonitor service, be sure it is enabled for the service user
 > - Open suborders file
 > ```
 > sudo visudo
