@@ -55,14 +55,17 @@ sudo chown -R stakersspace:stakersspace /srv/stakersspace_utils/calculate-reward
 ```
 node /srv/stakersspace_utils/calculate-rewards.js snapshot --snapshot_state=finalized --fileStorageDir=/tmp/reward_snap --format=jsonl --verboseLog=true --beaconBaseUrl=http://localhost:9799
 ```
-e.g. in cronetab
+- Set regular running through `crontab`
 ```
 crontab -e
 ```
 ```
 CRON_TZ=UTC
-20 0 * * * /usr/bin/flock -n /var/lock/val-snapshot.lock -c '/usr/bin/node /srv/stakersspace_utils/calculate-rewards.js snapshot --format=jsonl --snapshot_state=finalized --verboseLog=true --fileStorageDir=/srv/stakersspace_utils/data --beaconBaseUrl=http://localhost:9799 >>/var/log/validator_snapshots.log 2>&1'
+20 0 * * * /usr/bin/flock -n /var/lock/val-snapshot.lock -c '/usr/local/bin/node /srv/stakersspace_utils/calculate-rewards.js snapshot --format=jsonl --snapshot_state=finalized --verboseLog=true --fileStorageDir=/srv/stakersspace_utils/data --beaconBaseUrl=http://localhost:9799 >>/var/log/validator_snapshots.log 2>&1'
 ```
+> [!NOTE]
+> Be sure you use proper paths. Check `which node` for `node` path and `crontab -l` to verify the tasks are under your user.
+
 
 ### Run Calculation
 - Calculates balance difference between daily snapshots
