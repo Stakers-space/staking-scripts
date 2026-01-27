@@ -3,6 +3,7 @@
 chain=$1
 validatorsDirectory=$2
 beaconNode="${3:-http://localhost:5052}"
+exitBelowId=$4
 lighthouse_app_path="/usr/local/bin/lighthouse"
 
 # Ensure that param $validatorsDirectory ends with '/'
@@ -27,7 +28,15 @@ if [[ ! -d "$validatorsDirectory" ]]; then
   exit 1
 fi
 
+if [[ -n "$exitBelowId" && ! "$exitBelowId" =~ ^[0-9]+$ ]]; then
+  echo "Failed | exitBelowId must be a number (got: '$exitBelowId')"
+  exit 1
+fi
+
 echo "Initializing withdrawal prompts for validators at directory $validatorsDirectory"
+if [[ -n "$exitBelowId" ]]; then
+  echo "Filter enabled: exiting only validators with id < $exitBelowId"
+fi
 
 files=$(ls "$validatorsDirectory")
 num_files=$(echo "$files" | wc -l)
@@ -40,6 +49,10 @@ iterate_keystores() {
       for k in $key; do
         if [[ ${#k} -gt 22 && ${k:0:22} == "keystore-m_12381_3600_" && ${k: -5} == ".json" ]]; then
           file_path="$key_path$k"
+
+          if [[ -n "$exitBelowId" && "$id" -ge "$exitBelowId" ]]; then
+            continue
+          fi
 
           if [[ $1 == "Exit my validator" ]]; then
              $lighthouse_app_path --network "$chain" account validator exit \

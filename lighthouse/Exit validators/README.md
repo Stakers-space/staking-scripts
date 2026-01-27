@@ -37,6 +37,8 @@ Place the encryption password into the file and press `ctrl`+`x`, then `y` to ex
 Arguments
 - `<chain>` [mainnet, gnosis]
 - `<validatorsDirectory>` path to directory with keystores
+- `<beaconNodeAPI>` path to beacon node api
+- `<indices lower than>`: optional filter to exit only indices lower than ...
 
 ### Exit samples:
 - If you used [SomerEsat staking guide](https://someresat.medium.com/guide-to-staking-on-ethereum-ubuntu-lighthouse-773f5d982e03):
