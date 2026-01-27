@@ -40,6 +40,11 @@ Arguments
 - `<beaconNodeAPI>` path to beacon node api
 - `<indices lower than>`: optional filter to exit only indices lower than ...
 
+> [!CAUTION]
+> As validator keystores are locked under their System user (`lighthouse-vi1` in this sample), to prevent `ReadError("Permission denied (os error 13)")` you may have to add you into the system user group:
+> Add yourself into the group: `sudo usermod -aG lighthouse-vi1 <yourUser>`. Then reload with `newgrp lighthouse-vi1`.
+> Remove yourself from the group: `sudo gpasswd -d <yourUser> lighthouse-vi1`. Then reload with `newgrp lighthouse-vi1`.
+
 ### Exit samples:
 - If you used [SomerEsat staking guide](https://someresat.medium.com/guide-to-staking-on-ethereum-ubuntu-lighthouse-773f5d982e03):
 ```
@@ -53,6 +58,10 @@ _Note: Edit the `<vi1>` to specify the proper instance you wish to exit_
 - If you used Stakers.space staking guide for mainnet
 ```
 /usr/local/bin/lighthouse_exit_validators.sh mainnet /var/lib/ethereum/lighthouse/vi1/validators/
+```
+- Exit 100 first indices on gnosis
+```
+/usr/local/bin/lighthouse_exit_validators.sh gnosis /var/lib/gnosis/lighthouse/vi1/validators/ http://localhost:5052 100
 ```
 _Note: Edit the `<vi1>` to specify the proper instance you wish to exit_
 
