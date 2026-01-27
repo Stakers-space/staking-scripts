@@ -54,7 +54,6 @@ iterate_keystores() {
           id="${rest%%_*}"
 
           if [[ -n "$exitBelowId" && "$id" -ge "$exitBelowId" ]]; then
-            echo "filtration apllied: skipping $id"
             continue
           fi
 
