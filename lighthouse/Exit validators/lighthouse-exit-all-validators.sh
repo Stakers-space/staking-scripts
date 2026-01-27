@@ -50,7 +50,11 @@ iterate_keystores() {
         if [[ ${#k} -gt 22 && ${k:0:22} == "keystore-m_12381_3600_" && ${k: -5} == ".json" ]]; then
           file_path="$key_path$k"
 
+          rest="${k#keystore-m_12381_3600_}"
+          id="${rest%%_*}"
+
           if [[ -n "$exitBelowId" && "$id" -ge "$exitBelowId" ]]; then
+            echo "filtration apllied: skipping $id"
             continue
           fi
 
