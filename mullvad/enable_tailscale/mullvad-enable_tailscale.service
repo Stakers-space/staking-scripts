@@ -1,11 +1,17 @@
 [Unit]
-Description=Set up netfilter rules at startup
-After=network.target mullvad-daemon.service
-Wants=mullvad-daemon.service
+Description=Netfilter rules enabling Tailscale next to Mullvad VPN
+# Rules do not depend on Mullvad or Tailscale being up, so they are loaded before both of them.
+Before=mullvad-daemon.service tailscaled.service
+# nftables.service flushes the whole ruleset on (re)start and reload. Follow it and load the rules again.
+After=nftables.service
+PartOf=nftables.service
+ReloadPropagatedFrom=nftables.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/netfilter_manager.sh add-rules "/usr/local/etc/mullvad-tailscale_netfilters.rules"
+ExecStart=/usr/local/bin/netfilter_manager.sh add-rules --file /usr/local/etc/mullvad-tailscale_netfilters.rules
+ExecReload=/usr/local/bin/netfilter_manager.sh add-rules --file /usr/local/etc/mullvad-tailscale_netfilters.rules
+# No ExecStop on purpose: stopping or restarting this service never removes the rules.
 RemainAfterExit=true
 
 [Install]

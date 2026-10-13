@@ -1,18 +1,29 @@
+# Load this file through netfilter_manager.sh (add-rules). The script replaces the table atomically,
+# so the rules are never duplicated and there is no moment without them.
+
+# Tailscale DNS resolver (MagicDNS)
 define RESOLVER_ADDRS = {
     100.100.100.100
 }
 
 # Define machines IPs (available at login.tailscale.com/admin/machines)
+# Tailscale devices this server is allowed to open connections to.
+# Incoming connections from the tailnet are allowed regardless of this list.
 define EXCLUDED_IPS = {
     100.101.102.103,
     100.104.105.106
 }
 
 # https://mullvad.net/en/help/split-tunneling-with-linux-advanced
-table inet mullvad-tilescale {
+#
+# Mullvad firewall (table inet mullvad) hooks at priority 0 and lets through only connections
+# marked with ct mark 0x00000f41. All chains below have to run BEFORE it, so they use
+# a priority lower than 0. With the same priority, the order would depend on which table was
+# loaded last, and it would change whenever Mullvad reloads its table.
+table inet mullvad-tailscale {
     # Exclude outgoing Tailscale connection
     chain excludeOutgoing {
-        type route hook output priority 0; policy accept;
+        type route hook output priority -100; policy accept;
         ip daddr $EXCLUDED_IPS ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
     }
 

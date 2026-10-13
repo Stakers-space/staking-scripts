@@ -1,0 +1,7 @@
+[Unit]
+Description=Reload netfilter rules for Tailscale next to Mullvad VPN, if they are missing
+After=mullvad-enable_tailscale.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/netfilter_manager.sh ensure-rules --file /usr/local/etc/mullvad-tailscale_netfilters.rules

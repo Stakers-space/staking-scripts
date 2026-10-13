@@ -11,3 +11,8 @@ Shell Script utility that may be used by other scripts to join a VPN servers fro
 ### [Prevent issue with time synchronization due to VPN](./split-tunnel/README.md)
 System utility that automatically checks `timedatectl status` every 30 minutes and adding `split tunnel`, if necessary.
 - [mullvad_split_tunnel_set.sh](https://github.com/Stakers-space/ShellScripts/tree/main/mullvad/split-tunnel)
+
+
+### [Enable Tailscale during active Mullvad connection](./enable_tailscale/README.md)
+Netfilter rules and their manager that keep Tailscale connection (e.g. SSH access to the server) working next to connected Mullvad VPN.
+- [netfilter_manager.sh](https://github.com/Stakers-space/staking-scripts/tree/main/mullvad/enable_tailscale)
