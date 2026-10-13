@@ -1,9 +1,9 @@
-# This Utility enables tailscale connection durring active Mullvad connection
+# This Utility enables tailscale connection during active Mullvad connection
 
 ## Intro
 Most VPN clients blocks other simultaneous VPN connections by default. This utility sets [advanced split tunneling](https://mullvad.net/en/help/split-tunneling-with-linux-advanced) in mullvad for enabled simultaneous Tailscale VPN connection.
 
-[Tailscale](https://tailscale.com/) is a VPN service allowing to create virtual private network. This service is usable for remove connections to any device within created network. The huge benefit is the independence on ISP or router settings.
+[Tailscale](https://tailscale.com/) is a VPN service allowing to create virtual private network. This service is usable for remote connections to any device within created network. The huge benefit is the independence on ISP or router settings.
 
 
 ### How does it work?
@@ -12,9 +12,9 @@ Internet traffic go through `nftables` rules. Utilities can add rules to that ta
 - This shell utility manages rule `table inet mullvad-tailscale` (It's added on activation and removed on deactivation)
 
 Mullvad firewall lets through only connections marked with `ct mark 0x00000f41`. Rules of this utility set that mark for Tailscale traffic:
-- all connections incoming through `tailscale0` interface (e.g. SSH to the server)
+- all connections incoming through `tailscale0` interface (e.g. SSH to the server), including replies to them
 - connections opened by the server to Tailscale IPs listed in `EXCLUDED_IPS`
-- DNS queries to the Tailscale resolver
+- DNS queries to the Tailscale resolver (used only with `tailscale up --accept-dns=true`, which is the default)
 
 ### Connection safety
 Losing the Tailscale connection to a remote server is the worst case scenario, so the utility is built to avoid it:
@@ -25,7 +25,7 @@ Losing the Tailscale connection to a remote server is the worst case scenario, s
 - Established connections keep their mark in conntrack, so an already opened SSH session normally stays alive even while the table is missing. Only new connections are blocked.
 
 
-## Prerequisities
+## Prerequisites
 - Installed Mullvad with active VPN connection
 - Installed tailscale
 - `nftables` (`nft` command)
@@ -37,7 +37,7 @@ Losing the Tailscale connection to a remote server is the worst case scenario, s
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/netfilter_manager.sh
 ```
-- download the service file to `/usr/local/bin` directory
+- download the script to `/usr/local/bin` directory
 ```
 sudo curl -o /usr/local/bin/netfilter_manager.sh https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/netfilter_manager.sh
 ```
@@ -46,16 +46,16 @@ sudo curl -o /usr/local/bin/netfilter_manager.sh https://raw.githubusercontent.c
 sudo chmod +x /usr/local/bin/netfilter_manager.sh
 ```
 
-2. Download `tailscale_netfilters.rules` file
+2. Download `mullvad-tailscale_netfilters.rules` file
 - View the file
 ```
 curl -o- https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/mullvad-tailscale_netfilters.rules
 ```
-- download the service file to `/usr/local/etc` directory
+- download the rules file to `/usr/local/etc` directory
 ```
 sudo curl -o /usr/local/etc/mullvad-tailscale_netfilters.rules https://raw.githubusercontent.com/Stakers-space/staking-scripts/main/mullvad/enable_tailscale/mullvad-tailscale_netfilters.rules
 ```
-- Open the file and update `EXCLUDED_IPS` marks
+- Open the file and replace example `EXCLUDED_IPS` values
 Place there Tailscale IPs of devices the server is going to open connections to. Incoming connections (e.g. SSH from Your HOME PC, Laptop etc.) are allowed for the whole tailnet regardless of the list.
 ```
 sudo nano /usr/local/etc/mullvad-tailscale_netfilters.rules
@@ -173,7 +173,7 @@ sudo cp /usr/local/etc/mullvad-tailscale_netfilters.rules.bak /usr/local/etc/mul
 ```
 
 ### Upgrade from the previous version
-Previous version used table name `mullvad-tilescale` (typo), chain priority `0` and it appended rules on each run.
+Previous version used table name `mullvad-tilescale` (typo), chain priority `0`, it appended rules on each run and it did not route replies to incoming connections and DNS queries reliably (it depended on the start order of Mullvad and Tailscale).
 1. Download new `netfilter_manager.sh` and service files (see steps above). Old rules file and old service file keep working with the new script.
 2. Copy `table inet mullvad-tailscale { ... }` block from the new rules file into your rules file (keep your `EXCLUDED_IPS`), or download the new rules file and set `EXCLUDED_IPS` again.
 3. Follow [Safe rollout on a remote server](#safe-rollout-on-a-remote-server). `add-rules` removes the old `mullvad-tilescale` table within the same transaction as it loads the new one.

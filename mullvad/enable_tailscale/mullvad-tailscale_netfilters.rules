@@ -6,8 +6,8 @@ define RESOLVER_ADDRS = {
     100.100.100.100
 }
 
-# Define machines IPs (available at login.tailscale.com/admin/machines)
 # Tailscale devices this server is allowed to open connections to.
+# EXAMPLE VALUES - replace them with Tailscale IPs of your machines (available at login.tailscale.com/admin/machines)
 # Incoming connections from the tailnet are allowed regardless of this list.
 define EXCLUDED_IPS = {
     100.101.102.103,
@@ -20,10 +20,16 @@ define EXCLUDED_IPS = {
 # marked with ct mark 0x00000f41. All chains below have to run BEFORE it, so they use
 # a priority lower than 0. With the same priority, the order would depend on which table was
 # loaded last, and it would change whenever Mullvad reloads its table.
+#
+# Outgoing packets need meta mark 0x6d6f6c65 as well, otherwise Mullvad routing rules may send them
+# into the Mullvad tunnel instead of tailscale0 (depends on the order in which Mullvad and Tailscale
+# added their 'ip rule' entries). The mark changes the route only in chains of type 'route'.
 table inet mullvad-tailscale {
-    # Exclude outgoing Tailscale connection
     chain excludeOutgoing {
         type route hook output priority -100; policy accept;
+        # Replies to connections accepted in allow-incoming chain (whole tailnet, IPv4 and IPv6)
+        ct direction reply ct mark 0x00000f41 meta mark set 0x6d6f6c65;
+        # Exclude outgoing Tailscale connection
         ip daddr $EXCLUDED_IPS ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
     }
 
@@ -34,8 +40,9 @@ table inet mullvad-tailscale {
     }
 
     # Exclude Tailscale DNS
+    # Needed only if the server uses Tailscale DNS (tailscale up --accept-dns=true, which is the default)
     chain excludeDns {
-        type filter hook output priority -10; policy accept;
+        type route hook output priority -100; policy accept;
         ip daddr $RESOLVER_ADDRS udp dport 53 ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
         ip daddr $RESOLVER_ADDRS tcp dport 53 ct mark set 0x00000f41 meta mark set 0x6d6f6c65;
     }
